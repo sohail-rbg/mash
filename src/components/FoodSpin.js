@@ -16,6 +16,7 @@ export default function FoodSpin({
   isFiltered,
   mealTiming,
   baseParams,
+  activeQueryString,
 }) {
   const [foods, setFoods] = useState(initialFoods || []);
   const [loading, setLoading] = useState(false);
@@ -27,7 +28,7 @@ export default function FoodSpin({
   const [spinning, setSpinning] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const [rejectedIds, setRejectedIds] = useState(new Set());
-  const [currentQueryString, setCurrentQueryString] = useState(baseParams);
+  const [currentQueryString, setCurrentQueryString] = useState(activeQueryString || baseParams);
   const [filtersVisible, setFiltersVisible] = useState(false);
   const [filterExpiry, setFilterExpiry] = useState(null);
   const [timeLeft, setTimeLeft] = useState(null);
@@ -37,9 +38,9 @@ export default function FoodSpin({
   const abortControllerRef = useRef(null);
 
   // Dynamically derive the meal timing from the current filters
-  const activeParams = new URLSearchParams(currentQueryString);
+  const currentParams = new URLSearchParams(currentQueryString);
   const activeMealTiming =
-    activeParams.get("mealTiming")?.toLowerCase() || mealTiming?.toLowerCase();
+    currentParams.get("mealTiming")?.toLowerCase() || mealTiming?.toLowerCase();
   const COMMON_INGREDIENTS = MEAL_SPECIFIC_INGREDIENTS[activeMealTiming] || [];
   const remainingCount = Math.max(0, foods.length - rejectedIds.size);
 
@@ -82,6 +83,30 @@ export default function FoodSpin({
   }, [initialFoods, isFiltered]);
 
   useEffect(() => {
+    const expiryCookie = document.cookie
+      .split("; ")
+      .find((cookie) => cookie.startsWith("temp_filters_expires="));
+
+    if (!expiryCookie) return;
+
+    const expiryTime = Number(expiryCookie.split("=")[1]);
+    if (!expiryTime || expiryTime <= Date.now()) {
+      document.cookie = "temp_filters=; path=/; max-age=0";
+      document.cookie = "temp_filters_expires=; path=/; max-age=0";
+      return;
+    }
+
+    setFilterExpiry(expiryTime);
+    setTimeLeft(Math.ceil((expiryTime - Date.now()) / 1000));
+  }, []);
+
+  useEffect(() => {
+    if (activeQueryString !== undefined && activeQueryString !== null) {
+      setCurrentQueryString(activeQueryString || baseParams);
+    }
+  }, [activeQueryString, baseParams]);
+
+  useEffect(() => {
     if (foods?.length > 0) {
       if (!suggestedFood) setSuggestedFood(getNewSuggestion(foods));
       setShowResult(false);
@@ -98,6 +123,7 @@ export default function FoodSpin({
         setTimeLeft(null);
         setCurrentQueryString(baseParams);
         document.cookie = "temp_filters=; path=/; max-age=0";
+        document.cookie = "temp_filters_expires=; path=/; max-age=0";
         setFoods([]);
         setSuggestedFood(null);
         setShowResult(false);
@@ -185,7 +211,7 @@ export default function FoodSpin({
   };
 
   const handleFilterApply = (newParams, expiryTime) => {
-    setCurrentQueryString(newParams);
+    setCurrentQueryString(newParams || baseParams);
     setFiltersVisible(false);
     setFoods([]);
     setRejectedIds(new Set());
@@ -195,6 +221,9 @@ export default function FoodSpin({
     if (expiryTime) {
       setFilterExpiry(expiryTime);
       setTimeLeft(Math.ceil((expiryTime - Date.now()) / 1000));
+    } else {
+      setFilterExpiry(null);
+      setTimeLeft(null);
     }
   };
 
@@ -224,6 +253,7 @@ export default function FoodSpin({
     setRejectedIds(new Set());
     setIngredientsVisible(false);
     document.cookie = "temp_filters=; path=/; max-age=0";
+    document.cookie = "temp_filters_expires=; path=/; max-age=0";
     setFoods([]);
     setSuggestedFood(null);
     setShowResult(false);

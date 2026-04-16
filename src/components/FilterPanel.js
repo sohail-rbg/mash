@@ -92,9 +92,19 @@ export default function FilterPanel({ currentParams, onApply, onClose }) {
       }
     });
 
+    const queryString = params.toString();
     const expirySeconds = 3600;
-    document.cookie = `temp_filters=${params.toString()}; path=/; max-age=${expirySeconds}`;
-    onApply(params.toString(), Date.now() + expirySeconds * 1000);
+
+    if (queryString) {
+      const expiresAt = Date.now() + expirySeconds * 1000;
+      document.cookie = `temp_filters=${queryString}; path=/; max-age=${expirySeconds}`;
+      document.cookie = `temp_filters_expires=${expiresAt}; path=/; max-age=${expirySeconds}`;
+      onApply(queryString, expiresAt);
+    } else {
+      document.cookie = "temp_filters=; path=/; max-age=0";
+      document.cookie = "temp_filters_expires=; path=/; max-age=0";
+      onApply("", null);
+    }
   };
 
   const activeCount = Object.values(filters).flat().filter(Boolean).length;
