@@ -44,8 +44,14 @@ export default async function Home() {
   if (!session || !session.user) redirect("/register");
 
   const user = session.user;
-  if (!user?.questionnaire || user?.questionnaire?.length === 0)
+  const userQuestionnaire = user?.questionnaire || [];
+  const hasPreferenceData = userQuestionnaire.some(
+    (pref) => pref.questionId !== 'preferenceSkipped' && Array.isArray(pref.answer) && pref.answer.length > 0,
+  );
+
+  if (!userQuestionnaire || userQuestionnaire.length === 0) {
     redirect("/preferences");
+  }
 
   const cookieStore = await cookies();
   const tempFilters = cookieStore.get("temp_filters");
@@ -122,6 +128,7 @@ export default async function Home() {
   const mealTimingForComponent =
     finalParams.get("mealTiming")?.split(",")[0] || "Lunch";
   const baseParams = defaultQueryString;
+  const needsPreferences = !hasPreferenceData;
 
   return (
     <div className="h-screen w-screen overflow-hidden relative bg-[var(--bg-color)] transition-colors duration-500">
@@ -186,6 +193,7 @@ export default async function Home() {
           mealTiming={mealTimingForComponent}
           baseParams={baseParams}
           activeQueryString={queryString}
+          needsPreferences={needsPreferences}
         />
       </div>
 

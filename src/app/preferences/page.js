@@ -190,14 +190,44 @@ export default function Preferences() {
 
       if (res.ok) {
         setToast({ show: true, message: "Preferences saved successfully! ✅", type: "success" });
-        // Update the session to reflect the new questionnaire and profileComplete status
-        await update({ user: { ...session.user, questionnaire: preferencesData, profileComplete: true } });
+        await update({ user: data.user });
         setTimeout(() => router.push("/"), 1500); // Redirect after short delay so they see success
       } else {
         setToast({ show: true, message: data.message || "Failed to save preferences.", type: "error" });
       }
     } catch (error) {
       setToast({ show: true, message: "A connection error occurred. Please try again.", type: "error" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSkip = async () => {
+    if (!session?.user?.id) return;
+    setSaving(true);
+
+    try {
+      const res = await fetch('/api/preferences', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: session.user.id,
+          answers: [{ questionId: 'preferenceSkipped', answer: ['true'] }],
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setToast({ show: true, message: 'Preferences skipped for now. You can update them anytime.', type: 'success' });
+        await update({ user: data.user });
+        router.push('/');
+      } else {
+        setToast({ show: true, message: data.message || 'Unable to skip preferences.', type: 'error' });
+      }
+    } catch (error) {
+      setToast({ show: true, message: 'A connection error occurred. Please try again.', type: 'error' });
     } finally {
       setSaving(false);
     }
@@ -528,6 +558,14 @@ export default function Preferences() {
                     }} />
                   : "Save My Preferences →"
                 }
+              </button>
+              <button
+                type="button"
+                disabled={saving}
+                onClick={handleSkip}
+                className="w-full mt-3 py-3 text-sm sm:text-base rounded-2xl border border-white/15 bg-transparent text-white/80 hover:bg-white/5 transition-all"
+              >
+                Skip for now
               </button>
             </div>
 

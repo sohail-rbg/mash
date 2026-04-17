@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { MEAL_SPECIFIC_INGREDIENTS } from "@/lib/utils";
 import FilterPanel from "./FilterPanel";
 import ConfirmedSelection from "./ConfirmedSelect";
@@ -17,6 +18,7 @@ export default function FoodSpin({
   mealTiming,
   baseParams,
   activeQueryString,
+  needsPreferences,
 }) {
   const [foods, setFoods] = useState(initialFoods || []);
   const [loading, setLoading] = useState(false);
@@ -36,6 +38,7 @@ export default function FoodSpin({
 
   const wheelRef = useRef(null);
   const abortControllerRef = useRef(null);
+  const router = useRouter();
 
   // Dynamically derive the meal timing from the current filters
   const currentParams = new URLSearchParams(currentQueryString);
@@ -107,6 +110,16 @@ export default function FoodSpin({
   }, [activeQueryString, baseParams]);
 
   useEffect(() => {
+    if (selectedMode) {
+      const selectedIngredients =
+        selectedMode === "self-cooking"
+          ? Object.keys(checkedIngredients).filter((k) => checkedIngredients[k])
+          : [];
+      fetchFoodsForMode(selectedMode, selectedIngredients);
+    }
+  }, [currentQueryString, selectedMode, checkedIngredients]);
+
+  useEffect(() => {
     if (foods?.length > 0) {
       if (!suggestedFood) setSuggestedFood(getNewSuggestion(foods));
       setShowResult(false);
@@ -154,11 +167,14 @@ export default function FoodSpin({
       params.set("ingredients", ingredients.join(","));
 
     try {
-      const res = await fetch(`/api/foods?${params.toString()}`, {
+      const queryString = params.toString();
+      console.log("[FoodSpin] Fetching /api/foods?" + queryString);
+      const res = await fetch(`/api/foods?${queryString}`, {
         signal: abortControllerRef.current.signal,
       });
       if (!res.ok) throw new Error(`Failed to fetch food: ${res.statusText}`);
       const data = await res.json();
+      console.log("[FoodSpin] fetched", data.length, "foods");
       if (data.length === 0) {
         setError("No food found. Try changing filters.");
         setFoods([]);
@@ -167,7 +183,10 @@ export default function FoodSpin({
       setFoods(data);
       return data;
     } catch (err) {
-      if (err.name !== "AbortError") setError(err.message);
+      if (err.name === "AbortError") {
+        return [];
+      }
+      setError(err.message);
       setFoods([]);
       return [];
     } finally {
@@ -361,7 +380,20 @@ export default function FoodSpin({
           />
 
           {/* glass divider */}
-          <div className="w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mb-3" />
+          <div className="w-full h-px bg-linear-to-r from-transparent via-white/20 to-transparent mb-3" />
+
+          {needsPreferences && (
+            <div className="mb-4 rounded-3xl border border-orange-300/20 bg-orange-500/10 p-4 text-sm text-orange-100">
+              <p className="font-semibold">Please fill your preferences to get better food suggestions.</p>
+              <button
+                type="button"
+                onClick={() => router.push('/preferences')}
+                className="mt-3 inline-flex items-center justify-center rounded-2xl border border-orange-300/40 bg-orange-500 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-black shadow-lg shadow-orange-500/20 hover:bg-orange-400 transition"
+              >
+                Open Preferences
+              </button>
+            </div>
+          )}
 
           {/* ── Mode selector ── */}
           <ModeRow

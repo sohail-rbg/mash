@@ -94,11 +94,17 @@ export async function GET(req) {
     const { searchParams } = req.nextUrl;
     const query = {};
 
-    for (const [key, value] of searchParams.entries()) {
+    const processValues = (values) =>
+      values
+        .flatMap(value => String(value).split(','))
+        .map(v => v.trim().toLowerCase())
+        .filter(Boolean);
+
+    for (const key of new Set(searchParams.keys())) {
+      const values = searchParams.getAll(key);
       // 1. Handle Enum Fields
       if (FIELD_VALIDATION[key]) {
-        const inputValues = value.split(',').map(v => v.trim().toLowerCase().replace(/\s+/g, '-'));
-        
+        const inputValues = processValues(values).map(v => v.replace(/\s+/g, '-'));
         const searchValues = new Set();
 
         inputValues.forEach(val => {
@@ -108,58 +114,86 @@ export async function GET(req) {
             searchValues.add(val);
           }
         });
-        
+
         if (searchValues.size > 0) {
           query[key] = { $in: Array.from(searchValues) };
         }
       } else if (key === 'restrictedIngredients' || key === 'allergies') {
-        // Exclude foods that contain these ingredients in their 'ingredients' list.
-        // Do not use $nin on food.restrictedIngredients here because this field represents
-        // ingredients the recipe avoids, not ingredients the food contains.
-        const excludedItems = value.split(',')
-          .map(v => v.trim().toLowerCase())
-          .filter(v => v && !['no-allergies', 'no allergies', 'no'].includes(v));
+        const excludedItems = processValues(values).filter(
+          (v) => !['no-allergies', 'no allergies', 'no'].includes(v),
+        );
 
         if (excludedItems.length > 0) {
-          const patterns = excludedItems.map(ing => new RegExp(ing, 'i'));
+          const patterns = excludedItems.map((ing) => new RegExp(ing, 'i'));
 
-          if (!query.ingredients) query.ingredients = {}; // Ensure ingredients object exists
-          if (!query.ingredients.$nin) query.ingredients.$nin = []; // Ensure $nin array exists
-          query.ingredients.$nin.push(...patterns); // Add exclusion patterns
+          if (!query.ingredients) query.ingredients = {};
+          if (!query.ingredients.$nin) query.ingredients.$nin = [];
+          query.ingredients.$nin.push(...patterns);
         }
       } else if (key === 'ingredients') {
-        // 2. ingredients' parameter for self-cooking
-        const ingredientsList = value.split(',')
-          .map(v => v.trim().toLowerCase())
-          .filter(v => v); 
-
+        const ingredientsList = processValues(values);
         if (ingredientsList.length > 0) {
-          if (!query.ingredients) {
-            query.ingredients = {};
-          }
-          query.ingredients.$all = ingredientsList.map(ing => new RegExp(ing, 'i'));
+          if (!query.ingredients) query.ingredients = {};
+          query.ingredients.$all = ingredientsList.map((ing) => new RegExp(ing, 'i'));
         }
       } else if (key === 'search' || key === 'searchKeywords') {
-        const searchTerm = value.trim().toLowerCase();
-        // NO FILTER
-        if (searchTerm.startsWith("no ")) {
-          const ingredient = searchTerm.replace("no ", "").trim();
-          if (!query.ingredients) {
-            query.ingredients = {};
-          }
+        const searchTerms = processValues(values);
+
+        const noIngredients = searchTerms
+          .filter((searchTerm) => searchTerm.startsWith('no '))
+          .map((searchTerm) => searchTerm.replace(/^no\s+/, '').trim());
+
+        if (noIngredients.length > 0) {
+          if (!query.ingredients) query.ingredients = {};
           if (!query.ingredients.$nin) query.ingredients.$nin = [];
-          query.ingredients.$nin.push(new RegExp(ingredient, 'i'));
-        } else {
-          query.$or = [
+          noIngredients.forEach((ingredient) => {
+            if (ingredient) query.ingredients.$nin.push(new RegExp(ingredient, 'i'));
+          });
+        }
+
+        const normalTerms = searchTerms.filter((searchTerm) => !searchTerm.startsWith('no '));
+        if (normalTerms.length > 0) {
+          query.$or = normalTerms.flatMap((searchTerm) => [
             { name: { $regex: searchTerm, $options: 'i' } },
             { searchKeywords: { $regex: searchTerm, $options: 'i' } },
-            { ingredients: { $regex: searchTerm, $options: 'i' } }
-          ];
+            { ingredients: { $regex: searchTerm, $options: 'i' } },
+          ]);
         }
       }
     }
 
-     const foods = await FoodModel.find(query).lean();
+     const projection = {
+      name: 1,
+      image: 1,
+      description: 1,
+      mealTiming: 1,
+      dietType: 1,
+      healthGoals: 1,
+      cuisine: 1,
+      mood: 1,
+      weather: 1,
+      foodStyle: 1,
+      foodType: 1,
+      ingredients: 1,
+      nutrition: 1,
+    };
+
+    const foods = await FoodModel.find(query, projection).lean();
+    // console.log("[API /api/foods] query=", JSON.stringify(query), "count=", foods.length);
+    // console.log(
+    //   "[API /api/foods] filtered foods=",
+    //   JSON.stringify(
+    //     foods.slice(0, 20).map((food) => ({
+    //       name: food.name,
+    //       dietType: food.dietType,
+    //       mealTiming: food.mealTiming,
+    //       ingredients: food.ingredients,
+    //     })),
+    //     null,
+    //     2
+    //   )
+    // );
+    // console.log("show all food after click model", foods);
 
     return NextResponse.json(foods, { status: 200 });
   } catch (error) {
