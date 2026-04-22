@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 import { MEAL_SPECIFIC_INGREDIENTS } from "@/lib/utils";
 import FilterPanel from "./FilterPanel";
 import ConfirmedSelection from "./ConfirmedSelect";
@@ -18,7 +17,6 @@ export default function FoodSpin({
   mealTiming,
   baseParams,
   activeQueryString,
-  needsPreferences,
 }) {
   const [foods, setFoods] = useState(initialFoods || []);
   const [loading, setLoading] = useState(false);
@@ -38,7 +36,7 @@ export default function FoodSpin({
 
   const wheelRef = useRef(null);
   const abortControllerRef = useRef(null);
-  const router = useRouter();
+  const spinTimeoutRef = useRef(null);
 
   // Dynamically derive the meal timing from the current filters
   const currentParams = new URLSearchParams(currentQueryString);
@@ -54,6 +52,10 @@ export default function FoodSpin({
     setFoods([]);
     setRejectedIds(new Set());
     setError(null);
+    if (spinTimeoutRef.current) {
+      clearTimeout(spinTimeoutRef.current);
+      spinTimeoutRef.current = null;
+    }
     if (wheelRef.current) {
       wheelRef.current.style.transition = "none";
       wheelRef.current.style.transform = "rotate(0deg)";
@@ -118,6 +120,21 @@ export default function FoodSpin({
       fetchFoodsForMode(selectedMode, selectedIngredients);
     }
   }, [currentQueryString, selectedMode, checkedIngredients]);
+   // Stop spinning if mode changes during spin
+  useEffect(() => {
+    if (spinning) {
+      setSpinning(false);
+      setShowResult(false);
+      if (spinTimeoutRef.current) {
+        clearTimeout(spinTimeoutRef.current);
+        spinTimeoutRef.current = null;
+      }
+      if (wheelRef.current) {
+        wheelRef.current.style.transition = "none";
+        wheelRef.current.style.transform = "rotate(0deg)";
+      }
+    }
+  }, [selectedMode]);
 
   useEffect(() => {
     if (foods?.length > 0) {
@@ -163,6 +180,8 @@ export default function FoodSpin({
     if (params.get("restrictedIngredients") === "no-allergies")
       params.delete("restrictedIngredients");
     params.set("foodType", mode);
+    // Ensure images are fetched when mode or ingredients change
+    params.set("fullImage", "true");
     if (ingredients.length > 0)
       params.set("ingredients", ingredients.join(","));
 
@@ -308,7 +327,7 @@ export default function FoodSpin({
         "transform 4.5s cubic-bezier(0.25,0.1,0.25,1)";
       wheelRef.current.style.transform = `rotate(${totalRotation}deg)`;
     }
-    setTimeout(() => {
+    spinTimeoutRef.current = setTimeout(() => {
       setSpinning(false);
       setShowResult(true);
       setTimeout(() => {
@@ -381,19 +400,6 @@ export default function FoodSpin({
 
           {/* glass divider */}
           <div className="w-full h-px bg-linear-to-r from-transparent via-white/20 to-transparent mb-3" />
-
-          {needsPreferences && (
-            <div className="mb-4 rounded-3xl border border-orange-300/20 bg-orange-500/10 p-4 text-sm text-orange-100">
-              <p className="font-semibold">Please fill your preferences to get better food suggestions.</p>
-              <button
-                type="button"
-                onClick={() => router.push('/preferences')}
-                className="mt-3 inline-flex items-center justify-center rounded-2xl border border-orange-300/40 bg-orange-500 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-black shadow-lg shadow-orange-500/20 hover:bg-orange-400 transition"
-              >
-                Open Preferences
-              </button>
-            </div>
-          )}
 
           {/* ── Mode selector ── */}
           <ModeRow

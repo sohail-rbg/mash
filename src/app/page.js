@@ -9,6 +9,7 @@ import { cookies } from "next/headers";
 import ThemeToggle from "@/app/ThemeToggle";
 import AddFoodForm from "@/components/AddFoodForm";
 import RefreshButton from "@/components/RefreshButton";
+import PreferenceReminder from "@/components/PreferenceReminder";
 
 async function getFoods(queryString = "") {
   try {
@@ -26,9 +27,13 @@ async function getFoods(queryString = "") {
     const url = new URL("/api/foods", baseUrl);
     if (queryString) url.search = queryString;
 
-    const res = await fetch(url.toString(), { cache: "no-store" });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 seconds timeout - API should be fast now 
+
+    const res = await fetch(url.toString(), { cache: "no-store", signal: controller.signal });
+    clearTimeout(timeoutId);
     if (!res.ok) {
-      console.error("API ERROR:", res.status);
+      console.error(`API ERROR: ${res.status} ${res.statusText}`);
       return [];
     }
 
@@ -69,6 +74,8 @@ export default async function Home() {
 
   if (user.questionnaire) {
     user.questionnaire.forEach((pref) => {
+      if (pref.questionId === "preferenceSkipped") return;
+
       const apiField = FIELD_MAP[pref.questionId] || pref.questionId;
       const values = pref.answer;
 
@@ -111,6 +118,9 @@ export default async function Home() {
   if (!defaultParams.has("weather"))
     defaultParams.set("weather", getAutoWeatherCondition());
 
+  // Do NOT request images here. It causes the 60s timeout crash.
+  // FoodSpin and FoodList will fetch images separately on the client side.
+
   const defaultQueryString = defaultParams.toString();
   let queryString = defaultQueryString;
 
@@ -122,7 +132,9 @@ export default async function Home() {
     queryString = tempParams.toString();
   }
 
-  const foods = await getFoods(queryString);
+  const foodData = await getFoods(queryString);
+  // Fix: Handle both { foods: [...] } and raw [...] responses
+  const foods = Array.isArray(foodData) ? foodData : (foodData?.foods || []);
 
   const finalParams = new URLSearchParams(queryString);
   const mealTimingForComponent =
@@ -180,10 +192,12 @@ export default async function Home() {
         {/* Right Side: Theme Switch and User Avatar */}
         <div className="flex items-center gap-2">
           <RefreshButton />
-          <ThemeToggle />
+          {/* <ThemeToggle /> */}
           <LogoutButton />
         </div>
       </header>
+
+      <PreferenceReminder visible={needsPreferences} />
 
       {/* ── LAYER 5: FoodSpin (center, above lines) ── */}
       <div className="absolute inset-0 flex items-center justify-center z-10">
@@ -193,7 +207,6 @@ export default async function Home() {
           mealTiming={mealTimingForComponent}
           baseParams={baseParams}
           activeQueryString={queryString}
-          needsPreferences={needsPreferences}
         />
       </div>
 
