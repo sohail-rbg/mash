@@ -164,7 +164,6 @@ export async function GET(req) {
 
      const projection = {
       name: 1,
-      image: 1, // Always include image
       description: 1,
       category: 1,
       dietType: 1,
@@ -176,6 +175,7 @@ export async function GET(req) {
 
     // Add extra fields if requested
     if (searchParams.get('details') === 'true' || searchParams.get('fullImage') === 'true') {
+      projection.image = 1; // Only include the heavy image field when explicitly requested
       projection.ingredients = 1;
       projection.mood = 1;
       projection.weather = 1;
@@ -198,7 +198,7 @@ export async function GET(req) {
         .lean()
         .exec();
     } else {
-      // Use the built 'query' and 'limit' even when not paginating
+     // Use the built 'query' and 'limit' even when not paginating
       foods = await FoodModel.find(query, projection).limit(limit).lean().exec();
       console.log("[API /api/foods] Querying foods, found", foods.length, "foods");
     }
