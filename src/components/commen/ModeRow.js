@@ -1,13 +1,14 @@
 "use client";
 
-export default function ModeRow({ selectedMode, showResult, suggestedFood, spinning, onModeSelect }) {
+export default function ModeRow({ selectedMode, showResult, suggestedFood, spinning, onModeSelect, pulseModes }) {
   const modeBtn = (mode, label, activeClass) => (
     <button
       onClick={() => onModeSelect(mode)}
       className={` cursor-pointer
-        relative z-10 px-5 py-2 rounded-2xl flex-shrink-0
-         font-bold text-[11px] tracking-[0.06em] uppercase
-        transition-all duration-300 active:scale-[0.95]
+        relative z-10 px-7 py-3 rounded-2xl flex-shrink-0
+        font-bold text-[11px] tracking-[0.1em] uppercase
+        transition-all duration-300 
+        ${pulseModes ? "animate-attention-bounce" : ""}
         ${!selectedMode ? (mode === "online" ? "mode-highlight-red" : "mode-highlight-green") : ""}
         ${selectedMode === mode
           ? activeClass
@@ -22,10 +23,44 @@ export default function ModeRow({ selectedMode, showResult, suggestedFood, spinn
   return (
     <div className="w-full flex items-center p-1.5 mb-2 bg-[var(--glass-bg)] backdrop-blur-[40px] border border-[var(--glass-border)] rounded-[2.5rem] shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),0_15px_35px_rgba(0,0,0,0.2)] relative overflow-hidden">
       <style>{`
+        @keyframes attentionThump { 
+          0%, 100% { transform: scale(1) translateY(0); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+          30% { /* Upr Aaye - Pop Out */
+            transform: scale(1.15) translateY(-12px); 
+            box-shadow: 0 25px 40px -10px rgba(249, 115, 22, 0.6), 0 0 20px rgba(249, 115, 22, 0.2);
+            border-color: #f97316;
+          }
+          70% { /* Inder Jaaye - Sink In */
+            transform: scale(0.92) translateY(3px);
+            box-shadow: inset 0 0 15px 5px rgba(0,0,0,0.5), 0 2px 4px rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.1);
+          }
+        }
+        .animate-attention-bounce { 
+          animation: attentionThump 0.75s cubic-bezier(0.34, 1.56, 0.64, 1) infinite; 
+          z-index: 50; 
+        }
         @keyframes modeRingRipple {
           0% { outline: 2px solid var(--ring-color); outline-offset: 0px; }
           100% { outline: 6px solid transparent; outline-offset: 15px; }
         }
+
+        /* 3D Button Behavior - Uiverse Style logic with project colors */
+        .mode-btn-active-red {
+           background: linear-gradient(to bottom, #ef4444 0%, #991b1b 100%);
+           box-shadow: 0 4px 3px 1px rgba(255,255,255,0.1), 0 6px 8px rgba(0,0,0,0.4), 
+                       inset 0 0 5px 3px rgba(0,0,0,0.2), inset 0 0 30px rgba(0,0,0,0.3);
+           transform: scale(0.95);
+           color: white;
+        }
+        .mode-btn-active-green {
+           background: linear-gradient(to bottom, #22c55e 0%, #166534 100%);
+           box-shadow: 0 4px 3px 1px rgba(255,255,255,0.1), 0 6px 8px rgba(0,0,0,0.4), 
+                       inset 0 0 5px 3px rgba(0,0,0,0.2), inset 0 0 30px rgba(0,0,0,0.3);
+           transform: scale(0.95);
+           color: white;
+        }
+
         .mode-highlight-red {
           --ring-color: rgba(239, 68, 68, 0.6);
           border-radius: 1rem;
@@ -36,6 +71,21 @@ export default function ModeRow({ selectedMode, showResult, suggestedFood, spinn
           border-radius: 1rem;
           animation: modeRingRipple 4s infinite cubic-bezier(0.25, 0, 0.2, 1);
         }
+
+        /* Hover effects - Lifting up */
+        .cursor-pointer:hover:not(:disabled) {
+          box-shadow: 0 8px 15px rgba(0,0,0,0.3), 0 -4px 4px rgba(255,255,255,0.05), 
+                      inset 0 0 3px 1px rgba(255,255,255,0.1);
+          transform: translateY(-2px);
+        }
+
+        /* Active state - Pushing in */
+        .cursor-pointer:active {
+          box-shadow: 0 2px 2px rgba(255,255,255,0.1), 0 2px 4px rgba(0,0,0,0.4), 
+                      inset 0 0 8px 4px rgba(0,0,0,0.5);
+          transform: translateY(1px) scale(0.96);
+        }
+
         @keyframes textGlow {
           0%, 100% { text-shadow: 0 0 10px rgba(255,255,255,0.1); }
           50% { text-shadow: 0 0 20px rgba(255,255,255,0.3), 0 0 30px var(--glow-color, rgba(255,255,255,0.1)); }
@@ -51,7 +101,7 @@ export default function ModeRow({ selectedMode, showResult, suggestedFood, spinn
       {/* Platform Selection */}
       {modeBtn(
         "online", "🛵 Online",
-        "bg-red-500/25 text-red-400 border border-red-500/40 shadow-[0_0_25px_rgba(239,68,68,0.3)]"
+        "mode-btn-active-red border-red-500/50"
       )}
 
       {/* Center label */}
@@ -92,7 +142,7 @@ export default function ModeRow({ selectedMode, showResult, suggestedFood, spinn
 
       {modeBtn(
         "self-cooking", "🍳 Self",
-        "bg-green-500/25 text-green-400 border border-green-500/40 shadow-[0_0_25px_rgba(34,197,94,0.3)]"
+        "mode-btn-active-green border-green-500/50"
       )}
     </div>
   );

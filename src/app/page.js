@@ -164,14 +164,17 @@ export default async function Home() {
       <div className="absolute inset-0 bg-black/5 dark:bg-black/10 z-[1]" />
 
       <div className="absolute inset-0 z-[2]">
-        <ShapeGrid 
-          speed={0.2}
-          squareSize={40}
-          direction="diagonal"
-          borderColor="rgba(150, 150, 150, 0.15)"
-          hoverFillColor="rgba(16, 185, 129, 0.3)"
-          shape="square"
-          hoverTrailAmount={10}
+        {/* Background Image Layer */}
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: "url('https://images.unsplash.com/photo-1543353071-873f17a7a088?q=80&w=2000&auto=format&fit=crop')", 
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+            opacity: 0.2, // Subtle transparency
+            filter: "grayscale(20%)" // Makes it blend better with dark theme
+          }}
         />
       </div>
 

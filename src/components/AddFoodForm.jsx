@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Input from "./commen/Input";
 import Button from "./commen/Button";
 import { MEAL_SPECIFIC_INGREDIENTS } from "@/lib/utils";
@@ -13,15 +13,15 @@ import {
   MOOD_OPTIONS,
   WEATHER_OPTIONS,
   FOOD_STYLE_OPTIONS,
+  FOOD_TYPE_OPTIONS,
   // OCCASION_OPTIONS,
 } from "@/lib/constants";
 
 const SPICE_LEVEL_OPTIONS = ["mild", "medium", "spicy", "extra-spicy"];
 
-export default function AddFoodForm({ onAdded }) {
-  const searchParams = useSearchParams();
-  const editId = searchParams.get('edit');
+export default function AddFoodForm({ editId, onAdded }) {
   const isEditing = !!editId;
+  const router = useRouter();
 
   const [form, setForm] = useState({
     name: "",
@@ -37,7 +37,7 @@ export default function AddFoodForm({ onAdded }) {
     mood: [],
     weather: [],
     foodStyle: [],
-    foodType: "online",
+    foodType: [],
     ingredients: [],
     spiceLevel: "",
     calories: "",
@@ -79,7 +79,7 @@ export default function AddFoodForm({ onAdded }) {
             mood: food.mood || [],
             weather: food.weather || [],
             foodStyle: food.foodStyle || [],
-            foodType: food.foodType ? food.foodType[0] : "online",
+            foodType: food.foodType || [],
             ingredients: food.ingredients || [],
             spiceLevel: food.spiceLevel ? food.spiceLevel[0] : "",
             calories: food.nutrition?.calories?.toString() || "",
@@ -218,7 +218,7 @@ export default function AddFoodForm({ onAdded }) {
     if (form.foodStyle.length) body.foodStyle = form.foodStyle;
     
     // New fields
-    if (form.foodType) body.foodType = [form.foodType];
+    if (form.foodType.length) body.foodType = form.foodType;
     if (form.ingredients.length) body.ingredients = form.ingredients;
     if (form.spiceLevel) body.spiceLevel = [form.spiceLevel];
 
@@ -264,7 +264,7 @@ export default function AddFoodForm({ onAdded }) {
       if (!isEditing) {
         // Reset form only when adding new food
         setForm({
-          name: "",
+          name: "", // Reset form fields
           image: null,
           imageUrl: "",
           useUrl: false,
@@ -277,7 +277,7 @@ export default function AddFoodForm({ onAdded }) {
           mood: [],
           weather: [],
           foodStyle: [],
-          foodType: "online",
+          foodType: [],
           ingredients: [],
           spiceLevel: "",
           calories: "",
@@ -290,6 +290,7 @@ export default function AddFoodForm({ onAdded }) {
       }
 
       if (onAdded) onAdded(updatedFood);
+      router.push("/"); // Navigate back after success
     } catch (err) {
       setError(err.message);
     } finally {
@@ -418,19 +419,7 @@ export default function AddFoodForm({ onAdded }) {
 
       {/* Food Type */}
       <div>
-        <label className="block text-sm font-medium" htmlFor="foodType">
-          Food Type
-        </label>
-        <select
-          id="foodType"
-          name="foodType"
-          value={form.foodType}
-          onChange={handleChange}
-          className="mt-1 block w-full border rounded px-2 py-1"
-        >
-          <option value="online">Order Online</option>
-          <option value="self-cooking">Self Cooking</option>
-        </select>
+        {renderMultiSelect("Food Type", "foodType", FOOD_TYPE_OPTIONS || ["online", "self-cooking"])}
       </div>
 
       {/* Ingredients Multi-select */}

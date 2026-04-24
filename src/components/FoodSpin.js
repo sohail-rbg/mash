@@ -463,15 +463,14 @@ export default function FoodSpin({
           <div className="w-full h-px bg-linear-to-r from-transparent via-white/20 to-transparent mb-3" />
 
           {/* ── Mode selector ── */}
-          <div className={pulseModes ? "pulse-active" : ""}>
-            <ModeRow
-              selectedMode={selectedMode}
-              showResult={showResult}
-              suggestedFood={suggestedFood}
-              spinning={spinning}
-              onModeSelect={handleModeSelect}
-            />
-          </div>
+          <ModeRow
+            selectedMode={selectedMode}
+            showResult={showResult}
+            suggestedFood={suggestedFood}
+            spinning={spinning}
+            onModeSelect={handleModeSelect}
+            pulseModes={pulseModes}
+          />
 
           {/* ── Spin Wheel ── */}
           <SpinWheel
