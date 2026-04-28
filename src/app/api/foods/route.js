@@ -217,3 +217,26 @@ export async function GET(req) {
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
 }
+
+export async function DELETE(req) {
+  try {
+    await connectDB();
+    const { searchParams } = req.nextUrl;
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json({ message: "Food ID is required" }, { status: 400 });
+    }
+
+    const deletedFood = await FoodModel.findByIdAndDelete(id);
+
+    if (!deletedFood) {
+      return NextResponse.json({ message: "Food item not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ message: "Food deleted successfully" }, { status: 200 });
+  } catch (error) {
+    console.error("DELETE ERROR:", error);
+    return NextResponse.json({ message: error.message }, { status: 500 });
+  }
+}

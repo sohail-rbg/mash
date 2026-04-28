@@ -147,15 +147,14 @@ const SpinWheel = forwardRef(({
         .animate-select-mode {
           animation: selectModeFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
-        @keyframes labelShake {
-          0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-4px); }
-          75% { transform: translateX(4px); }
+        @keyframes aggressivePulse {
+          0%, 100% { transform: scale(1); box-shadow: 0 0 0 rgba(249, 115, 22, 0); }
+          50% { transform: scale(1.15); background: rgba(249, 115, 22, 0.6); box-shadow: 0 0 25px rgba(249, 115, 22, 0.8); }
         }
         .pulse-label-active {
-          animation: labelShake 0.2s ease-in-out infinite;
+          animation: aggressivePulse 0.4s ease-in-out infinite;
           border-color: #f97316 !important;
-          background: rgba(249, 115, 22, 0.3) !important;
+          background: rgba(249, 115, 22, 0.4) !important;
         }
 
         .typewriter-cursor {
@@ -169,6 +168,15 @@ const SpinWheel = forwardRef(({
           color: #ef4444; /* Red/Alert color for deleting */
           -webkit-text-fill-color: #ef4444 !important;
         }
+        @keyframes bounceIn {
+          0% { opacity: 0; transform: translateY(30px) scale(0.5); }
+          60% { opacity: 1; transform: translateY(-12px) scale(1.1); }
+          80% { transform: translateY(5px) scale(0.95); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .animate-food-bounce {
+          animation: bounceIn 0.85s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
         @keyframes blink-caret {
           from, to { opacity: 0; }
           50% { opacity: 1; }
@@ -178,7 +186,7 @@ const SpinWheel = forwardRef(({
       `}</style>
 
       <div 
-      className="relative flex items-center justify-center w-full max-w-[240px] min-[380px]:max-w-[280px] sm:max-w-[360px] md:max-w-[395px] aspect-square flex-shrink-0 mx-auto transition-all duration-300"
+      className="relative flex items-center justify-center w-full max-w-[240px] min-[370px]:max-w-[270px] sm:max-w-[350px] md:max-w-[385px] aspect-square flex-shrink-0 mx-auto transition-all duration-300"
     >
       {/* Dynamic Background Aura Glow */}
       {selectedMode && !showResult && (
@@ -363,6 +371,15 @@ const SpinWheel = forwardRef(({
         }} />
       </div> */}
       </div>
+
+      {/* Food Name Display below the wheel */}
+      {showResult && suggestedFood && !spinning && (
+        <div className="mt-1 animate-food-bounce w-full px-4">
+          <p className="font-[Playfair_Display] font-black text-xl sm:text-2xl text-center leading-tight tracking-tight bg-gradient-to-r from-orange-400 via-white to-orange-400 bg-clip-text text-transparent drop-shadow-lg">
+            {suggestedFood.name}
+          </p>
+        </div>
+      )}
     </div>
 
   );

@@ -3,7 +3,6 @@ import React from "react";
 import Link from "next/link";
 import Button from "./commen/Button";
 import LogoutButton from "./LogoutButton";
-import ThemeToggle from "../app/ThemeToggle";
 import RefreshButton from "./RefreshButton";
 
 export default function Header() {
@@ -26,7 +25,6 @@ export default function Header() {
             </Button>
           </Link>
           <RefreshButton />
-          <ThemeToggle />
           <LogoutButton />
         </div>
       </div>

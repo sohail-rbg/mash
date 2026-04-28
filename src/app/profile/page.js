@@ -1,10 +1,8 @@
 "use client";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import ShapeGrid from "@/components/FloatingLines";
 import { useState, useEffect } from "react";
 import RefreshButton from "@/components/RefreshButton";
-import ThemeToggle from "@/app/ThemeToggle";
 import { OPTIONS_MAP } from "@/lib/question";
 import UserPreferences from "@/components/UserPreferences";
 
@@ -121,7 +119,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen relative bg-[var(--bg-color)] transition-colors duration-500 overflow-x-hidden">
+    <div className="min-h-screen relative transition-colors duration-500 overflow-x-hidden">
       <style>{`
         @keyframes whiteCardPulse {
           0%, 100% { box-shadow: 0 0 40px rgba(255, 255, 255, 0.15); }
@@ -134,7 +132,7 @@ export default function ProfilePage() {
           flex-direction: column;
           overflow: hidden;
           border-radius: 1.5rem; /* Squared shape */
-          box-shadow: var(--card-shadow), 0 0 20px -5px var(--gradient-start), 0 0 20px -5px var(--gradient-end);
+          // box-shadow: var(--card-shadow), 0 0 20px -5px var(--gradient-start), 0 0 20px -5px var(--gradient-end);
           border: 1.5px solid var(--card-border);
           backdrop-filter: blur(40px) saturate(210%);
           z-index: 0;
@@ -148,8 +146,9 @@ export default function ProfilePage() {
           height: 200%;
           top: -50%;
           left: 35%;
-          animation: rotBGimg 8s linear infinite;
-          transition: all 0.2s linear;
+          opacity: 0;
+          visibility: hidden;
+          animation: rotBGimg 8s linear infinite 2.5s, fadeInBorder 1.5s ease-in forwards 2.5s;
           z-index: -2;
         }
 
@@ -162,6 +161,11 @@ export default function ProfilePage() {
           z-index: -1;
           backdrop-filter: blur(40px);
           transition: all 0.4s ease;
+        }
+
+        @keyframes fadeInBorder {
+          from { opacity: 0; visibility: hidden; }
+          to { opacity: 1; visibility: visible; }
         }
 
         @keyframes rotBGimg {
@@ -217,12 +221,18 @@ export default function ProfilePage() {
         // }
       `}</style>
 
-      {/* Original background — ShapeGrid only */}
-      <div className="absolute inset-0 z-[1]">
-        <ShapeGrid speed={0.2} squareSize={40} direction="diagonal"
-          borderColor="rgba(0,242,255,0.15)" hoverFillColor="rgba(0,242,255,0.3)"
-          shape="square" hoverTrailAmount={2} />
-      </div>
+      {/* Profile Background Image */}
+      <div
+          className="absolute inset-0 pointer-events-none z-0"
+          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1490818387583-1baba5e638af?auto=format&fit=crop&q=80&w=2000')", 
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+            // opacity: 0.2,  Subtle transparency
+            filter: "grayscale(20%)"  }}
+          />
+      {/* Dark overlay on top of the image for better readability */}
+      <div className="absolute inset-0 bg-black/80 z-[1]" />
 
       {/* Topbar */}
       <header className="fixed top-2 inset-x-4 z-30">
@@ -246,7 +256,6 @@ export default function ProfilePage() {
             {/* Right: Controls */}
             <div className="flex items-center justify-end gap-3 flex-1">
               <RefreshButton />
-              <ThemeToggle />
             </div>
           </div>
         </div>
@@ -264,10 +273,10 @@ export default function ProfilePage() {
       </div>
 
       {/* Content */}
-      <main className="relative z-10 min-h-screen flex items-end justify-center pt-16 pb-10 px-4">
-        <div className="w-full max-w-md">
+      <main className="relative z-10 min-h-screen flex items-center justify-center pt-12 pb-2 px-4">
+        <div className="w-full max-w-xl">
 
-          <div className="food-engine-card p-6 flex flex-col gap-6"
+          <div className="food-engine-card p-8 sm:p-10 flex flex-col gap-8"
             style={{ '--gradient-start': 'rgb(0, 183, 255)', '--gradient-end': 'rgb(255, 48, 255)' }}>
             
             <button
@@ -283,14 +292,14 @@ export default function ProfilePage() {
 
             {/* ── Section 1: Identity ── */}
             <div className="flex flex-col items-center gap-4 relative z-10">
-              <div className="w-24 h-24 rounded-3xl border-2 border-white/20 shadow-xl bg-white/5 flex items-center justify-center text-4xl font-black text-orange-400 overflow-hidden">
+              <div className="w-32 h-32 rounded-[2.5rem] border-2 border-white/20 shadow-2xl bg-white/5 flex items-center justify-center text-5xl font-black text-orange-400 overflow-hidden">
                 {session.user.image
                   ? <img src={session.user.image} alt="" className="w-full h-full object-cover" />
                   : session.user.name?.charAt(0) ?? "U"}
               </div>
               <div className="text-center">
-                <p className="text-[var(--text-main)] font-black text-xl tracking-tight">{session.user.name ?? "Chef"}</p>
-                <p className="text-[var(--text-muted)] text-xs font-medium mt-1">{session.user.email}</p>
+                <p className="text-[var(--text-main)] font-black text-2xl tracking-tight">{session.user.name ?? "Chef"}</p>
+                <p className="text-[var(--text-muted)] text-sm font-medium mt-1">{session.user.email}</p>
               </div>
             </div>
 

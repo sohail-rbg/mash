@@ -142,7 +142,7 @@ export default async function Home() {
   const needsPreferences = user && !hasPreferenceData;
 
   return (
-    <div className="h-screen w-screen overflow-hidden relative bg-[var(--bg-color)] transition-colors duration-500">
+    <div className="h-screen w-screen overflow-hidden relative transition-colors duration-500">
 
       {/* ── LAYER 1: Background Video ── */}
       {/* Ensure video-bg-03.mp4 or video-bg-04.mp4 actually exists in public/assets/img/ */}
@@ -160,10 +160,7 @@ export default async function Home() {
         }}
       /> */}
 
-      {/* ── LAYER 2: Dark overlay so lines stay visible ── */}
-      <div className="absolute inset-0 bg-black/5 dark:bg-black/10 z-[1]" />
-
-      <div className="absolute inset-0 z-[2]">
+      <div className="absolute inset-0 z-0">
         {/* Background Image Layer */}
         <div
           className="absolute inset-0"
@@ -172,11 +169,14 @@ export default async function Home() {
             backgroundSize: "cover",
             backgroundPosition: "center",
             backgroundRepeat: "no-repeat",
-            opacity: 0.2, // Subtle transparency
-            filter: "grayscale(20%)" // Makes it blend better with dark theme
+            // opacity: 0.2,  Subtle transparency
+            filter: "grayscale(30%)" // Makes it blend better with dark theme
           }}
         />
       </div>
+
+      {/* ── LAYER 2: Dark overlay on top of image ── */}
+      <div className="absolute inset-0 bg-black/80 z-[1]" />
 
       {/* ── LAYER 4: Header ── */}
       <header className="absolute top-0 left-0 w-full flex items-center justify-between px-4 pt-2 z-20">

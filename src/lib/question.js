@@ -15,7 +15,7 @@ export const ALLERGY_OPTIONS = [
 
 export const GOAL_OPTIONS = [
   { value: "weight-loss", label: "Weight Loss" }, { value: "muscle-gain", label: "Muscle Gain" }, { value: "energy", label: "More Energy" },
-  { value: "heart-health", label: "Heart Health" }, { value: "gut-health", label: "Gut Health" }, { value: "balanced", label: "Stay Balanced" },
+  { value: "weight-gain", label: "Weight Gain" }, { value: "gut-health", label: "Gut Health" }, { value: "balanced", label: "Stay Balanced" },
 ];
 
 export const CUISINE_OPTIONS = [
