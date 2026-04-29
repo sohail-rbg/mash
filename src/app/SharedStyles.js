@@ -7,7 +7,7 @@ export const GlobalStyles = () => (
     @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@700;800&display=swap');
 
     :root {
-      --bg-color: #020617;
+      --bg-color: #000000;
       --card-bg: rgba(7, 24, 46, 0.8);
       --card-inner-bg: rgba(3, 6, 10, 0.7);
       --text-main: #ffffff;

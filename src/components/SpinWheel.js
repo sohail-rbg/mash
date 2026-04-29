@@ -186,7 +186,7 @@ const SpinWheel = forwardRef(({
       `}</style>
 
       <div 
-      className="relative flex items-center justify-center w-full max-w-[240px] min-[370px]:max-w-[270px] sm:max-w-[350px] md:max-w-[385px] aspect-square flex-shrink-0 mx-auto transition-all duration-300"
+      className="relative flex items-center justify-center w-full max-w-[240px] min-[370px]:max-w-[370px] sm:max-w-[350px] md:max-w-[385px] aspect-square flex-shrink-0 mx-auto transition-all duration-300"
     >
       {/* Dynamic Background Aura Glow */}
       {selectedMode && !showResult && (

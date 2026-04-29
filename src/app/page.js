@@ -176,7 +176,9 @@ export default async function Home() {
       </div>
 
       {/* ── LAYER 2: Dark overlay on top of image ── */}
-      <div className="absolute inset-0 bg-black/80 z-[1]" />
+      <div className="absolute inset-0 z-[1]" style={{
+        background: "linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(4,8,20,0.72) 50%, rgba(0,0,0,0.65) 100%)"
+      }} />
 
       {/* ── LAYER 4: Header ── */}
       <header className="absolute top-0 left-0 w-full flex items-center justify-between px-4 pt-2 z-20">
@@ -202,7 +204,7 @@ export default async function Home() {
       <PreferenceReminder visible={needsPreferences} />
 
       {/* ── LAYER 5: FoodSpin (center, above lines) ── */}
-      <div className="absolute inset-0 flex items-start sm:items-center justify-center z-10 pointer-events-none overflow-y-auto pt-20 pb-10 sm:p-0">
+      <div className="absolute inset-0 flex items-center sm:items-center justify-center z-10 pointer-events-none overflow-y-auto sm:p-0">
         <div className="pointer-events-auto w-full flex justify-center h-fit">
           <FoodSpin
             initialFoods={foods}

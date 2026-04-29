@@ -441,10 +441,10 @@ export default function FoodSpin({
       )}
 
       <div
-        className={`food-engine-card w-full px-5 py-9 sm:py-6 flex flex-col transition-all duration-700 ${isReadyToSpin ? "pulse-ready" : ""}`}
+        className={`food-engine-card w-full px-5 py-9 mt-5 sm:py-6 flex flex-col transition-all duration-700 ${isReadyToSpin ? "pulse-ready" : ""}`}
         style={{
           maxWidth: "min(95vw, 480px)",
-          minHeight: "540px",
+          minHeight: "550px",
           "--gradient-start": getGradientColors().start,
           "--gradient-end": getGradientColors().end,
         }}

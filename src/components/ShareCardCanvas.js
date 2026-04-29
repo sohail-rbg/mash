@@ -23,7 +23,7 @@ export default function ShareCardCanvas({ food, user, onClose }) {
 
     // Design styles based on theme
     const designStyles = theme === 'dark' ? [
-      { bg: '#020617', accent: '#3b82f6', gold: '#fbbf24', text: '#ffffff', muted: 'rgba(255,255,255,0.6)', cardInner: 'rgba(255,255,255,0.05)', texture: 'grid' },
+      { bg: '#000000', accent: '#3b82f6', gold: '#fbbf24', text: '#ffffff', muted: 'rgba(255,255,255,0.6)', cardInner: 'rgba(255,255,255,0.05)', texture: 'grid' },
       { bg: '#0f172a', accent: '#10b981', gold: '#34d399', text: '#ffffff', muted: 'rgba(255,255,255,0.6)', cardInner: 'rgba(255,255,255,0.05)', texture: 'lines' },
       { bg: '#1e1b4b', accent: '#818cf8', gold: '#e879f9', text: '#ffffff', muted: 'rgba(255,255,255,0.6)', cardInner: 'rgba(255,255,255,0.05)', texture: 'dots' },
       { bg: '#18181b', accent: '#f43f5e', gold: '#fb923c', text: '#ffffff', muted: 'rgba(255,255,255,0.6)', cardInner: 'rgba(255,255,255,0.05)', texture: 'none' },
