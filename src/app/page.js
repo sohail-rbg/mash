@@ -4,10 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { getAutoMealTiming, getAutoWeatherCondition } from "@/lib/utils";
 import FoodSpin from "@/components/FoodSpin";
 import LogoutButton from "@/components/LogoutButton";
-import ShapeGrid  from "@/components/FloatingLines";
 import { cookies } from "next/headers";
-import ThemeToggle from "@/app/ThemeToggle";
-import AddFoodForm from "@/components/AddFoodForm";
 import RefreshButton from "@/components/RefreshButton";
 import PreferenceReminder from "@/components/PreferenceReminder";
 
@@ -169,19 +166,22 @@ export default async function Home() {
             backgroundSize: "cover",
             backgroundPosition: "center",
             backgroundRepeat: "no-repeat",
-            // opacity: 0.2,  Subtle transparency
-            filter: "grayscale(30%)" // Makes it blend better with dark theme
+            filter: "grayscale(20%) brightness(0.85) saturate(1.1)"
           }}
         />
       </div>
 
       {/* ── LAYER 2: Dark overlay on top of image ── */}
       <div className="absolute inset-0 z-[1]" style={{
-        background: "linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(4,8,20,0.72) 50%, rgba(0,0,0,0.65) 100%)"
+        background: "linear-gradient(to bottom, rgba(0,0,0) 0%, rgba(0,0,0) 0%, rgba(0,0,0) 0%)"
       }} />
 
       {/* ── LAYER 4: Header ── */}
-      <header className="absolute top-0 left-0 w-full flex items-center justify-between px-4 pt-2 z-20">
+      <header className="absolute top-0 left-0 w-full flex items-center justify-between px-4 pt-3 pb-2 z-20"
+        style={{
+          background: "linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 100%)",
+        }}
+      >
 
         {/* Left Logo */}
         <div className="flex items-center gap-2">
@@ -203,9 +203,11 @@ export default async function Home() {
 
       <PreferenceReminder visible={needsPreferences} />
 
-      {/* ── LAYER 5: FoodSpin (center, above lines) ── */}
-      <div className="absolute inset-0 flex items-center sm:items-center justify-center z-10 pointer-events-none overflow-y-auto sm:p-0">
-        <div className="pointer-events-auto w-full flex justify-center h-fit">
+      {/* ── FoodSpin ── */}
+      <div className="absolute inset-0 z-10 overflow-y-auto flex items-center justify-center">
+        <div className="pointer-events-auto w-full flex justify-center px-3"
+          // style={{ paddingTop: '5px', paddingBottom: '2px' }}
+        >
           <FoodSpin
             initialFoods={foods}
             isFiltered={queryString.length > 0}

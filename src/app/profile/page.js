@@ -131,9 +131,9 @@ export default function ProfilePage() {
           display: flex;
           flex-direction: column;
           overflow: hidden;
-          border-radius: 1.5rem; /* Squared shape */
+          border-radius: 2rem; /* Squared shape */
           // box-shadow: var(--card-shadow), 0 0 20px -5px var(--gradient-start), 0 0 20px -5px var(--gradient-end);
-          border: 1.5px solid var(--card-border);
+          border: 2px solid var(--card-border);
           backdrop-filter: blur(40px) saturate(210%);
           z-index: 0;
         }
@@ -155,7 +155,12 @@ export default function ProfilePage() {
         .food-engine-card::after {
           content: '';
           position: absolute;
-          background: var(--bg-color);
+          background: linear-gradient(
+            160deg,
+            rgba(9, 14, 28, 0.98) 0%,
+            rgba(6, 9, 20, 0.99) 55%,
+            rgba(11, 7, 26, 0.98) 100%
+          );
           inset: 3px;
           border-radius: 1.3rem;
           z-index: -1;
@@ -173,6 +178,43 @@ export default function ProfilePage() {
           to { transform: rotate(360deg); }
         }
 
+        @keyframes profileAvatarRing {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(360deg); }
+        }
+        .profile-avatar-ring {
+          position: relative;
+          border-radius: 2.5rem;
+          display: inline-flex;
+          padding: 3px;
+          background: transparent;
+        }
+        .profile-avatar-ring::before {
+          content: '';
+          position: absolute;
+          inset: -2px;
+          border-radius: 2.6rem;
+          background: conic-gradient(
+            from 0deg,
+            transparent 0deg,
+            rgb(0,183,255) 90deg,
+            rgb(255,48,255) 200deg,
+            transparent 270deg,
+            transparent 360deg
+          );
+          animation: profileAvatarRing 4s linear infinite;
+          z-index: 0;
+        }
+        .profile-avatar-ring::after {
+          content: '';
+          position: absolute;
+          inset: 1.5px;
+          border-radius: 2.4rem;
+          background: rgba(9,14,28,0.98);
+          z-index: 1;
+        }
+        .profile-avatar-ring > * { position: relative; z-index: 2; }
+
         @keyframes wiggle {
           0%, 100% { transform: rotate(0deg); }
           25% { transform: rotate(-12deg); }
@@ -183,8 +225,6 @@ export default function ProfilePage() {
           animation: wiggle 0.6s ease-in-out 2;
           animation-delay: 0.8s;
         }
-
-        .header-engine-card {
           background: var(--card-bg);
           position: relative;
           overflow: hidden;
@@ -273,7 +313,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Content */}
-      <main className="relative z-10 min-h-screen flex items-center justify-center pt-12 pb-2 px-4">
+      <main className="relative z-10 min-h-screen flex items-center justify-center  px-4">
         <div className="w-full max-w-xl">
 
           <div className="food-engine-card p-8 sm:p-10 flex flex-col gap-8"
@@ -292,10 +332,12 @@ export default function ProfilePage() {
 
             {/* ── Section 1: Identity ── */}
             <div className="flex flex-col items-center gap-4 relative z-10">
-              <div className="w-32 h-32 rounded-[2.5rem] border-2 border-white/20 shadow-2xl bg-white/5 flex items-center justify-center text-5xl font-black text-orange-400 overflow-hidden">
-                {session.user.image
-                  ? <img src={session.user.image} alt="" className="w-full h-full object-cover" />
-                  : session.user.name?.charAt(0) ?? "U"}
+              <div className="profile-avatar-ring">
+                <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-[2.2rem] overflow-hidden bg-white/5 flex items-center justify-center text-5xl font-black text-orange-400">
+                  {session.user.image
+                    ? <img src={session.user.image} alt="" className="w-full h-full object-cover" />
+                    : <span>{session.user.name?.charAt(0) ?? "U"}</span>}
+                </div>
               </div>
               <div className="text-center">
                 <p className="text-[var(--text-main)] font-black text-2xl tracking-tight">{session.user.name ?? "Chef"}</p>

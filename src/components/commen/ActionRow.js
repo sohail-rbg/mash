@@ -66,7 +66,7 @@ export default function ActionRow({
   }
 
   return (
-    <div className="w-full flex justify-center mt-3 min-h-[44px] items-center">
+    <div className="w-full flex justify-center mt-6 min-h-[44px] items-center">
       <StatusBar
         foods={foods}
         error={error}

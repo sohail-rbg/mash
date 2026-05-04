@@ -52,10 +52,15 @@ export default function FilterPanel({ currentParams, onApply, onClose }) {
     const normalized = String(value).trim().toLowerCase();
 
     if (categoryId === 'dietType') {
+      // Map all variants to the exact OPTIONS_MAP values
       if (['veg', 'vegetarian', 'pure-vegetarian', 'pure vegetarian'].includes(normalized))
         return 'vegetarian';
-      if (['non-veg', 'non-vegetarian', 'non vegetarian', 'omnivore'].includes(normalized))
-        return 'omnivore';
+      if (['non-veg', 'non-vegetarian', 'non vegetarian', 'omnivore', 'nonveg'].includes(normalized))
+        return 'non-veg';
+      if (['vegan'].includes(normalized)) return 'vegan';
+      if (['keto'].includes(normalized)) return 'keto';
+      if (['paleo'].includes(normalized)) return 'paleo';
+      if (['gluten-free', 'gluten free', 'glutenfree'].includes(normalized)) return 'gluten-free';
       return normalized;
     }
 
@@ -102,7 +107,7 @@ export default function FilterPanel({ currentParams, onApply, onClose }) {
 
   const handleToggle = (categoryId, optionValue) => {
     const rawValue = typeof optionValue === 'object' ? optionValue.value : optionValue;
-    const normalizedValue = String(rawValue).trim().toLowerCase().replace(/\s+/g, "-");
+    const normalizedValue = normalizeIncomingValue(categoryId, String(rawValue).trim().toLowerCase());
     setFilters(prev => {
       const currentValues = prev[categoryId] || [];
       const categoryConfig = FILTER_CONFIG.find(config => config.id === categoryId);
@@ -289,7 +294,7 @@ export default function FilterPanel({ currentParams, onApply, onClose }) {
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   {category.options.map(option => {
-                    const normalizedVal = String(option.value).trim().toLowerCase().replace(/\s+/g, "-");
+                    const normalizedVal = normalizeIncomingValue(category.id, String(option.value).trim().toLowerCase());
                     const isActive = filters[category.id]?.includes(normalizedVal);
                     return (
                       <button

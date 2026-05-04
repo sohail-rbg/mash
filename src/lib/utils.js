@@ -40,36 +40,88 @@ export function isFoodSafeForUser(food, userAllergies = []) {
 
 export const MEAL_SPECIFIC_INGREDIENTS = {
   breakfast: [
-    { id: "poha",       label: "Poha" },
-    { id: "bread",      label: "Bread" },
-    { id: "eggs",       label: "Eggs" },
-    { id: "dosa",       label: "Dosa" },
-    { id: "idli",       label: "Idli" },
-    { id: "onion",      label: "Onion" },
+    { id: "poha",       label: "Poha",          diets: ["veg","vegan","jain"] },
+    { id: "bread",      label: "Bread",          diets: ["veg","vegan","jain","keto"] },
+    { id: "eggs",       label: "Eggs",           diets: ["non-veg","eggitarian","keto"] },
+    { id: "dosa",       label: "Dosa",           diets: ["veg","vegan","jain"] },
+    { id: "idli",       label: "Idli",           diets: ["veg","vegan","jain"] },
+    { id: "onion",      label: "Onion",          diets: ["veg","non-veg","eggitarian","vegan","keto"] },
+    { id: "oats",       label: "Oats",           diets: ["veg","vegan","keto"] },
+    { id: "paneer",     label: "Paneer",         diets: ["veg","keto"] },
+    { id: "upma",       label: "Upma",           diets: ["veg","vegan","jain"] },
+    { id: "paratha",    label: "Paratha",        diets: ["veg","jain"] },
+    { id: "chicken",    label: "Chicken",        diets: ["non-veg","keto"] },
+    { id: "avocado",    label: "Avocado",        diets: ["vegan","keto"] },
+    { id: "tofu",       label: "Tofu",           diets: ["vegan","keto"] },
   ],
   lunch: [
-    { id: "dal",        label: "Dal" },
-    { id: "chawal",     label: "Chawal (Rice)" },
-    { id: "roti",       label: "Roti" },
-    { id: "paneer",     label: "Paneer" },
-    { id: "chicken",    label: "Chicken" },
+    { id: "dal",        label: "Dal",            diets: ["veg","vegan","jain"] },
+    { id: "chawal",     label: "Chawal (Rice)",  diets: ["veg","non-veg","eggitarian","vegan","jain"] },
+    { id: "roti",       label: "Roti",           diets: ["veg","non-veg","eggitarian","vegan","jain"] },
+    { id: "paneer",     label: "Paneer",         diets: ["veg","keto"] },
+    { id: "chicken",    label: "Chicken",        diets: ["non-veg","keto"] },
+    { id: "fish",       label: "Fish",           diets: ["non-veg","keto"] },
+    { id: "tofu",       label: "Tofu",           diets: ["vegan","keto"] },
+    { id: "rajma",      label: "Rajma",          diets: ["veg","vegan","jain"] },
+    { id: "chole",      label: "Chole",          diets: ["veg","vegan","jain"] },
+    { id: "salad",      label: "Salad",          diets: ["veg","vegan","jain","keto"] },
+    { id: "egg-curry",  label: "Egg Curry",      diets: ["eggitarian"] },
+    { id: "mutton",     label: "Mutton",         diets: ["non-veg"] },
   ],
   snacks: [
-    { id: "samosa",     label: "Samosa" },
-    { id: "maggi",      label: "Maggi" },
-    { id: "pakora",     label: "Pakora" },
-    { id: "bhel",       label: "Bhel Puri" },
-    { id: "fries",      label: "Fries" },
+    { id: "samosa",     label: "Samosa",         diets: ["veg","jain"] },
+    { id: "maggi",      label: "Maggi",          diets: ["veg","non-veg","eggitarian"] },
+    { id: "pakora",     label: "Pakora",         diets: ["veg","jain"] },
+    { id: "bhel",       label: "Bhel Puri",      diets: ["veg","jain"] },
+    { id: "fries",      label: "Fries",          diets: ["veg","vegan","jain","keto"] },
+    { id: "nuts",       label: "Nuts",           diets: ["veg","vegan","jain","keto"] },
+    { id: "fruit",      label: "Fruit",          diets: ["veg","vegan","jain"] },
+    { id: "eggs",       label: "Boiled Eggs",    diets: ["non-veg","eggitarian","keto"] },
+    { id: "chicken-tikka", label: "Chicken Tikka", diets: ["non-veg","keto"] },
+    { id: "cheese",     label: "Cheese",         diets: ["veg","keto"] },
   ],
   dinner: [
-    { id: "chicken",    label: "Chicken" },
-    { id: "paneer",     label: "Paneer" },
-    { id: "dal",        label: "Dal Makhani" },
-    { id: "roti",       label: "Roti" },
-    { id: "biryani",    label: "Biryani" },
+    { id: "chicken",    label: "Chicken",        diets: ["non-veg","keto"] },
+    { id: "paneer",     label: "Paneer",         diets: ["veg","keto"] },
+    { id: "dal",        label: "Dal Makhani",    diets: ["veg","jain"] },
+    { id: "roti",       label: "Roti",           diets: ["veg","non-veg","eggitarian","vegan","jain"] },
+    { id: "biryani",    label: "Biryani",        diets: ["non-veg","veg"] },
+    { id: "fish",       label: "Fish",           diets: ["non-veg","keto"] },
+    { id: "tofu",       label: "Tofu",           diets: ["vegan","keto"] },
+    { id: "salad",      label: "Salad",          diets: ["veg","vegan","jain","keto"] },
+    { id: "soup",       label: "Soup",           diets: ["veg","vegan","jain","keto"] },
+    { id: "mutton",     label: "Mutton",         diets: ["non-veg"] },
+    { id: "egg-curry",  label: "Egg Curry",      diets: ["eggitarian"] },
+    { id: "khichdi",    label: "Khichdi",        diets: ["veg","vegan","jain"] },
   ],
   'late-night': [
-    { id: "maggi",      label: "Maggi" },
-    { id: "popcorn",    label: "Popcorn" },
+    { id: "maggi",      label: "Maggi",          diets: ["veg","non-veg","eggitarian"] },
+    { id: "popcorn",    label: "Popcorn",        diets: ["veg","vegan","jain"] },
+    { id: "eggs",       label: "Scrambled Eggs", diets: ["non-veg","eggitarian","keto"] },
+    { id: "nuts",       label: "Nuts",           diets: ["veg","vegan","jain","keto"] },
+    { id: "cheese",     label: "Cheese Toast",   diets: ["veg","keto"] },
   ],
 };
+
+/**
+ * Filter ingredients by meal timing AND diet type.
+ * If no dietType provided, returns all ingredients for that meal.
+ */
+export function getFilteredIngredients(mealTiming, dietType = null) {
+  const all = MEAL_SPECIFIC_INGREDIENTS[mealTiming] || [];
+  if (!dietType) return all;
+
+  // Normalize diet type — handle both "vegetarian"→"veg", "non-vegetarian"→"non-veg" etc.
+  const raw = dietType.toLowerCase().trim();
+  const diet = raw === "vegetarian" ? "veg"
+    : raw === "non-vegetarian" ? "non-veg"
+    : raw === "eggetarian" || raw === "eggitarian" ? "eggitarian"
+    : raw;
+
+  const filtered = all.filter(item =>
+    !item.diets || item.diets.length === 0 || item.diets.includes(diet)
+  );
+
+  // Safety: if filter returns nothing (unknown diet), return all
+  return filtered.length > 0 ? filtered : all;
+}

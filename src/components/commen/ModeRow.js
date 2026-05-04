@@ -21,7 +21,7 @@ export default function ModeRow({ selectedMode, showResult, suggestedFood, spinn
   );
 
   return (
-    <div className="w-full flex items-center p-1.5 mb-2 bg-[var(--glass-bg)] backdrop-blur-[40px] border border-[var(--glass-border)] rounded-[2.5rem] shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),0_15px_35px_rgba(0,0,0,0.2)] relative overflow-hidden">
+    <div className="w-full flex items-center p-1.5 mb-4 bg-[var(--glass-bg)] backdrop-blur-[40px] border border-[var(--glass-border)] rounded-[2.5rem] shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),0_15px_35px_rgba(0,0,0,0.2)] relative overflow-hidden">
       <style>{`
         @keyframes attentionThump { 
           0%, 100% { transform: translateY(0) scale(1); }
@@ -77,8 +77,8 @@ export default function ModeRow({ selectedMode, showResult, suggestedFood, spinn
 
         /* Active state - Pushing in */
         .cursor-pointer:active {
-          box-shadow: 0 2px 2px rgba(255,255,255,0.1), 0 2px 4px rgba(0,0,0,0.4), 
-                      inset 0 0 8px 4px rgba(0,0,0,0.5);
+          // box-shadow: 0 2px 2px rgba(255,255,255,0.1), 0 2px 4px rgba(0,0,0,0.4), 
+                      // inset 0 0 8px 4px rgba(0,0,0,0.5);
           transform: translateY(1px) scale(0.96);
         }
 

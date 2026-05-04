@@ -12,13 +12,9 @@ export const MEAL_TIMING_OPTIONS = [
 export const DIET_TYPE_OPTIONS = [
   "veg",
   "non-veg",
-  "eggitarian",
   "vegan",
   "jain",
   "keto",
-  "high-protein",
-  "low-carb",
-  "gluten-free",
 ];
 
 // HEALTH GOALS

@@ -156,7 +156,7 @@ export default function AddFoodForm({ editId, onAdded }) {
         <button
           type="button"
           onClick={() => setActiveDropdown(isOpen ? null : name)}
-          className="block w-full border rounded px-2 py-2 text-left bg-white min-h-[38px] flex justify-between items-center"
+          className="block w-full border border-white/10 rounded-lg px-3 py-2 text-left bg-zinc-900 text-white min-h-[42px] flex justify-between items-center transition-all focus:ring-2 focus:ring-blue-500/50"
         >
           {form[name].length > 0 ? (
             <div className="flex flex-wrap gap-1">
@@ -167,7 +167,7 @@ export default function AddFoodForm({ editId, onAdded }) {
               ))}
             </div>
           ) : (
-            <span className="text-gray-400">Select {label}...</span>
+            <span className="text-white/40">Select {label}...</span>
           )}
           <span className="text-xs ml-2">▼</span>
         </button>
@@ -175,16 +175,16 @@ export default function AddFoodForm({ editId, onAdded }) {
         {isOpen && (
           <>
             <div className="fixed inset-0 z-10" onClick={() => setActiveDropdown(null)} />
-            <div className="absolute z-20 w-full bg-white border rounded shadow-lg mt-1 max-h-60 overflow-y-auto p-2">
+            <div className="absolute z-20 w-full bg-zinc-900 border border-white/20 rounded-xl shadow-2xl mt-2 max-h-60 overflow-y-auto p-2 backdrop-blur-xl">
               {options.map((opt) => (
-                <label key={opt} className="flex items-center space-x-2 p-1 hover:bg-gray-50 cursor-pointer">
+                <label key={opt} className="flex items-center space-x-2 p-2 hover:bg-white/10 rounded-lg cursor-pointer transition-colors group">
                   <input
                     type="checkbox"
                     checked={form[name].includes(opt)}
                     onChange={() => toggleSelection(name, opt)}
                     className="rounded text-blue-600 focus:ring-blue-500"
                   />
-                  <span className="text-sm">{opt}</span>
+                  <span className="text-sm text-white group-hover:text-blue-400">{opt}</span>
                 </label>
               ))}
             </div>
@@ -428,7 +428,7 @@ export default function AddFoodForm({ editId, onAdded }) {
         <button
           type="button"
           onClick={() => setActiveDropdown(activeDropdown === 'ingredients' ? null : 'ingredients')}
-          className="block w-full border rounded px-2 py-2 text-left bg-white min-h-[38px] flex justify-between items-center"
+          className="block w-full border rounded px-2 py-2 text-left bg-gray min-h-[38px] flex justify-between items-center"
         >
           {form.ingredients.length > 0 ? (
             <div className="flex flex-wrap gap-1">
@@ -450,9 +450,9 @@ export default function AddFoodForm({ editId, onAdded }) {
         {activeDropdown === 'ingredients' && (
           <>
             <div className="fixed inset-0 z-10" onClick={() => setActiveDropdown(null)} />
-            <div className="absolute z-20 w-full bg-white border rounded shadow-lg mt-1 max-h-60 overflow-y-auto p-2">
+            <div className="absolute z-20 w-full bg-black border rounded shadow-lg mt-1 max-h-60 overflow-y-auto p-2">
               {allIngredientsList.map((item) => (
-                <label key={item.id} className="flex items-center space-x-2 p-1 hover:bg-gray-50 cursor-pointer">
+                <label key={item.id} className="flex items-center space-x-2 p-1  cursor-pointer">
                   <input
                     type="checkbox"
                     checked={form.ingredients.includes(item.id)}

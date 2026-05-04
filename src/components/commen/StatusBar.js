@@ -47,7 +47,7 @@ export default function StatusBar({ foods, error, spinning, loading, selectedMod
   })();
 
   return (
-    <div className={`inline-flex flex-row items-center gap-2 px-4 py-[7.5px] rounded-full border backdrop-blur-sm font-[Outfit] text-[10px] font-semibold tracking-[0.07em] whitespace-nowrap transition-all duration-300 shadow-[0_2px_10px_rgba(0,0,0,0.18)] ${cfg.bg} ${cfg.border}`}>
+    <div className={`inline-flex flex-row items-center gap-2 px-4 py-[7.5px] rounded-full  backdrop-blur-sm font-[Outfit] text-[10px] font-semibold tracking-[0.07em] whitespace-nowrap transition-all duration-300 shadow-[0_2px_10px_rgba(0,0,0,0.18)] cursor-default select-none  ${cfg.border}`}>
       <span className={`rounded-full flex-shrink-0 transition-all duration-300 ${cfg.dot} ${loading ? 'w-3 h-3' : 'w-[5.5px] h-[5.5px]'}`} />
       <span className={`transition-colors duration-300 ${cfg.text}`}>{cfg.label}</span>
     </div>

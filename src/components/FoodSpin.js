@@ -1,16 +1,15 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-import { MEAL_SPECIFIC_INGREDIENTS } from "@/lib/utils";
+import { getFilteredIngredients } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import FilterPanel from "./FilterPanel";
 import ConfirmedSelection from "./ConfirmedSelect";
 import SpinWheel from "./SpinWheel";
-import GlassCard from "./commen/GlassCard";
 import SpinHero from "./commen/SpinHero";
 import ModeRow from "./commen/ModeRow";
 import ActionRow from "./commen/ActionRow";
-import "./FoodSpin.css"; // Import a dedicated CSS file for FoodSpin styles
+import "./FoodSpin.css";
 import IngredientDrawer from "./commen/IngredientDrawer";
 
 export default function FoodSpin({
@@ -47,8 +46,28 @@ export default function FoodSpin({
   // Dynamically derive the meal timing from the current filters
   const currentParams = new URLSearchParams(currentQueryString);
   const activeMealTiming =
-    currentParams.get("mealTiming")?.toLowerCase() || mealTiming?.toLowerCase();
-  const COMMON_INGREDIENTS = MEAL_SPECIFIC_INGREDIENTS[activeMealTiming] || [];
+    currentParams.get("mealTiming")?.toLowerCase() ||
+    mealTiming?.toLowerCase() ||
+    "lunch";
+
+  // Diet type — filter params override session preference
+  const rawDietType =
+    currentParams.get("dietType") ||                          // from active filter
+    session?.user?.questionnaire
+      ?.find(q => q.questionId === "dietType")
+      ?.answer?.[0] ||
+    null;
+
+  // Normalize: "vegetarian"→"veg", "non-vegetarian"→"non-veg"
+  const activeDietType = rawDietType
+    ? rawDietType.toLowerCase().trim()
+        .replace(/^vegetarian$/, "veg")
+        .replace(/^non-vegetarian$/, "non-veg")
+        .replace(/^eggetarian$/, "eggitarian")
+    : null;
+
+  // Filter ingredients by both meal timing AND diet type
+  const COMMON_INGREDIENTS = getFilteredIngredients(activeMealTiming, activeDietType);
   const remainingCount = Math.max(0, foods.length - rejectedIds.size);
 
   /* ── helpers ── */
@@ -170,10 +189,10 @@ export default function FoodSpin({
     return () => clearInterval(interval);
   }, [filterExpiry, baseParams]);
 
-  // Reset checked ingredients if the meal timing changes via filters
+  // Reset checked ingredients if the meal timing OR diet type changes via filters
   useEffect(() => {
     setCheckedIngredients({});
-  }, [activeMealTiming]);
+  }, [activeMealTiming, activeDietType]);
 
   /* ── API ── */
   const fetchFoodsForMode = async (mode, ingredients = []) => {
@@ -441,16 +460,17 @@ export default function FoodSpin({
       )}
 
       <div
-        className={`food-engine-card w-full px-5 py-9 mt-5 sm:py-6 flex flex-col transition-all duration-700 ${isReadyToSpin ? "pulse-ready" : ""}`}
+        className={`food-engine-card w-full px-4 sm:px-5 py-4 sm:py-5 flex flex-col transition-all duration-700 ${isReadyToSpin ? "pulse-ready" : ""}`}
         style={{
-          maxWidth: "min(95vw, 480px)",
-          minHeight: "550px",
+          width: "min(96vw, 460px)",
+          maxWidth: "460px",
+          height: "auto",
           "--gradient-start": getGradientColors().start,
           "--gradient-end": getGradientColors().end,
         }}
       >
         <div
-          className={`relative z-10 transition-opacity duration-300 ${loading ? "opacity-50" : "opacity-100"}`}
+          className={`relative z-10 flex flex-col gap-0 transition-opacity duration-300 ${loading ? "opacity-50" : "opacity-100"}`}
         >
           {/* ── Hero ── */}
           <SpinHero
@@ -460,7 +480,7 @@ export default function FoodSpin({
           />
 
           {/* glass divider */}
-          <div className="w-full h-px bg-linear-to-r from-transparent via-white/20 to-transparent mb-3" />
+          <div className="w-full h-px bg-linear-to-r from-transparent via-white/20 to-transparent my-3" />
 
           {/* ── Mode selector ── */}
           <ModeRow
@@ -473,22 +493,24 @@ export default function FoodSpin({
           />
 
           {/* ── Spin Wheel ── */}
-          <SpinWheel
-            ref={wheelRef}
-            showResult={showResult}
-            suggestedFood={suggestedFood}
-            selectedMode={selectedMode}
-            spinning={spinning}
-            pulseModes={pulseModes}
-            onCenterClick={handleCenterClick}
-            onSpin={startSpin}
-            loading={loading}
-            disabled={
-              selectedMode === "self-cooking" &&
-              Object.values(checkedIngredients).filter(Boolean).length === 0 &&
-              foods.length === 0
-            }
-          />
+          <div className="w-full flex items-center justify-center">
+            <SpinWheel
+              ref={wheelRef}
+              showResult={showResult}
+              suggestedFood={suggestedFood}
+              selectedMode={selectedMode}
+              spinning={spinning}
+              pulseModes={pulseModes}
+              onCenterClick={handleCenterClick}
+              onSpin={startSpin}
+              loading={loading}
+              disabled={
+                selectedMode === "self-cooking" &&
+                Object.values(checkedIngredients).filter(Boolean).length === 0 &&
+                foods.length === 0
+              }
+            />
+          </div>
 
           {/* ── Action Row / Status ── */}
           <ActionRow

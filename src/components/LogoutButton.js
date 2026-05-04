@@ -84,27 +84,29 @@ export default function LogoutButton() {
 
   return (
     <div className="relative">
+
       {/* User Avatar Circle */}
-      <button 
+      <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative group p-0.5 rounded-full border-2 border-[var(--glass-border)] hover:border-[var(--text-muted)] transition-all active:scale-90"
+        className="relative cursor-pointer active:scale-90 transition-transform"
+        title="Account"
       >
-        <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-full overflow-hidden bg-neutral-900 border border-white/10 shadow-2xl">
+        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden bg-neutral-900 border border-white/15 shadow-lg">
           {session?.user?.image ? (
-            <img 
-              src={session.user.image} 
-              alt="User" 
+            <img
+              src={session.user.image}
+              alt="User"
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-white font-bold bg-gradient-to-br from-neutral-700 to-neutral-900">
+            <div className="w-full h-full flex items-center justify-center text-white text-sm font-bold bg-gradient-to-br from-neutral-700 to-neutral-900">
               {session?.user?.name?.charAt(0) || "U"}
             </div>
           )}
         </div>
-        
-        {/* Status indicator */}
-        <span className="absolute bottom-1 right-1 w-3 h-3 bg-green-500 border-2 border-black rounded-full"></span>
+
+        {/* Online status dot */}
+        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-black rounded-full" />
       </button>
 
       {/* Compact Dropdown Menu */}

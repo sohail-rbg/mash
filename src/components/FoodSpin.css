@@ -1,56 +1,63 @@
-@keyframes pulse { 0%,100%{opacity:1}50%{opacity:.4} }
-
-@keyframes themePulse {
-  0%, 100% { box-shadow: var(--card-shadow); transform: scale(1); }
-  50% { box-shadow: 0 30px 60px -10px rgba(0, 0, 0, 0.15), 0 0 30px rgba(255, 255, 255, var(--glow-opacity)); transform: scale(1.005); }
-}
-
-.food-engine-card {
-  background: transparent;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  border-radius: 1.5rem; /* Squared shape */
-  /* box-shadow: var(--card-shadow), 0 0 25px -8px var(--gradient-start), 0 0 25px -8px var(--gradient-end); */
-  border: 2px solid var(--card-border);
-  /* backdrop-filter: blur(40px) saturate(210%); */
-  z-index: 1;
-}
-
-.food-engine-card::before {
-  content: '';
-  position: absolute;
-  width: 150px;
-  background-image: linear-gradient(180deg, var(--gradient-start), var(--gradient-end));
-  height: 220%;
-  top: -60%;
-  left: 35%;
-  /* Pehle puri tarah hidden rhega taaki refresh pr na dikhe */
-  opacity: 0;
-  visibility: hidden;
-  /* 2.5s delay taaki card ka main content stable ho jaye */
-  animation: rotBGimg 8s linear infinite 2.5s, fadeInBorder 1.5s ease-in forwards 2.5s;
-  z-index: -2;
-}
-
-.food-engine-card::after {
-  content: '';
-  position: absolute;
-  background: var(--bg-color);
-  inset: 3px;
-  border-radius: 1.3rem;
-  z-index: -1;
-  /* backdrop-filter: blur(40px); */
-  transition: all 0.4s ease;
-}
+/* ─── Base Animations ─────────────────────────────────────── */
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 
 @keyframes rotBGimg {
-  from { transform: rotate(0deg); }        
-  to { transform: rotate(360deg); }
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
 
 @keyframes fadeInBorder {
   from { opacity: 0; visibility: hidden; }
-  to { opacity: 1; visibility: visible; }
+  to   { opacity: 1; visibility: visible; }
+}
+
+/* ─── Card Shell ──────────────────────────────────────────── */
+.food-engine-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+  overflow: hidden;
+  border-radius: 1.75rem;
+  border: 2px solid rgb(255, 255, 255);
+  z-index: 1;
+}
+
+/* Rotating gradient beam — border glow only */
+.food-engine-card::before {
+  content: '';
+  position: absolute;
+  width: 120px;
+  height: 220%;
+  top: -60%;
+  left: 35%;
+  background-image: linear-gradient(
+    180deg,
+    transparent 0%,
+    var(--gradient-start) 30%,
+    var(--gradient-end) 70%,
+    transparent 100%
+  );
+  opacity: 0;
+  visibility: hidden;
+  animation:
+    rotBGimg 8s linear infinite 2.5s,
+    fadeInBorder 1.5s ease-in forwards 2.5s;
+  z-index: -2;
+}
+
+/* Inner fill — deep navy */
+.food-engine-card::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 1.6rem;
+  background: linear-gradient(
+    160deg,
+    rgba(0, 0, 0, 0.98) 0%,
+    rgba(2, 2, 2, 0.99) 55%,
+    rgba(5, 5, 6, 0.98) 100%
+  );
+  z-index: -1;
+  transition: background 0.4s ease;
 }
