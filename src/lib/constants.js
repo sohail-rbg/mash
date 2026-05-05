@@ -2,7 +2,6 @@
 export const MEAL_TIMING_OPTIONS = [
   "breakfast",
   "lunch",
-  "evening",
   "snacks",
   "dinner",
   "late-night",
@@ -30,21 +29,28 @@ export const HEALTH_GOALS_OPTIONS = [
 ];
 // spice level
 export const SPICE_LEVEL_OPTIONS = [
-  "mild",
+  "low",
   "medium",
   "spicy",
   "extra-spicy",
+  "low-spicy"
 ];
 
 // CUISINE
 export const CUISINE_OPTIONS = [
   "indian",
+  "maharashtrian",
   "north-indian",
   "south-indian",
+  "gujarati",
+  "kerala",
+  "karnataka",
+  "andhra",
+  "mughlai",
+  "punjabi",
   "chinese",
   "italian",
   "mexican",
-  "mughlai",
   "continental",
   "arabic",
   "korean",

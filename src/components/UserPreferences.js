@@ -62,22 +62,14 @@ export default function UserPreferences({ questionnaire, userId, updateSession }
   const handleEditInit = (qId, answer) => {
     setEditingPref(qId);
     const currentAnswers = Array.isArray(answer) ? answer : [answer];
-    const normalized = currentAnswers.map((val) => {
-      if (qId === "dietType") {
-        if (val === "veg") return "vegetarian";
-        if (val === "non-veg") return "omnivore";
-      }
-      return val;
-    });
-    setTempAnswers(normalized);
+    setTempAnswers(currentAnswers);
     setIsDrawerOpen(true);
   };
 
   const getLabel = (qId, val) => {
     const opts = OPTIONS_MAP[qId];
     if (!opts) return val;
-    const match = opts.find((o) => o.value === val) || 
-                  opts.find((o) => (val === 'veg' && o.value === 'vegetarian') || (val === 'non-veg' && o.value === 'omnivore'));
+    const match = opts.find((o) => o.value === val);
     return match?.label || val;
   };
 

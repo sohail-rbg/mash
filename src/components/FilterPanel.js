@@ -345,6 +345,9 @@ export default function FilterPanel({ currentParams, onApply, onClose }) {
             <button
               onClick={() => {
                 setFilters({});
+                document.cookie = "temp_filters=; path=/; max-age=0";
+                document.cookie = "temp_filters_expires=; path=/; max-age=0";
+                onApply("", null);
               }}
               style={{
                 width: '100%',

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import FoodModel from "@/models/Food";
 
-export const dynamic = "force-dynamic"; // 🔥 MUST
+export const dynamic = "force-dynamic";
 
 import {
   MEAL_TIMING_OPTIONS,
@@ -12,7 +12,6 @@ import {
   MOOD_OPTIONS,
   WEATHER_OPTIONS,
   FOOD_STYLE_OPTIONS,
-  INGREDIENT_RESTRICTION_OPTIONS,
   FOOD_TYPE_OPTIONS,
   SPICE_LEVEL_OPTIONS,
 } from "@/lib/constants";
@@ -20,7 +19,6 @@ import {
 // Map field names to their valid options for validation/sanitization
 const FIELD_VALIDATION = {
   foodStyle: FOOD_STYLE_OPTIONS,
-  // spiceLevel: ["spicy", "mild", "normal"],
   mealTiming: MEAL_TIMING_OPTIONS,
   dietType: DIET_TYPE_OPTIONS,
   healthGoals: HEALTH_GOALS_OPTIONS,
@@ -29,20 +27,26 @@ const FIELD_VALIDATION = {
   weather: WEATHER_OPTIONS,
   foodType: FOOD_TYPE_OPTIONS,
   spiceLevel: SPICE_LEVEL_OPTIONS,
-  category: ["vegetarian", "non-vegetarian", "veg", "non-veg", "fast-food"]
+  category: ["vegetarian", "non-vegetarian", "veg", "non-veg", "fast-food"],
 };
 
 const SYNONYM_MAP = {
   dietType: {
-    'veg': ['veg', 'vegetarian'],
-    'vegetarian': ['veg', 'vegetarian'],
-    'pure-vegetarian': ['veg', 'vegetarian'],
-    'non-veg': ['non-veg', 'non-vegetarian'],
-    'non-vegetarian': ['non-veg', 'non-vegetarian'],
+    "veg": ["veg", "vegetarian"],
+    "vegetarian": ["veg", "vegetarian"],
+    "pure-vegetarian": ["veg", "vegetarian"],
+    "non-veg": ["non-veg", "non-vegetarian"],
+    "non-vegetarian": ["non-veg", "non-vegetarian"],
   },
   mood: {
-    'happy': ['excited'],
-  }
+    "happy": ["excited"],
+  },
+  // "self cooking" (with space) → match both variants in DB
+  foodType: {
+    "self-cooking": ["self-cooking", "self cooking"],
+    "self cooking": ["self-cooking", "self cooking"],
+    "online": ["online"],
+  },
 };
 
 export async function POST(req) {
@@ -97,8 +101,14 @@ export async function GET(req) {
 
     // Pagination Params
     const page = parseInt(searchParams.get("page")) || 1;
-    
-    const limit = Math.min(parseInt(searchParams.get("limit")) || 20, 50);
+    const hasPagination = searchParams.has("page");
+
+    // For paginated requests (all-foods admin page) cap at 50 per page.
+    // For non-paginated requests (FoodSpin) fetch up to 200 so the wheel
+    const limit = hasPagination
+      ? Math.min(parseInt(searchParams.get("limit")) || 20, 50)
+      : Math.min(parseInt(searchParams.get("limit")) || 200, 200);
+
     const skip = (page - 1) * limit;
 
     const processValues = (values) =>
@@ -188,7 +198,7 @@ export async function GET(req) {
     let foods;
     let totalCount = 0;
 
-    if (searchParams.get('page')) {
+    if (hasPagination) {
       totalCount = await FoodModel.countDocuments(query);
       console.log("[API /api/foods] Total documents matching query:", totalCount);
 
@@ -198,7 +208,7 @@ export async function GET(req) {
         .lean()
         .exec();
     } else {
-     // Use the built 'query' and 'limit' even when not paginating
+      // Non-paginated (FoodSpin) — fetch full pool up to 200
       foods = await FoodModel.find(query, projection).limit(limit).lean().exec();
       console.log("[API /api/foods] Querying foods, found", foods.length, "foods");
     }
@@ -206,7 +216,7 @@ export async function GET(req) {
     console.log("[API /api/foods] Query completed, found", foods.length, "foods");
     console.log(`[API /api/foods] Total time: ${Date.now() - startTime}ms`);
 
-    if (searchParams.get('page')) {
+    if (hasPagination) {
       const totalPages = Math.ceil(totalCount / limit);
       return NextResponse.json({ foods, totalPages, totalCount, page }, { status: 200 });
     } else {

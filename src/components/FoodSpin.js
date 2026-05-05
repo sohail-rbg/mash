@@ -144,7 +144,8 @@ export default function FoodSpin({
           : [];
       fetchFoodsForMode(selectedMode, selectedIngredients);
     }
-  }, [currentQueryString, selectedMode, checkedIngredients]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentQueryString, selectedMode]);
    // Stop spinning if mode changes during spin
   useEffect(() => {
     if (spinning) {
@@ -193,6 +194,19 @@ export default function FoodSpin({
   useEffect(() => {
     setCheckedIngredients({});
   }, [activeMealTiming, activeDietType]);
+
+  // Clear all filters when user logs out
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      clearFilters();
+      setSelectedMode(null);
+      setPhase("select-mode");
+      setSuggestedFood(null);
+      setShowResult(false);
+      setCheckedIngredients({});
+      setRejectedIds(new Set());
+    }
+  }, [status]);
 
   /* ── API ── */
   const fetchFoodsForMode = async (mode, ingredients = []) => {
@@ -407,7 +421,7 @@ export default function FoodSpin({
 
   const handleConfirm = () => {
     if (!suggestedFood) return;
-    alert(`Confirmed: ${suggestedFood.name} (${selectedMode || "—"})`);
+    setPhase("confirmed");
   };
 
   /* ── confirmed phase ── */

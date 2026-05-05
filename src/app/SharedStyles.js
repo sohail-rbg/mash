@@ -13,7 +13,7 @@ export const GlobalStyles = () => (
       --text-main: #ffffff;
       --text-muted: rgba(255, 255, 255, 0.55);
       --glass-bg: rgba(255, 255, 255, 0.08);
-      --glass-border: rgba(255, 255, 255, 0.14);
+      --glass-border: rgba(255, 255, 255, 0.38);
       --card-shadow: 0 0 60px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255,255,255,0.04), inset 0 0 20px rgba(0,0,0,0.3);
       --glow-opacity: 0.35;
       --card-border: rgba(255, 255, 255, 1);

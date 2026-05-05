@@ -17,7 +17,7 @@ import {
   // OCCASION_OPTIONS,
 } from "@/lib/constants";
 
-const SPICE_LEVEL_OPTIONS = ["mild", "medium", "spicy", "extra-spicy"];
+const SPICE_LEVEL_OPTIONS = ["mild", "medium", "spicy", "extra-spicy", "low-spicy"];
 
 export default function AddFoodForm({ editId, onAdded }) {
   const isEditing = !!editId;
@@ -290,7 +290,12 @@ export default function AddFoodForm({ editId, onAdded }) {
       }
 
       if (onAdded) onAdded(updatedFood);
-      router.push("/"); // Navigate back after success
+      if (isEditing) {
+        // Go back to all-foods and highlight the edited food
+        router.push(`/all-foods?highlight=${updatedFood._id}`);
+      } else {
+        router.push("/");
+      }
     } catch (err) {
       setError(err.message);
     } finally {

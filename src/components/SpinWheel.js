@@ -159,8 +159,8 @@ const SpinWheel = forwardRef(({
       <div
         className="relative flex-shrink-0 mx-auto"
         style={{
-          width: 'min(calc(min(96vw, 460px) - 48px), 350px)',
-          height: 'min(calc(min(96vw, 460px) - 48px), 350px)',
+          width: 'min(calc(min(96vw, 460px) - 10px), 360px)',
+          height: 'min(calc(min(96vw, 460px) - 10px), 360px)',
         }}
       >
 
