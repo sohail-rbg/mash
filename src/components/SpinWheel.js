@@ -157,12 +157,15 @@ const SpinWheel = forwardRef(({
           WHEEL CONTAINER — properly centered, square
       ══════════════════════════════════════════════════════ */}
       <div
-        className="relative flex-shrink-0 mx-auto"
-        style={{
-          width: 'min(calc(min(96vw, 460px) - 10px), 360px)',
-          height: 'min(calc(min(96vw, 460px) - 10px), 360px)',
-        }}
+        className="relative flex-shrink-0 w-full flex items-center justify-center"
       >
+        <div
+          className="relative flex-shrink-0"
+          style={{
+            width: 'min(100%, 340px)',
+            aspectRatio: '1 / 1',
+          }}
+        >
 
         {/* ── Ambient aura glow behind wheel ── */}
         {/* removed */}
@@ -271,7 +274,7 @@ const SpinWheel = forwardRef(({
                     {!selectedMode ? (
                       /* No mode — typewriter */
                       <div
-                        className="flex flex-col items-center gap-3 cursor-pointer hover:scale-105 transition-transform"
+                        className="flex flex-col items-center gap-3 cursor-pointer hover:scale-105 transition-transform  cursor-default select-none"
                         onClick={onCenterClick}
                         title="Click to start"
                       >
@@ -342,6 +345,7 @@ const SpinWheel = forwardRef(({
             }}
           /> */}
         </div>
+      </div>
       </div>
 
       {/* ── Food name below wheel ── */}

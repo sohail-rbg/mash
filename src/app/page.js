@@ -139,42 +139,27 @@ export default async function Home() {
   const needsPreferences = user && !hasPreferenceData;
 
   return (
-    <div className="h-screen w-screen overflow-hidden relative transition-colors duration-500">
-
-      {/* ── LAYER 1: Background Video ── */}
-      {/* Ensure video-bg-03.mp4 or video-bg-04.mp4 actually exists in public/assets/img/ */}
-      {/* <video
-        autoPlay
-        muted
-        loop
-        playsInline
-        src="/assets/img/video-bg-04.mp4" 
-        className="absolute inset-0 w-full h-full object-cover z-0"
-        style={{ filter: "brightness(0.4) saturate(0.9)" }}
-        onError={(e) => { 
-          e.target.style.display = 'none'; 
-          console.warn("Background video not found at the specified path."); 
-        }}
-      /> */}
-
-      <div className="absolute inset-0 z-0">
-        {/* Background Image Layer */}
+    <div className="h-screen w-screen overflow-hidden relative transition-colors duration-500"
+      style={{ background: "#000" }}
+    >
+      {/* ── Background image — desktop only (hidden on mobile) ── */}
+      <div className="absolute inset-0 z-0 hidden md:block">
         <div
           className="absolute inset-0"
           style={{
-            backgroundImage: "url('https://images.unsplash.com/photo-1543353071-873f17a7a088?q=80&w=2000&auto=format&fit=crop')", 
+            backgroundImage: "url('https://images.unsplash.com/photo-1543353071-873f17a7a088?q=80&w=2000&auto=format&fit=crop')",
             backgroundSize: "cover",
             backgroundPosition: "center",
             backgroundRepeat: "no-repeat",
-            filter: "grayscale(20%) brightness(0.85) saturate(1.1)"
+            filter: "grayscale(15%) brightness(0.55) saturate(1.1)",
           }}
         />
+        {/* Frosted glass overlay — makes the bg feel filtered/blurred */}
+        <div className="absolute inset-0" style={{
+          background: "linear-gradient(135deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.35) 50%, rgba(0,0,0,0.6) 100%)",
+          backdropFilter: "blur(1px)",
+        }} />
       </div>
-
-      {/* ── LAYER 2: Dark overlay on top of image ── */}
-      <div className="absolute inset-0 z-[1]" style={{
-        background: "linear-gradient(to bottom, rgba(0,0,0) 0%, rgba(0,0,0) 0%, rgba(0,0,0) 0%)"
-      }} />
 
       {/* ── LAYER 4: Header ── */}
       <header className="absolute top-0 left-0 w-full flex items-center justify-between px-4 pt-3 pb-2 z-20"
@@ -204,17 +189,17 @@ export default async function Home() {
       <PreferenceReminder visible={needsPreferences} />
 
       {/* ── FoodSpin ── */}
-      <div className="absolute inset-0 z-10 overflow-y-auto flex items-center justify-center">
-        <div className="pointer-events-auto w-full flex justify-center px-3"
-          // style={{ paddingTop: '5px', paddingBottom: '2px' }}
-        >
-          <FoodSpin
-            initialFoods={foods}
-            isFiltered={queryString.length > 0}
-            mealTiming={mealTimingForComponent}
-            baseParams={baseParams}
-            activeQueryString={queryString}
-          />
+      <div className="absolute inset-0 z-10 overflow-y-auto">
+        <div className="min-h-full flex items-center justify-center py-0 px-2">
+          <div className="pointer-events-auto w-full flex justify-center">
+            <FoodSpin
+              initialFoods={foods}
+              isFiltered={queryString.length > 0}
+              mealTiming={mealTimingForComponent}
+              baseParams={baseParams}
+              activeQueryString={queryString}
+            />
+          </div>
         </div>
       </div>
 

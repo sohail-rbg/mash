@@ -11,21 +11,18 @@ export const MEAL_TIMING_OPTIONS = [
 export const DIET_TYPE_OPTIONS = [
   "veg",
   "non-veg",
-  "vegan",
-  "jain",
-  "keto",
+  // "vegan",
+  // "jain",
+  // "keto",
 ];
 
 // HEALTH GOALS
 export const HEALTH_GOALS_OPTIONS = [
+  "No Goal",
   "weight-loss",
   "weight-gain",
-  "maintain",
-  "muscle-gain",
   "diabetic-friendly",
-  "low-cholesterol",
-  "low-sugar",
-  "low-oil",
+  
 ];
 // spice level
 export const SPICE_LEVEL_OPTIONS = [
@@ -39,20 +36,12 @@ export const SPICE_LEVEL_OPTIONS = [
 // CUISINE
 export const CUISINE_OPTIONS = [
   "indian",
-  "maharashtrian",
   "north-indian",
   "south-indian",
-  "gujarati",
-  "kerala",
-  "karnataka",
-  "andhra",
-  "mughlai",
-  "punjabi",
   "chinese",
   "italian",
   "mexican",
   "continental",
-  "arabic",
   "korean",
 ];
 
@@ -65,6 +54,8 @@ export const FOOD_STYLE_OPTIONS = [
   "traditional",
   "modern",
   "fusion",
+  "deep-fried",
+  "grilled"
 ];
 
 // MOOD
@@ -80,6 +71,7 @@ export const MOOD_OPTIONS = [
   "relaxed",
   "energized",
   "happy",
+  "fun",
 ];
 
 // WEATHER
@@ -94,13 +86,11 @@ export const WEATHER_OPTIONS = [
 export const INGREDIENT_RESTRICTION_OPTIONS = [
   "onion",
   "garlic",
-  "dairy",
-  "nuts",
-  "sugar",
-  "oil",
-  "eggs",
-  "soy",
-  "shellfish",
+  "Dairy Product",
+  "Nuts",
+  "Sugar",
+  "Oil",
+  "Eggs",
   "gluten"
 ];
 export const FOOD_TYPE_OPTIONS = [

@@ -128,5 +128,10 @@ FoodSchema.index({ ingredients: 1 });
 // Compound index for common filter combinations
 FoodSchema.index({ dietType: 1, mealTiming: 1, foodType: 1 });
 
-export default mongoose.models.Food ||
-mongoose.model("Food", FoodSchema);
+export default (mongoose.models.Food && 
+  // Validate cached model has current enum length — recompile if stale
+  mongoose.models.Food.schema.path('healthGoals').enumValues?.includes('energy') &&
+  mongoose.models.Food.schema.path('foodStyle').enumValues?.includes('deep-fried')
+    ? mongoose.models.Food
+    : (() => { delete mongoose.models.Food; return mongoose.model("Food", FoodSchema); })()
+);

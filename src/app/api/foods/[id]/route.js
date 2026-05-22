@@ -37,7 +37,7 @@ export async function PUT(req, { params }) {
         ...body,
         updatedAt: new Date(),
       },
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     );
 
     if (!updatedFood) {

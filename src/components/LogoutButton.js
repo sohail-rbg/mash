@@ -126,9 +126,6 @@ export default function LogoutButton() {
               <Link href="/profile" className="flex items-center gap-3 px-4 py-1 text-xs font-bold text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-white/5 hover:border-black-500/10 rounded-2xl transition-all group">
                 <span className="text-lg group-hover:scale-110 transition-transform">👤</span> Profile Details
               </Link>
-              <Link href="/add-food" className="flex items-center gap-3 px-4 py-3 text-xs font-bold text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-white/5 rounded-2xl transition-all group">
-                <span className="text-lg group-hover:scale-110 transition-transform">🍳</span> Add New Food
-              </Link>
               <Link href="/preferences" className="flex items-center gap-3 px-4  text-xs font-bold text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-white/5 rounded-2xl transition-all group">
                 <span className="text-lg group-hover:rotate-45 transition-transform">⚙️</span> Settings
               </Link>

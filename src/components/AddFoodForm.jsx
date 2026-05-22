@@ -14,10 +14,8 @@ import {
   WEATHER_OPTIONS,
   FOOD_STYLE_OPTIONS,
   FOOD_TYPE_OPTIONS,
-  // OCCASION_OPTIONS,
+  SPICE_LEVEL_OPTIONS,
 } from "@/lib/constants";
-
-const SPICE_LEVEL_OPTIONS = ["mild", "medium", "spicy", "extra-spicy", "low-spicy"];
 
 export default function AddFoodForm({ editId, onAdded }) {
   const isEditing = !!editId;

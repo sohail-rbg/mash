@@ -474,9 +474,9 @@ export default function FoodSpin({
       )}
 
       <div
-        className={`food-engine-card w-full px-4 sm:px-5 py-4 sm:py-5 flex flex-col transition-all duration-700 ${isReadyToSpin ? "pulse-ready" : ""}`}
+        className={`food-engine-card w-full px-3 sm:px-5 py-4 sm:py-5 flex flex-col transition-all duration-700 ${isReadyToSpin ? "pulse-ready" : ""}`}
         style={{
-          width: "min(96vw, 460px)",
+          width: "100%",
           maxWidth: "460px",
           height: "auto",
           "--gradient-start": getGradientColors().start,
@@ -484,7 +484,7 @@ export default function FoodSpin({
         }}
       >
         <div
-          className={`relative z-10 flex flex-col gap-0 transition-opacity duration-300 ${loading ? "opacity-50" : "opacity-100"}`}
+          className={`relative z-10 flex flex-col gap-1 transition-opacity duration-300 ${loading ? "opacity-50" : "opacity-100"}`}
         >
           {/* ── Hero ── */}
           <SpinHero

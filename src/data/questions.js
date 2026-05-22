@@ -36,6 +36,8 @@ export const preferenceQuestions = [
       "low-cholesterol",
       "low-sugar",
       "low-oil",
+      "gut-healthy",
+      "energy",
     ],
   },
 ];
