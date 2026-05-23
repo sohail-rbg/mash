@@ -1,15 +1,10 @@
 import CredentialsProvider from "next-auth/providers/credentials";
-import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
 import connectDB from "@/lib/db";
 import User from "@/models/Users";
 
 export const authOptions = {
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    }),
     CredentialsProvider({
       name: "Credentials",
       credentials: {
@@ -41,44 +36,15 @@ export const authOptions = {
     }),
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
-      if (account.provider === "google") {
-        await connectDB();
-        const existingUser = await User.findOne({ email: user.email });
-        if (!existingUser) {
-          // First-time Google sign-in: create a new user
-          await User.create({
-            name: user.name,
-            email: user.email,
-            image: user.image,
-            googleId: user.id,
-            profileComplete: false,
-            questionnaire: [],
-          });
-        } else {
-          // Existing email user: link Google account if not already linked
-          if (!existingUser.googleId) {
-            existingUser.googleId = user.id;
-            if (!existingUser.image) existingUser.image = user.image;
-            await existingUser.save();
-          }
-        }
-      }
-      return true;
-    },
-    async jwt({ token, user, trigger, session, account }) {
+    async jwt({ token, user, trigger, session }) {
       // Initial sign-in — populate token from user object
       if (user) {
-        await connectDB();
-        const dbUser = await User.findOne({ email: user.email });
-        if (dbUser) {
-          token.id = dbUser._id.toString();
-          token.name = dbUser.name;
-          token.email = dbUser.email;
-          token.image = dbUser.image || null;
-          token.profileComplete = dbUser.profileComplete || false;
-          token.questionnaire = dbUser.questionnaire || [];
-        }
+        token.id = user.id;
+        token.name = user.name;
+        token.email = user.email;
+        token.image = user.image || null;
+        token.profileComplete = user.profileComplete || false;
+        token.questionnaire = user.questionnaire || [];
       }
 
       // Session update triggered by client (e.g. after saving preferences)
