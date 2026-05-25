@@ -5,6 +5,17 @@ import bcrypt from "bcryptjs";
 import connectDB from "@/lib/db";
 import User from "@/models/Users";
 
+// Function to get the correct base URL
+function getBaseUrl(req) {
+  if (!req) return process.env.NEXTAUTH_URL || "http://localhost:3000";
+  
+  // Priority: x-forwarded-proto/host (for proxies), then origin header
+  const proto = req.headers["x-forwarded-proto"] || "http";
+  const host = req.headers["x-forwarded-host"] || req.headers.host;
+  
+  return `${proto}://${host}`;
+}
+
 export const authOptions = {
   session: {
     strategy: "jwt",
@@ -13,6 +24,8 @@ export const authOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      // Allow both localhost and network access to Google OAuth
+      allowDangerousEmailAccountLinking: true,
     }),
     CredentialsProvider({
       name: "credentials",
@@ -121,10 +134,20 @@ export const authOptions = {
       }
       return true;
     },
-    async redirect({ baseUrl }) {
-      return baseUrl; 
+    async redirect({ url, baseUrl, req }) {
+      // Use dynamic base URL instead of the static one
+      const dynamicBaseUrl = getBaseUrl(req);
+      
+      // Preserve the requested callback URL when using signIn with callbackUrl
+      if (url) {
+        // If the URL is relative, return a full absolute URL using the dynamic baseUrl
+        return url.startsWith("/") ? `${dynamicBaseUrl}${url}` : url;
+      }
+      return dynamicBaseUrl;
     },
   },
+  // Dynamic NEXTAUTH_URL based on request
+  trustHost: true,
 };
 
 const handler = NextAuth(authOptions);

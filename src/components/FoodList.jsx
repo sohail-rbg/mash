@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function FoodList({ initialFoods, isFiltered }) {
+  const router = useRouter();
   const [foods, setFoods] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -120,7 +122,16 @@ export default function FoodList({ initialFoods, isFiltered }) {
                   <div className="flex flex-wrap gap-1.5 mt-auto">
                     {food.cuisine?.map((c) => <span key={c} className="bg-white/5 border border-white/10 text-white/60 text-[9px] px-2 py-1 rounded-lg capitalize"> {c}</span>)}
                     {food.dietType?.map((d) => <span key={d} className="bg-green-500/10 border border-green-500/20 text-green-400 text-[9px] px-2 py-1 rounded-lg capitalize"> {d}</span>)}
-                    {food.healthGoals?.map((h) => <span key={h} className="bg-orange-500/10 border border-orange-500/20 text-orange-400 text-[9px] px-2 py-1 rounded-lg capitalize"> {h}</span>)}
+                    {food.healthGoals?.map((h) => (
+                      <button
+                        key={h}
+                        onClick={() => router.push(`/all-foods?healthGoals=${encodeURIComponent(h)}`)}
+                        className="bg-orange-500/10 border border-orange-500/20 text-orange-400 text-[9px] px-2 py-1 rounded-lg capitalize hover:brightness-110"
+                        title={`Filter all foods by ${h}`}
+                      >
+                        {h}
+                      </button>
+                    ))}
                     {food.mood?.map((m) => <span key={m} className="bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[9px] px-2 py-1 rounded-lg capitalize"> {m}</span>)}
                   </div>
                 </div>
@@ -216,7 +227,16 @@ export default function FoodList({ initialFoods, isFiltered }) {
                         <div>
                             <span className="font-semibold block text-white/40 uppercase text-[10px] tracking-widest">Health Goals</span>
                             <div className="flex flex-wrap gap-1 mt-1">
-                                {suggestedFood.healthGoals?.map(h => <span key={h} className="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-2 py-1 rounded capitalize">{h}</span>)}
+                                {suggestedFood.healthGoals?.map(h => (
+                                  <button
+                                    key={h}
+                                    onClick={() => router.push(`/all-foods?healthGoals=${encodeURIComponent(h)}`)}
+                                    className="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-2 py-1 rounded capitalize hover:brightness-110"
+                                    title={`Filter all foods by ${h}`}
+                                  >
+                                    {h}
+                                  </button>
+                                ))}
                             </div>
                         </div>
 

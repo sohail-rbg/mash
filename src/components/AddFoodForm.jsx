@@ -174,6 +174,33 @@ export default function AddFoodForm({ editId, onAdded }) {
           <>
             <div className="fixed inset-0 z-10" onClick={() => setActiveDropdown(null)} />
             <div className="absolute z-20 w-full bg-zinc-900 border border-white/20 rounded-xl shadow-2xl mt-2 max-h-60 overflow-y-auto p-2 backdrop-blur-xl">
+              <div className="flex items-center justify-between mb-2 p-1">
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForm((f) => ({ ...f, [name]: options }));
+                      // keep dropdown open
+                      setActiveDropdown(name);
+                    }}
+                    className="text-sm text-green-400 hover:text-green-300 px-2 py-1 rounded"
+                  >
+                    Select All
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForm((f) => ({ ...f, [name]: [] }));
+                      // close dropdown after clearing
+                      setActiveDropdown(null);
+                    }}
+                    className="text-sm text-red-400 hover:text-red-300 px-2 py-1 rounded"
+                  >
+                    Clear All
+                  </button>
+                </div>
+                <span className="text-xs text-white/40">{form[name].length} selected</span>
+              </div>
               {options.map((opt) => (
                 <label key={opt} className="flex items-center space-x-2 p-2 hover:bg-white/10 rounded-lg cursor-pointer transition-colors group">
                   <input
@@ -497,9 +524,9 @@ export default function AddFoodForm({ editId, onAdded }) {
         <div>
           {renderMultiSelect("Cuisine", "cuisine", CUISINE_OPTIONS)}
         </div>
-        <div>
+        {/* <div>
           {renderMultiSelect("Mood", "mood", MOOD_OPTIONS)}
-        </div>
+        </div> */}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -509,9 +536,9 @@ export default function AddFoodForm({ editId, onAdded }) {
         <div>
           {renderMultiSelect("Weather", "weather", WEATHER_OPTIONS)}
         </div>
-        <div>
+        {/* <div>
           {renderMultiSelect("Food Style", "foodStyle", FOOD_STYLE_OPTIONS)}
-        </div>
+        </div> */}
         {/* <div>
           <label className="block text-sm font-medium" htmlFor="occasion">
             Occasion
@@ -551,7 +578,7 @@ export default function AddFoodForm({ editId, onAdded }) {
       </div>
 
       {/* Nutrition Fields */}
-      <div className="border p-3 rounded bg-gray-50">
+      {/* <div className="border p-3 rounded bg-gray-50">
         <h3 className="text-sm font-medium mb-2">Nutrition (Per Serving)</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <Input
@@ -587,7 +614,7 @@ export default function AddFoodForm({ editId, onAdded }) {
             placeholder="e.g. 35"
           />
         </div>
-      </div>
+      </div> */}
 
       {error && <p className="text-red-600">{error}</p>}
 

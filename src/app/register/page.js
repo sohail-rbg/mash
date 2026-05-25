@@ -137,7 +137,7 @@ export default function Register() {
 
           <button
             type="button"
-            onClick={() => signIn("google")}
+            onClick={() => signIn("google", { callbackUrl: `${window.location.origin}/` })}
             className="flex items-center justify-center gap-3 bg-white/5 hover:bg-white/10 text-white border border-white/10  font-bold px-6 py-4 rounded-2xl transition-all cursor-pointer"
           >
             <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5" alt="Google" />

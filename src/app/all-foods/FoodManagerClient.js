@@ -64,6 +64,7 @@ export default function FoodManagerClient({
   const [isNavigating, setIsNavigating] = useState(false);
   const [activeMeal, setActiveMeal]     = useState("all");
   const [activeFoodType, setActiveFoodType] = useState("all");
+  const [activeHealthGoal, setActiveHealthGoal] = useState(null);
   const [mealLoading, setMealLoading]   = useState(false);
   const [totalPages, setTotalPages]     = useState(initialTotalPages);
   const [totalCount, setTotalCount]     = useState(initialTotalCount);
@@ -79,6 +80,7 @@ export default function FoodManagerClient({
   const searchParams = useSearchParams();
   const highlightId  = searchParams.get("highlight");
   const highlightRef = useRef(null);
+  const urlHealthGoal = searchParams.get("healthGoals");
 
   useEffect(() => {
     if (highlightId && highlightRef.current) {
@@ -88,6 +90,32 @@ export default function FoodManagerClient({
       return () => clearTimeout(t);
     }
   }, [highlightId, foods]);
+
+  // If URL contains a healthGoals param, fetch filtered results
+  useEffect(() => {
+    if (urlHealthGoal) {
+      const g = urlHealthGoal;
+      setActiveHealthGoal(g);
+      // fetch filtered by health goal
+      (async () => {
+        setMealLoading(true);
+        try {
+          const params = new URLSearchParams({ fullImage: "true", limit: "20", page: "1", healthGoals: g });
+          const res = await fetch(`/api/foods?${params.toString()}`);
+          if (!res.ok) throw new Error("Failed to fetch");
+          const data = await res.json();
+          setFoods(data.foods || []);
+          setTotalPages(data.totalPages || 1);
+          setTotalCount(data.totalCount || 0);
+          setFilteredPage(1);
+        } catch (err) {
+          console.error(err);
+        } finally {
+          setMealLoading(false);
+        }
+      })();
+    }
+  }, [urlHealthGoal]);
 
   // Fetch meal timing stats (counts + duplicate detection) once on mount
   useEffect(() => {
@@ -134,6 +162,7 @@ export default function FoodManagerClient({
   const fetchByMeal = async (meal, foodType = "all", page = 1) => {
     setMealLoading(true);
     setSearch("");
+    setActiveHealthGoal(null);
     try {
       const params = new URLSearchParams({ limit: "20", page: String(page), fullImage: "true" });
       if (meal !== "all")     params.set("mealTiming", meal);
