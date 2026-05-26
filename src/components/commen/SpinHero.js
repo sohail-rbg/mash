@@ -1,24 +1,73 @@
 "use client";
 
 export default function SpinHero({ timeLeft, onClearFilters, onOpenFilters }) {
+  const filterActive = timeLeft != null && timeLeft > 0;
+
+  // The card's actual background color — must match so gradient ring looks like border only
+  const cardBg = "rgb(12, 14, 22)";
+
   return (
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
-        .filter-spin:hover { transform: scale(1.1) rotate(18deg); }
+
+        .filter-btn {
+          cursor: pointer;
+          transition: transform 0.2s ease;
+        }
+        .filter-btn:hover { transform: scale(1.08); }
+        .filter-btn svg { pointer-events: none; }
+
+        /* Gradient ring — always visible */
+        .filter-grad-ring {
+          padding: 1.5px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #fcd34d, #f97316 50%, #ef4444);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          transition: box-shadow 0.3s ease;
+        }
+        .filter-grad-ring.active {
+          box-shadow: 0 0 0 3px rgba(249,115,22,0.2), 0 4px 20px rgba(249,115,22,0.35);
+        }
+
+        /* X badge */
+        .filter-clear-badge {
+          position: absolute;
+          top: -3px;
+          right: -3px;
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background: #f97316;
+          border: 2px solid #000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          z-index: 20;
+          transition: transform 0.15s ease, background 0.15s ease;
+        }
+        .filter-clear-badge:hover {
+          transform: scale(1.3);
+          background: #ef4444;
+          cursor: pointer;
+        }
+        .filter-clear-badge svg { pointer-events: none; }
       `}</style>
 
-      <div className="flex items-start justify-between gap-3 ">
-        {/* Left: title */}
+      <div className="flex items-start justify-between gap-3">
+
+        {/* ── Left: title ── */}
         <div className="flex flex-col">
-          {/* eyebrow */}
           <span className="text-[9px] font-[Outfit] font-bold tracking-[0.22em] uppercase text-[var(--text-muted)]">
             🍽 Food Engine
           </span>
 
           <h2
             className="font-[Playfair_Display] leading-[1.05] tracking-[-0.02em] text-[var(--text-main)]"
-            style={{ fontSize: "clamp(26px,6.5vw,36px)", fontWeight: 900, textShadow: "var(--glow-opacity) > 0.2 ? '0 2px 20px rgba(0,0,0,0.45)' : 'none'" }}
+            style={{ fontSize: "clamp(22px, 5.5vw, 34px)", fontWeight: 900 }}
           >
             Let fate{" "}
             <span
@@ -39,31 +88,59 @@ export default function SpinHero({ timeLeft, onClearFilters, onOpenFilters }) {
           </p>
         </div>
 
-        {/* Right: filter + timer */}
-        <div className="flex flex-col items-end gap-2 flex-shrink-0">
-          <button
-            onClick={onOpenFilters}
-            className="cursor-pointer filter-spin w-11 h-11 rounded-full bg-[var(--glass-bg)] backdrop-blur-xl border border-[var(--glass-border)] text-[var(--text-main)] flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.45)] transition-all duration-250"
-            title="Filters"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-            </svg>
-          </button>
+        {/* ── Right: filter button ── */}
+        <div style={{ position: "relative", display: "inline-flex", flexShrink: 0 }}>
 
-          {timeLeft != null && timeLeft > 0 && (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-400/10 dark:bg-amber-400/[0.18] border border-amber-500/20 dark:border-amber-300/45 backdrop-blur-xl shadow-[0_2px_10px_rgba(245,158,11,0.05)] dark:shadow-[0_2px_10px_rgba(245,158,11,0.2)]">
-              <span className="text-[11px] font-[Outfit] font-bold text-amber-600 dark:text-amber-300">⏳ {timeLeft}s</span>
-              <button
-                onClick={onClearFilters}
-                className="text-amber-500 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-200 transition-colors"
+          {/* Gradient ring wrapper — 1.5px gradient acts as border */}
+          <div className={`filter-grad-ring${filterActive ? " active" : ""}`}>
+            <button
+              onClick={onOpenFilters}
+              className="filter-btn"
+              title={filterActive ? `Filters active — ${timeLeft}s left` : "Open filters"}
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: "50%",
+                border: "none",
+                /* solid bg matching card — makes gradient wrapper look like border only */
+                background: "var(--card-bg, rgba(18,18,28,0.95))",
+                backdropFilter: "blur(12px)",
+                WebkitBackdropFilter: "blur(12px)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: filterActive ? "#f97316" : "var(--text-main, #fff)",
+              }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="17"
+                height="17"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                style={{ pointerEvents: "none" }}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </button>
-            </div>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+              </svg>
+            </button>
+          </div>
+
+          {/* X badge — only when filters active */}
+          {filterActive && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onClearFilters(); }}
+              className="filter-clear-badge"
+              title={`Clear filters (${timeLeft}s left)`}
+              aria-label="Clear active filters"
+              style={{ cursor: "pointer" }}
+            >
+              <svg width="7" height="7" viewBox="0 0 10 10" fill="none" style={{ pointerEvents: "none" }}>
+                <path d="M2 2l6 6M8 2l-6 6" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+              </svg>
+            </button>
           )}
+
         </div>
       </div>
     </>

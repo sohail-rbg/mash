@@ -41,11 +41,64 @@ export default async function Home() {
 
   const cookieStore = await cookies();
   const tempFilters = cookieStore.get("temp_filters");
-  let queryString = "";
 
   const userAllergies = (user.questionnaire || [])
     .find((item) => item.questionId === "allergies")
     ?.answer || [];
+
+  const defaultParams = new URLSearchParams();
+  const FIELD_MAP = {
+    healthSuggestions: "healthGoals",
+    allergies: "restrictedIngredients",
+    weightGoal: "healthGoals",
+  };
+
+  if (user.questionnaire) {
+    user.questionnaire.forEach((pref) => {
+      const apiField = FIELD_MAP[pref.questionId] || pref.questionId;
+      const values = pref.answer;
+
+      if (!values || values.length === 0 || values[0] === "") return;
+
+      if (
+        (apiField === "restrictedIngredients" &&
+          ["no allergies", "no-allergies", "no"].includes(
+            values[0].toLowerCase()
+          )) ||
+        (apiField === "healthGoals" &&
+          pref.questionId === "healthSuggestions" &&
+          values[0].toLowerCase() === "no")
+      )
+        return;
+
+      let formattedValues = values.map((v) =>
+        v.toLowerCase().replace(/\s+/g, "-")
+      );
+
+      if (apiField === "dietType") {
+        formattedValues = formattedValues.map((v) =>
+          v === "vegetarian"
+            ? "veg"
+            : v === "non-vegetarian"
+            ? "non-veg"
+            : v
+        );
+      }
+
+      if (apiField === "foodType") return;
+
+      defaultParams.append(apiField, formattedValues.join(","));
+    });
+  }
+
+  if (!defaultParams.has("mealTiming"))
+    defaultParams.set("mealTiming", getAutoMealTiming());
+
+  if (!defaultParams.has("weather"))
+    defaultParams.set("weather", getAutoWeatherCondition());
+
+  const defaultQueryString = defaultParams.toString();
+  let queryString = defaultQueryString;
 
   if (tempFilters) {
     const tempParams = new URLSearchParams(tempFilters.value);
@@ -53,60 +106,6 @@ export default async function Home() {
       tempParams.delete("restrictedIngredients");
     }
     queryString = tempParams.toString();
-  } else {
-    const params = new URLSearchParams();
-
-    const FIELD_MAP = {
-      healthSuggestions: "healthGoals",
-      allergies: "restrictedIngredients",
-      weightGoal: "healthGoals",
-    };
-
-    if (user.questionnaire) {
-      user.questionnaire.forEach((pref) => {
-        const apiField = FIELD_MAP[pref.questionId] || pref.questionId;
-        const values = pref.answer;
-
-        if (!values || values.length === 0 || values[0] === "") return;
-
-        if (
-          (apiField === "restrictedIngredients" &&
-            ["no allergies", "no-allergies", "no"].includes(
-              values[0].toLowerCase()
-            )) ||
-          (apiField === "healthGoals" &&
-            pref.questionId === "healthSuggestions" &&
-            values[0].toLowerCase() === "no")
-        )
-          return;
-
-        let formattedValues = values.map((v) =>
-          v.toLowerCase().replace(/\s+/g, "-")
-        );
-
-        if (apiField === "dietType") {
-          formattedValues = formattedValues.map((v) =>
-            v === "vegetarian"
-              ? "veg"
-              : v === "non-vegetarian"
-              ? "non-veg"
-              : v
-          );
-        }
-
-        if (apiField === "foodType") return;
-
-        params.append(apiField, formattedValues.join(","));
-      });
-    }
-
-    if (!params.has("mealTiming"))
-      params.set("mealTiming", getAutoMealTiming());
-
-    if (!params.has("weather"))
-      params.set("weather", getAutoWeatherCondition());
-
-    queryString = params.toString();
   }
 
   const foods = await getFoods(queryString);
@@ -130,7 +129,7 @@ export default async function Home() {
       /> */}
 
       {/* ── LAYER 2: Dark overlay so lines stay visible ── */}
-      <div className="absolute inset-0 bg-black/ z-[1]" />
+      <div className="absolute inset-0 bg-black/80 z-[1]" />
 
       <div className="absolute inset-0 z-[2]">
         <FloatingLines
@@ -171,7 +170,8 @@ export default async function Home() {
           initialFoods={foods}
           isFiltered={queryString.length > 0}
           mealTiming={mealTimingForComponent}
-          baseParams={queryString}
+          baseParams={defaultQueryString}
+          activeQueryString={queryString}
         />
       </div>
 

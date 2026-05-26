@@ -101,38 +101,40 @@ export default function Hero({ timeLeft, onClearFilters, onOpenFilters }) {
           </div>
 
           {/* Right: Actions (Timer + Filter) */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10, zIndex: 30, cursor:'pointer' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10, zIndex: 30 }}>
             <button
               onClick={onOpenFilters}
               className="hero-filter-btn"
               style={{
                 width: 44, height: 44, borderRadius: '50%',
-                background: '#ffffff', color: '#1a1a1a',
+                // Coloring Process: Shifts from default glass to Amber when active
+                background: timeLeft > 0 ? 'rgba(251, 191, 36, 0.18)' : 'rgba(255, 255, 255, 0.05)', 
+                color: timeLeft > 0 ? '#fbbf24' : '#ffffff',
+                backdropFilter: 'blur(16px)',
+                border: timeLeft > 0 ? '1px solid rgba(251, 191, 36, 0.45)' : '1px solid rgba(255, 255, 255, 0.1)',
                 border: 'none', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                boxShadow: timeLeft > 0 ? '0 0 0 2px rgba(245, 158, 11, 0.3), 0 4px 16px rgba(0,0,0,0.2)' : '0 4px 12px rgba(0,0,0,0.1)',
+                position: 'relative',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
               }}
             >
-              <svg onClick={onOpenFilters} className="cursor-pointer" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+              {timeLeft > 0 && (
+                <span style={{
+                  position: 'absolute', top: -2, right: -2,
+                  background: '#f59e0b', color: '#000',
+                  fontSize: '9px', fontWeight: 900,
+                  padding: '1px 4px', borderRadius: '8px',
+                  border: '1.5px solid #0a0a0a',
+                  zIndex: 40
+                }}>
+                  {timeLeft}
+                </span>
+              )}
+              <svg className="cursor-pointer" xmlns="http://www.w3.org/2000/svg" width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
               </svg>
             </button>
-
-            {timeLeft != null && timeLeft > 0 && (
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                padding: '6px 14px', borderRadius: 50,
-                background: 'rgba(255, 247, 237, 0.95)', border: '1px solid #fed7aa',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-              }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: '#ea580c' }}>⏳ {timeLeft}s</span>
-                <button onClick={onClearFilters} style={{ color: '#f97316', lineHeight: 1, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
-                </button>
-              </div>
-            )}
           </div>
 
         </div>

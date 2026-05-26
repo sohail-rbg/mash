@@ -8,7 +8,7 @@ export default function ActionRow({
 }) {
   if (showResult && suggestedFood && !spinning) {
     return (
-      <div className="w-full flex items-center justify-between gap-2 mt-3 min-h-[44px]">
+      <div className="w-full flex items-center justify-between gap-2 mt-1 min-h-[44px]">
         {/* Reject */}
         <button
           onClick={onReject}
@@ -66,7 +66,7 @@ export default function ActionRow({
   }
 
   return (
-    <div className="w-full flex justify-center mt-3 min-h-[44px] items-center">
+    <div className="w-full flex justify-center mt-1 min-h-[44px] items-center">
       <StatusBar
         foods={foods}
         error={error}

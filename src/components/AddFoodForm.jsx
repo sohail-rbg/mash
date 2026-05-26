@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Input from "./commen/Input";
 import Button from "./commen/Button";
 import { MEAL_SPECIFIC_INGREDIENTS } from "@/lib/utils";
@@ -12,12 +13,14 @@ import {
   MOOD_OPTIONS,
   WEATHER_OPTIONS,
   FOOD_STYLE_OPTIONS,
-  // OCCASION_OPTIONS,
+  FOOD_TYPE_OPTIONS,
+  SPICE_LEVEL_OPTIONS,
 } from "@/lib/constants";
 
-const SPICE_LEVEL_OPTIONS = ["mild", "medium", "spicy", "extra-spicy"];
+export default function AddFoodForm({ editId, onAdded }) {
+  const isEditing = !!editId;
+  const router = useRouter();
 
-export default function AddFoodForm({ onAdded }) {
   const [form, setForm] = useState({
     name: "",
     image: null,          
@@ -32,7 +35,7 @@ export default function AddFoodForm({ onAdded }) {
     mood: [],
     weather: [],
     foodStyle: [],
-    foodType: "online",
+    foodType: [],
     ingredients: [],
     spiceLevel: "",
     calories: "",
@@ -42,8 +45,61 @@ export default function AddFoodForm({ onAdded }) {
     // occasion: "",
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);  const [previewUrl, setPreviewUrl] = useState(null);
+  const [error, setError] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
   const [activeDropdown, setActiveDropdown] = useState(null);
+  const [existingImage, setExistingImage] = useState(null); // Store existing image for editing
+
+  // Fetch food data for editing
+  useEffect(() => {
+    if (isEditing) {
+      const fetchFood = async () => {
+        try {
+          setLoading(true);
+          const res = await fetch(`/api/foods/${editId}`);
+          if (!res.ok) {
+            throw new Error('Failed to fetch food data');
+          }
+          const food = await res.json();
+          console.log("Fetched food data:", food);
+          console.log("Food image:", food.image);
+          setForm({
+            name: food.name || "",
+            image: null, // Can't pre-fill file input
+            imageUrl: "", // Don't pre-fill URL input when editing
+            useUrl: false, // Default to upload mode when editing
+            description: food.description || "",
+            category: food.category || "",
+            mealTiming: food.mealTiming || [],
+            dietType: food.dietType ? food.dietType[0] : "", // Convert array to single value
+            healthGoals: food.healthGoals || [],
+            cuisine: food.cuisine || [],
+            mood: food.mood || [],
+            weather: food.weather || [],
+            foodStyle: food.foodStyle || [],
+            foodType: food.foodType || [],
+            ingredients: food.ingredients || [],
+            spiceLevel: food.spiceLevel ? food.spiceLevel[0] : "",
+            calories: food.nutrition?.calories?.toString() || "",
+            protein: food.nutrition?.protein?.toString() || "",
+            carbs: food.nutrition?.carbs?.toString() || "",
+            fat: food.nutrition?.fat?.toString() || "",
+          });
+
+          // Set existing image for preview
+          if (food.image) {
+            setExistingImage(food.image);
+            setPreviewUrl(food.image);
+          }
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchFood();
+    }
+  }, [isEditing, editId]);
 
   // Flatten ingredients for the dropdown
   const allIngredientsList = React.useMemo(() => {
@@ -64,6 +120,11 @@ export default function AddFoodForm({ onAdded }) {
       setForm((f) => ({ ...f, [name]: checked }));
     } else {
       setForm((f) => ({ ...f, [name]: value }));
+    }
+
+    // Update preview for URL changes
+    if (name === "imageUrl") {
+      setPreviewUrl(value || null);
     }
   };
 
@@ -93,7 +154,7 @@ export default function AddFoodForm({ onAdded }) {
         <button
           type="button"
           onClick={() => setActiveDropdown(isOpen ? null : name)}
-          className="block w-full border rounded px-2 py-2 text-left bg-white min-h-[38px] flex justify-between items-center"
+          className="block w-full border border-white/10 rounded-lg px-3 py-2 text-left bg-zinc-900 text-white min-h-[42px] flex justify-between items-center transition-all focus:ring-2 focus:ring-blue-500/50"
         >
           {form[name].length > 0 ? (
             <div className="flex flex-wrap gap-1">
@@ -104,7 +165,7 @@ export default function AddFoodForm({ onAdded }) {
               ))}
             </div>
           ) : (
-            <span className="text-gray-400">Select {label}...</span>
+            <span className="text-white/40">Select {label}...</span>
           )}
           <span className="text-xs ml-2">▼</span>
         </button>
@@ -112,16 +173,43 @@ export default function AddFoodForm({ onAdded }) {
         {isOpen && (
           <>
             <div className="fixed inset-0 z-10" onClick={() => setActiveDropdown(null)} />
-            <div className="absolute z-20 w-full bg-white border rounded shadow-lg mt-1 max-h-60 overflow-y-auto p-2">
+            <div className="absolute z-20 w-full bg-zinc-900 border border-white/20 rounded-xl shadow-2xl mt-2 max-h-60 overflow-y-auto p-2 backdrop-blur-xl">
+              <div className="flex items-center justify-between mb-2 p-1">
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForm((f) => ({ ...f, [name]: options }));
+                      // keep dropdown open
+                      setActiveDropdown(name);
+                    }}
+                    className="text-sm text-green-400 hover:text-green-300 px-2 py-1 rounded"
+                  >
+                    Select All
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForm((f) => ({ ...f, [name]: [] }));
+                      // close dropdown after clearing
+                      setActiveDropdown(null);
+                    }}
+                    className="text-sm text-red-400 hover:text-red-300 px-2 py-1 rounded"
+                  >
+                    Clear All
+                  </button>
+                </div>
+                <span className="text-xs text-white/40">{form[name].length} selected</span>
+              </div>
               {options.map((opt) => (
-                <label key={opt} className="flex items-center space-x-2 p-1 hover:bg-gray-50 cursor-pointer">
+                <label key={opt} className="flex items-center space-x-2 p-2 hover:bg-white/10 rounded-lg cursor-pointer transition-colors group">
                   <input
                     type="checkbox"
                     checked={form[name].includes(opt)}
                     onChange={() => toggleSelection(name, opt)}
                     className="rounded text-blue-600 focus:ring-blue-500"
                   />
-                  <span className="text-sm">{opt}</span>
+                  <span className="text-sm text-white group-hover:text-blue-400">{opt}</span>
                 </label>
               ))}
             </div>
@@ -155,7 +243,7 @@ export default function AddFoodForm({ onAdded }) {
     if (form.foodStyle.length) body.foodStyle = form.foodStyle;
     
     // New fields
-    if (form.foodType) body.foodType = [form.foodType];
+    if (form.foodType.length) body.foodType = form.foodType;
     if (form.ingredients.length) body.ingredients = form.ingredients;
     if (form.spiceLevel) body.spiceLevel = [form.spiceLevel];
 
@@ -168,52 +256,71 @@ export default function AddFoodForm({ onAdded }) {
 
     // if (form.occasion) body.occasion = toArray(form.occasion);
 
-    // image handling: file -> base64, or if using URL use that directly
+    // image handling: file -> base64, or if using URL use that directly, or keep existing
     if (form.useUrl && form.imageUrl) {
       body.image = form.imageUrl;
     } else if (form.image instanceof File) {
       body.image = await fileToBase64(form.image);
+    } else if (isEditing && existingImage && !form.image && !form.imageUrl) {
+      // Keep existing image if no new image provided
+      body.image = existingImage;
+    } else if (isEditing && originalFood?.image && !form.image) {
+      // Preserve original image if editing and no new image provided
+      body.image = originalFood.image;
     }
 
     try {
-      const res = await fetch("/api/foods", {
-        method: "POST",
+      const method = isEditing ? "PUT" : "POST";
+      const url = isEditing ? `/api/foods/${editId}` : "/api/foods";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
 
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.message || "Failed to add food");
+        throw new Error(err.message || `Failed to ${isEditing ? 'update' : 'add'} food`);
       }
 
-      const newFood = await res.json();
-      setForm({
-        name: "",
-        image: "",
-        imageUrl: "",
-        useUrl: false,
-        description: "",
-        category: "",
-        mealTiming: [],
-        dietType: "",
-        healthGoals: [],
-        cuisine: [],
-        mood: [],
-        weather: [],
-        foodStyle: [],
-        foodType: "online",
-        ingredients: [],
-        spiceLevel: "",
-        calories: "",
-        protein: "",
-        carbs: "",
-        fat: "",
-        // occasion: "",
-      });
-      setPreviewUrl(null);
+      const updatedFood = await res.json();
 
-      if (onAdded) onAdded(newFood);
+      if (!isEditing) {
+        // Reset form only when adding new food
+        setForm({
+          name: "", // Reset form fields
+          image: null,
+          imageUrl: "",
+          useUrl: false,
+          description: "",
+          category: "",
+          mealTiming: [],
+          dietType: "",
+          healthGoals: [],
+          cuisine: [],
+          mood: [],
+          weather: [],
+          foodStyle: [],
+          foodType: [],
+          ingredients: [],
+          spiceLevel: "",
+          calories: "",
+          protein: "",
+          carbs: "",
+          fat: "",
+          // occasion: "",
+        });
+        setPreviewUrl(null);
+      }
+
+      if (onAdded) onAdded(updatedFood);
+      if (isEditing) {
+        // Go back to all-foods and highlight the edited food
+        router.push(`/all-foods?highlight=${updatedFood._id}`);
+      } else {
+        router.push("/");
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -225,7 +332,7 @@ export default function AddFoodForm({ onAdded }) {
 
   return (
     <form onSubmit={handleSubmit} className="mb-6 space-y-4">
-      <h2 className="text-xl font-semibold">Add New Food</h2>
+      <h2 className="text-xl font-semibold">{isEditing ? "Edit Food" : "Add New Food"}</h2>
 
       <Input
         label="Name"
@@ -265,7 +372,8 @@ export default function AddFoodForm({ onAdded }) {
               checked={!form.useUrl}
               onChange={() => {
                 setForm((f) => ({ ...f, useUrl: false, imageUrl: "" }));
-                setPreviewUrl(null);
+                // Show existing image if editing, otherwise clear preview
+                setPreviewUrl(isEditing && existingImage ? existingImage : null);
               }}
             />
             <span className="text-sm">Upload</span>
@@ -292,7 +400,7 @@ export default function AddFoodForm({ onAdded }) {
       ) : (
         <div>
           <label className="block text-sm font-medium" htmlFor="imageFile">
-            Upload Image
+            {isEditing ? "Upload New Image (leave empty to keep existing)" : "Upload Image"}
           </label>
           <input
             id="imageFile"
@@ -300,18 +408,28 @@ export default function AddFoodForm({ onAdded }) {
             accept="image/*"
             onChange={(e) => {
               if (e.target.files && e.target.files[0]) {
+                const file = e.target.files[0];
                 setForm((f) => ({ ...f, image: e.target.files[0] }));
                 setPreviewUrl(URL.createObjectURL(e.target.files[0]));
+              } else {
+                // If no file selected, show existing image again
+                setForm((f) => ({ ...f, image: null }));
+                setPreviewUrl(existingImage);
               }
             }}
             className="mt-1"
           />
           {previewUrl && (
-            <img
-              src={previewUrl}
-              alt="preview"
-              className="mt-2 w-32 h-32 object-cover rounded"
-            />
+            <div className="mt-2">
+              <img
+                src={previewUrl}
+                alt="preview"
+                className="w-32 h-32 object-cover rounded"
+              />
+              {isEditing && existingImage === previewUrl && (
+                <p className="text-xs text-gray-500 mt-1">Current image</p>
+              )}
+            </div>
           )}
         </div>
       )}
@@ -331,19 +449,7 @@ export default function AddFoodForm({ onAdded }) {
 
       {/* Food Type */}
       <div>
-        <label className="block text-sm font-medium" htmlFor="foodType">
-          Food Type
-        </label>
-        <select
-          id="foodType"
-          name="foodType"
-          value={form.foodType}
-          onChange={handleChange}
-          className="mt-1 block w-full border rounded px-2 py-1"
-        >
-          <option value="online">Order Online</option>
-          <option value="self-cooking">Self Cooking</option>
-        </select>
+        {renderMultiSelect("Food Type", "foodType", FOOD_TYPE_OPTIONS || ["online", "self-cooking"])}
       </div>
 
       {/* Ingredients Multi-select */}
@@ -352,7 +458,7 @@ export default function AddFoodForm({ onAdded }) {
         <button
           type="button"
           onClick={() => setActiveDropdown(activeDropdown === 'ingredients' ? null : 'ingredients')}
-          className="block w-full border rounded px-2 py-2 text-left bg-white min-h-[38px] flex justify-between items-center"
+          className="block w-full border rounded px-2 py-2 text-left bg-gray min-h-[38px] flex justify-between items-center"
         >
           {form.ingredients.length > 0 ? (
             <div className="flex flex-wrap gap-1">
@@ -374,9 +480,9 @@ export default function AddFoodForm({ onAdded }) {
         {activeDropdown === 'ingredients' && (
           <>
             <div className="fixed inset-0 z-10" onClick={() => setActiveDropdown(null)} />
-            <div className="absolute z-20 w-full bg-white border rounded shadow-lg mt-1 max-h-60 overflow-y-auto p-2">
+            <div className="absolute z-20 w-full bg-black border rounded shadow-lg mt-1 max-h-60 overflow-y-auto p-2">
               {allIngredientsList.map((item) => (
-                <label key={item.id} className="flex items-center space-x-2 p-1 hover:bg-gray-50 cursor-pointer">
+                <label key={item.id} className="flex items-center space-x-2 p-1  cursor-pointer">
                   <input
                     type="checkbox"
                     checked={form.ingredients.includes(item.id)}
@@ -418,9 +524,9 @@ export default function AddFoodForm({ onAdded }) {
         <div>
           {renderMultiSelect("Cuisine", "cuisine", CUISINE_OPTIONS)}
         </div>
-        <div>
+        {/* <div>
           {renderMultiSelect("Mood", "mood", MOOD_OPTIONS)}
-        </div>
+        </div> */}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -430,9 +536,9 @@ export default function AddFoodForm({ onAdded }) {
         <div>
           {renderMultiSelect("Weather", "weather", WEATHER_OPTIONS)}
         </div>
-        <div>
+        {/* <div>
           {renderMultiSelect("Food Style", "foodStyle", FOOD_STYLE_OPTIONS)}
-        </div>
+        </div> */}
         {/* <div>
           <label className="block text-sm font-medium" htmlFor="occasion">
             Occasion
@@ -472,7 +578,7 @@ export default function AddFoodForm({ onAdded }) {
       </div>
 
       {/* Nutrition Fields */}
-      <div className="border p-3 rounded bg-gray-50">
+      {/* <div className="border p-3 rounded bg-gray-50">
         <h3 className="text-sm font-medium mb-2">Nutrition (Per Serving)</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <Input
@@ -508,12 +614,12 @@ export default function AddFoodForm({ onAdded }) {
             placeholder="e.g. 35"
           />
         </div>
-      </div>
+      </div> */}
 
       {error && <p className="text-red-600">{error}</p>}
 
       <Button type="submit" disabled={loading}>
-        {loading ? "Saving..." : "Add Food"}
+        {loading ? "Saving..." : (isEditing ? "Update Food" : "Add Food")}
       </Button>
     </form>
   );

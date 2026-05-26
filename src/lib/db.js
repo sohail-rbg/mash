@@ -13,6 +13,11 @@ if (!cached) {
 }
 
 async function connectDB() {
+
+   if (!MONGODB_URI) {
+    throw new Error("❌ MONGODB_URI missing");
+  }
+
   if (cached.conn) {
     console.log("🚀 Using cached MongoDB connection");
     return cached.conn;
@@ -23,6 +28,8 @@ async function connectDB() {
 
     cached.promise = mongoose.connect(MONGODB_URI, {
       dbName: "mealmind_dev",
+      ssl: true,
+      tls: true,
       serverSelectionTimeoutMS: 10000,
     });
   }

@@ -8,20 +8,15 @@ import Link from "next/link";
 
 export default function LogoutButton() {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [timeLeft, setTimeLeft] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
 
   const handleLogout = () => {
-    // Clear the user cookie by setting its expiry date to the past
     document.cookie = "user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     document.cookie = "temp_filters=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    localStorage.removeItem("user");
-    localStorage.removeItem("loginTime");
-    // Redirect to the login page and refresh to clear server-side cache
-    window.location.href = "/login";
     localStorage.clear();
-    signOut({ callbackUrl: "/login" });
+    signOut({ callbackUrl: "/" }); // Redirect to home so they see the Login button on the main page
   };
 
   useEffect(() => {
@@ -72,29 +67,46 @@ export default function LogoutButton() {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  // If the user is not logged in, show a Login button instead of the avatar
+  if (status === "unauthenticated") {
+    return (
+      <Link 
+        href="/login" 
+        className="px-6 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-orange-500/20"
+      >
+        Login
+      </Link>
+    );
+  }
+
+  // While checking session, show a small loader or nothing
+  if (status === "loading") return <div className="w-10 h-10 rounded-full bg-white/5 animate-pulse" />;
+
   return (
     <div className="relative">
+
       {/* User Avatar Circle */}
-      <button 
+      <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative group p-0.5 rounded-full border-2 border-[var(--glass-border)] hover:border-[var(--text-muted)] transition-all active:scale-90"
+        className="relative cursor-pointer active:scale-90 transition-transform"
+        title="Account"
       >
-        <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-full overflow-hidden bg-neutral-900 border border-white/10 shadow-2xl">
+        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden bg-neutral-900 border border-white/15 shadow-lg">
           {session?.user?.image ? (
-            <img 
-              src={session.user.image} 
-              alt="User" 
+            <img
+              src={session.user.image}
+              alt="User"
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-white font-bold bg-gradient-to-br from-neutral-700 to-neutral-900">
+            <div className="w-full h-full flex items-center justify-center text-white text-sm font-bold bg-gradient-to-br from-neutral-700 to-neutral-900">
               {session?.user?.name?.charAt(0) || "U"}
             </div>
           )}
         </div>
-        
-        {/* Status indicator */}
-        <span className="absolute bottom-1 right-1 w-3 h-3 bg-green-500 border-2 border-black rounded-full"></span>
+
+        {/* Online status dot */}
+        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-black rounded-full" />
       </button>
 
       {/* Compact Dropdown Menu */}
@@ -113,9 +125,6 @@ export default function LogoutButton() {
             <div className="p-2 flex flex-col gap-1">
               <Link href="/profile" className="flex items-center gap-3 px-4 py-1 text-xs font-bold text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-white/5 hover:border-black-500/10 rounded-2xl transition-all group">
                 <span className="text-lg group-hover:scale-110 transition-transform">👤</span> Profile Details
-              </Link>
-              <Link href="/add-food" className="flex items-center gap-3 px-4 py-3 text-xs font-bold text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-white/5 rounded-2xl transition-all group">
-                <span className="text-lg group-hover:scale-110 transition-transform">🍳</span> Add New Food
               </Link>
               <Link href="/preferences" className="flex items-center gap-3 px-4  text-xs font-bold text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-white/5 rounded-2xl transition-all group">
                 <span className="text-lg group-hover:rotate-45 transition-transform">⚙️</span> Settings

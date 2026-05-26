@@ -13,7 +13,9 @@ import AuthProvider from "./AuthProvider";
 import { GlobalStyles } from "./SharedStyles";
 import ThemeProvider from "./ThemeProvider";
 
-// ✅ Default Fonts
+import { ClerkProvider, Show, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs'
+
+//  Default Fonts
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -24,7 +26,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// ✅ Extra Premium Fonts
+//  Extra Premium Fonts
 const syne = Syne({
   variable: "--font-syne",
   subsets: ["latin"],
@@ -50,17 +52,18 @@ const outfit = Outfit({
   subsets: ["latin"],
 });
 
-// ✅ Metadata
+//  Metadata
 export const metadata = {
   title: "My App",
   description: "Premium UI App",
 };
 
-// ✅ Root Layout
+//  Root Layout
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
+        suppressHydrationWarning
         className={`
           ${geistSans.variable}
           ${geistMono.variable}

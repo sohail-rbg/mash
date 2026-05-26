@@ -121,7 +121,6 @@ export default function Preferences() {
   const [goals,     setGoals]     = useState([]);
   const [cuisine,   setCuisine]   = useState([]);
   const [saving,    setSaving]    = useState(false);
-  const [allergySearch, setAllergySearch] = useState("");
   const [toast,     setToast]     = useState({ show: false, message: "", type: "success" });
 
   // Load initial preferences from session when it becomes available
@@ -156,11 +155,6 @@ export default function Preferences() {
   const goalOpts = GOAL_OPTIONS || OPTIONS_MAP?.healthGoals || [];
   const cuisineOpts = CUISINE_OPTIONS || OPTIONS_MAP?.cuisine || [];
 
-  const filteredAllergies = allergyList.filter(opt => 
-    opt.label?.toLowerCase().includes(allergySearch.toLowerCase()) && 
-    !allergies.includes(opt.value)
-  );
-
   const handleSave = async () => {
     if (!diet || !session?.user?.id) return; // Ensure diet is selected and user ID exists
 
@@ -190,14 +184,44 @@ export default function Preferences() {
 
       if (res.ok) {
         setToast({ show: true, message: "Preferences saved successfully! ✅", type: "success" });
-        // Update the session to reflect the new questionnaire and profileComplete status
-        await update({ user: { ...session.user, questionnaire: preferencesData, profileComplete: true } });
+        await update({ user: data.user });
         setTimeout(() => router.push("/"), 1500); // Redirect after short delay so they see success
       } else {
         setToast({ show: true, message: data.message || "Failed to save preferences.", type: "error" });
       }
     } catch (error) {
       setToast({ show: true, message: "A connection error occurred. Please try again.", type: "error" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSkip = async () => {
+    if (!session?.user?.id) return;
+    setSaving(true);
+
+    try {
+      const res = await fetch('/api/preferences', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: session.user.id,
+          answers: [{ questionId: 'preferenceSkipped', answer: ['true'] }],
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setToast({ show: true, message: 'Preferences skipped for now. You can update them anytime.', type: 'success' });
+        await update({ user: data.user });
+        router.push('/');
+      } else {
+        setToast({ show: true, message: data.message || 'Unable to skip preferences.', type: 'error' });
+      }
+    } catch (error) {
+      setToast({ show: true, message: 'A connection error occurred. Please try again.', type: 'error' });
     } finally {
       setSaving(false);
     }
@@ -256,9 +280,9 @@ export default function Preferences() {
         .pref-card-in { animation: cardIn 0.65s cubic-bezier(0.22,1,0.36,1) both; }
 
         .save-btn {
-          width:100%; padding:15px; border-radius:16px; border:none; cursor:pointer;
-          font-family:'Syne',sans-serif; font-weight:800; font-size:14px;
-          letter-spacing:0.08em; color:#000;
+          padding:13px; border-radius:16px; border:none; cursor:pointer;
+          font-family:'Syne',sans-serif; font-weight:800; font-size:13px;
+          letter-spacing:0.06em; color:#000;
           background:linear-gradient(90deg,#22c55e 0%,#4ade80 40%,#bbf7d0 55%,#4ade80 70%,#16a34a 100%);
           background-size:200% 100%;
           box-shadow:0 8px 28px rgba(34,197,94,0.35),0 2px 8px rgba(0,0,0,0.4);
@@ -271,17 +295,38 @@ export default function Preferences() {
           opacity:0.35; cursor:not-allowed; animation:none;
           background:#14532d; color:rgba(255,255,255,0.60);
         }
+
+        .skip-btn {
+          flex: 1; padding: 13px 0; font-size: 12px; font-weight: 700;
+          border-radius: 16px; border: 1px solid rgba(255,255,255,0.12);
+          background: rgba(255,255,255,0.04);
+          color: rgba(255,255,255,0.55);
+          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+          letter-spacing: 0.02em;
+          cursor: pointer;
+        }
+        .skip-btn:hover:not(:disabled) {
+          background: rgba(255,255,255,0.08);
+          color: rgba(255,255,255,0.9);
+          border-color: rgba(255,255,255,0.25);
+          transform: translateY(-2px);
+          box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .skip-btn:active:not(:disabled) { transform: translateY(0) scale(0.98); }
+        .skip-btn:disabled { opacity: 0.3; cursor: not-allowed; }
       `}</style>
 
       {/* ── Root container ── */}
       <div style={{
-        position:"relative", minHeight:"100vh", width:"100%",
-        display:"flex", alignItems:"center", justifyContent:"center",
-        // padding:"28px 16px",
-        background:"#000",
-        
-        isolation:"isolate",
-        overflowX:"hidden",
+        position: "fixed",
+        inset: 0,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#000",
+        isolation: "isolate",
+        overflowX: "hidden",
+        padding: "0 12px",
       }}>
 
         {/* ── Toast Notification ── */}
@@ -351,14 +396,20 @@ export default function Preferences() {
         <div
           className="pref-card-in"
           style={{
-            position:"relative", zIndex:10, margin: "0 auto", 
-            width:"100%", maxWidth:"min(95vw, 700px)",
-            borderRadius:"3rem", padding:"clamp(20px, 5vw, 25px)",
-            background:"rgba(255, 255, 255, 0.08)",
-            backdropFilter:"blur(5px) saturate(360%)",
-            WebkitBackdropFilter:"blur(28px) saturate(160%)",
-            border:"1px solid rgba(255,255,255,0.15)",
-            boxShadow:"0 50px 100px -20px rgba(0,0,0,0.7), inset 0 1px 1px rgba(255,255,255,0.1)",
+            position: "relative", zIndex: 10,
+            width: "100%", maxWidth: "min(95vw, 680px)",
+            maxHeight: "calc(100vh - 32px)",
+            overflowY: "auto",
+            overflowX: "hidden",
+            borderRadius: "2rem",
+            padding: "clamp(20px, 4vw, 32px)",
+            background: "rgba(255,255,255,0.07)",
+            backdropFilter: "blur(28px) saturate(160%)",
+            WebkitBackdropFilter: "blur(28px) saturate(160%)",
+            border: "1px solid rgba(255,255,255,0.13)",
+            boxShadow: "0 40px 80px -20px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.10)",
+            scrollbarWidth: "thin",
+            scrollbarColor: "rgba(255,255,255,0.1) transparent",
           }}
         >
           {/* card top glow strip */}
@@ -369,43 +420,42 @@ export default function Preferences() {
           }} />
 
           {/* ── Header ── */}
-          <div style={{ marginBottom:0 }}>
-            <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:5, justifyContent:"between" }}>
-              {/* <div style={{
-                width:30, height:30, borderRadius:14, fontSize:20,
-                background:"linear-gradient(135deg,#16a34a,#4ade80)",
-                display:"flex", alignItems:"center", justifyContent:"center",
-                boxShadow:"0 4px 16px rgba(74,222,128,0.35)",
-
-              }}>🍽️</div>
-              <span style={{
-                fontWeight:900, fontSize:14,
-                color:"rgba(255,255,255,0.45)", letterSpacing:"0.16em", textTransform:"uppercase", fontSize:"clamp(8px, 1.5vw, 10px)"
-              }}>MealMind</span> */}
-           
-
+          <div style={{ marginBottom: 20 }}>
             <h1 style={{
-              fontWeight:900, fontSize:"clamp(20px, 4vw, 25px)",
-              color:"#fff", lineHeight:1.1, letterSpacing:"-0.02em",
+              fontWeight: 900, fontSize: "clamp(22px, 4vw, 28px)",
+              color: "#fff", lineHeight: 1.1, letterSpacing: "-0.02em",
+              marginBottom: 6,
             }}>
-              Your Kitchen,
+              Your Kitchen,{" "}
               <span style={{
-                backgroundImage:"linear-gradient(90deg,#4ade80,#bbf7d0)",
-                WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
-                backgroundClip:"text", 
+                backgroundImage: "linear-gradient(90deg,#4ade80,#bbf7d0)",
+                WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
               }}>Your Rules.</span>
             </h1>
-             </div>
-            <p style={{ fontSize:12, color:"rgba(255,255,255,0.30)", letterSpacing:"0.03em", display:"flex", justifyContent:"center" }}>
+            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", letterSpacing: "0.03em" }}>
               Personalise your experience — takes 30 seconds
             </p>
           </div>
 
+          {!canSave && (
+            <div style={{ 
+              marginBottom: 20, padding: "10px 16px", borderRadius: "1rem",
+              background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.2)",
+              display: "flex", alignItems: "center", gap: 10, animation: "cardIn 0.4s ease-out"
+            }}>
+              <span style={{ fontSize: 14 }}>👋</span>
+              <p style={{ fontSize: 12, color: "#4ade80", fontWeight: 700, letterSpacing: "0.01em" }}>
+                Pick a diet type (Step 1) to continue
+              </p>
+            </div>
+          )}
+
           {/* ── Sections ── */}
-          <div style={{ display:"flex", flexDirection:"column", gap:20 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
 
             <Section step="1" title="Diet Type" subtitle="Pick one that fits your lifestyle">
-              <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 gap-3">
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: 8 }}>
                 {dietOpts.map(o => (
                   <OptionCard key={o.value} type="radio" name="diet"
                     value={o.value} label={o.label}
@@ -414,85 +464,18 @@ export default function Preferences() {
               </div>
             </Section>
 
-            <Section step="2" title="Allergies & Restrictions" subtitle="Search and add your allergies">
-              <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {/* Selected Tags Display */}
-                {allergies.length > 0 && (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    {allergies.map(val => {
-                      const opt = allergyList.find(o => o.value === val);
-                      return (
-                        <div key={val} style={{
-                          display: 'flex', alignItems: 'center', gap: 6,
-                          background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)',
-                          borderRadius: '12px', padding: '6px 12px', color: '#fff', fontSize: '11px', fontWeight: 800,
-                          animation: 'dotPop 0.3s ease-out', textTransform: 'capitalize'
-                        }}>
-                          {opt?.label || val}
-                          <button 
-                            onClick={() => setAllergies(prev => prev.filter(v => v !== val))}
-                            style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: '14px', marginLeft: 4, display: 'flex', alignItems: 'center' }}
-                          >✕</button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {/* Better Searcher Input */}
-                <div style={{ position: 'relative' }}>
-                  <input 
-                    type="text"
-                    placeholder="Search allergies (e.g. Nuts, Dairy...)"
-                    value={allergySearch}
-                    onChange={(e) => setAllergySearch(e.target.value)}
-                    style={{
-                      width: '100%', padding: '14px 18px', borderRadius: '16px',
-                      background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
-                      color: '#fff', outline: 'none', fontSize: '13px', fontWeight: 700,
-                      transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)', fontFamily: 'inherit'
-                    }}
-                    onFocus={(e) => { e.target.style.borderColor = 'rgba(74,222,128,0.5)'; e.target.style.background = 'rgba(255,255,255,0.1)'; }}
-                    onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.background = 'rgba(255,255,255,0.06)'; }}
-                  />
-                  
-                  {/* Search Results Dropdown */}
-                  {allergySearch && (
-                    <div className="drawer-scroll" style={{
-                      position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100,
-                      marginTop: 8, background: 'rgba(20, 20, 20, 0.98)', backdropFilter: 'blur(30px)',
-                      borderRadius: '20px', border: '1px solid rgba(255,255,255,0.15)',
-                      maxHeight: '190px', overflowY: 'auto', padding: '6px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.8)'
-                    }}>
-                      {filteredAllergies.length > 0 ? (
-                        filteredAllergies.map(o => (
-                          <button key={o.value} 
-                            onClick={() => {
-                              setAllergies(prev => [...prev, o.value]);
-                              setAllergySearch("");
-                            }}
-                            style={{
-                              width: '100%', textAlign: 'left', padding: '12px 16px', borderRadius: '12px',
-                              background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer',
-                              fontSize: '13px', fontWeight: 700, transition: 'all 0.2s', textTransform: 'capitalize'
-                            }}
-                            onMouseEnter={(e) => { e.target.style.background = 'rgba(255,255,255,0.08)'; e.target.style.color = '#4ade80'; }}
-                            onMouseLeave={(e) => { e.target.style.background = 'transparent'; e.target.style.color = '#fff'; }}
-                          >
-                            {o.label}
-                          </button>
-                        ))
-                      ) : (
-                        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', padding: '16px', textAlign: 'center', fontWeight: 600 }}>No results found</p>
-                      )}
-                    </div>
-                  )}
-                </div>
+            <Section step="2" title="Allergies & Restrictions" subtitle="Select any that apply to you">
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: 8 }}>
+                {allergyList.map(o => (
+                  <OptionCard key={o.value} type="checkbox" name="allergies"
+                    value={o.value} label={o.label}
+                    selected={allergies} onChange={toggle(setAllergies)} />
+                ))}
               </div>
             </Section>
 
             <Section step="3" title="Health Goals" subtitle="What are you working towards?">
-              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4">
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: 8 }}>
                 {goalOpts.map(o => (
                   <OptionCard key={o.value} type="checkbox" name="goals"
                     value={o.value} label={o.label}
@@ -502,7 +485,7 @@ export default function Preferences() {
             </Section>
 
             <Section step="4" title="Favourite Cuisines" subtitle="We'll prioritise these for you">
-              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4">
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: 8 }}>
                 {cuisineOpts.map(o => (
                   <OptionCard key={o.value} type="checkbox" name="cuisine"
                     value={o.value} label={o.label}
@@ -511,24 +494,32 @@ export default function Preferences() {
               </div>
             </Section>
 
-            {/* Save */}
-            <div>
-              {!canSave && (
-                <p className="text-center text-sm sm:text-base" style={{
-                  color:"rgba(74,222,128)",
-                  marginBottom:8, letterSpacing:"0.04em",
-                }}>↑ Pick a diet type to continue</p>
-              )}
-              <button className="save-btn py-3 sm:py-4 text-sm sm:text-base" disabled={!canSave || saving} onClick={handleSave}>
-                {saving
-                  ? <span style={{
-                      display:"inline-block", width:15, height:15,
-                      border:"2.5px solid rgba(0,0,0,0.35)", borderTopColor:"#000",
-                      borderRadius:"50%", animation:"spinBtn 0.7s linear infinite",
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10 }}>
+              <div style={{ display: "flex", gap: 12, alignItems: "stretch" }}>
+                {/* Save — primary, takes more space */}
+                <button
+                  className="save-btn"
+                  disabled={!canSave || saving}
+                  onClick={handleSave}
+                  style={{ flex: 2, padding: "13px 0", fontSize: 13 }}
+                >
+                  {saving ? (
+                    <span style={{
+                      display: "inline-block", width: 15, height: 15,
+                      border: "2.5px solid rgba(0,0,0,0.35)", borderTopColor: "#000",
+                      borderRadius: "50%", animation: "spinBtn 0.7s linear infinite",
                     }} />
-                  : "Save My Preferences →"
-                }
-              </button>
+                  ) : "Save My Preferences →"}
+                </button>
+
+                {/* Skip — secondary, smaller */}
+                <button
+                  type="button" className="skip-btn"
+                  disabled={saving} onClick={handleSkip}
+                >
+                  Skip for now
+                </button>
+              </div>
             </div>
 
           </div>

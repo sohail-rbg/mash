@@ -1,26 +1,40 @@
+import { 
+  DIET_TYPE_OPTIONS, 
+  HEALTH_GOALS_OPTIONS, 
+  CUISINE_OPTIONS as CONST_CUISINES,
+  INGREDIENT_RESTRICTION_OPTIONS 
+} from "./constants";
+
+const formatLabel = (str) => {
+  if (!str) return "";
+  return str
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
 export const DIET_OPTIONS = [
-  { value: "omnivore", label: "Omnivore" },
-  { value: "vegetarian", label: "Vegetarian" },
-  { value: "vegan", label: "Vegan" },
-  { value: "keto", label: "Keto" },
-  { value: "paleo", label: "Paleo" },
-  { value: "gluten-free", label: "Gluten Free" },
+  { value: "veg", label: "Vegetarian" },
+  { value: "non-veg", label: "Non-Vegetarian" },
+  ...DIET_TYPE_OPTIONS
+    .filter(opt => opt !== 'veg' && opt !== 'non-veg')
+    .map(opt => ({ value: opt, label: formatLabel(opt) }))
 ];
 
-export const ALLERGY_OPTIONS = [
-  { value: "nuts", label: "Nuts" }, { value: "dairy", label: "Dairy" }, { value: "eggs", label: "Eggs" },
-  { value: "soy", label: "Soy" }, { value: "shellfish", label: "Shellfish" }, { value: "gluten", label: "Gluten" },
-];
+export const ALLERGY_OPTIONS = INGREDIENT_RESTRICTION_OPTIONS.map(opt => ({
+  value: opt,
+  label: formatLabel(opt)
+}));
 
-export const GOAL_OPTIONS = [
-  { value: "weight-loss", label: "Weight Loss" }, { value: "muscle-gain", label: "Muscle Gain" }, { value: "energy", label: "More Energy" },
-  { value: "heart-health", label: "Heart Health" }, { value: "gut-health", label: "Gut Health" }, { value: "balanced", label: "Stay Balanced" },
-];
+export const GOAL_OPTIONS = HEALTH_GOALS_OPTIONS.map(opt => ({
+  value: opt,
+  label: formatLabel(opt)
+}));
 
-export const CUISINE_OPTIONS = [
-  { value: "indian", label: "Indian" }, { value: "italian", label: "Italian" }, { value: "mexican", label: "Mexican" },
-  { value: "japanese", label: "Japanese" }, { value: "american", label: "American" }, { value: "thai", label: "Thai" },
-];
+export const CUISINE_OPTIONS = CONST_CUISINES.map(opt => ({
+  value: opt,
+  label: formatLabel(opt)
+}));
 
 export const OPTIONS_MAP = {
   dietType: DIET_OPTIONS,

@@ -32,14 +32,17 @@ const UserSchema = new mongoose.Schema(
       type: String,
     },
 
+    profileComplete: {
+      type: Boolean,
+      default: false,
+    },
+
     questionnaire: [
       {
         questionId: String,
         answer: [String],
       },
     ],
-
-    // All user preferences are stored in the questionnaire array above
   },
   { timestamps: true }
 );

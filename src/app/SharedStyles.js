@@ -7,33 +7,16 @@ export const GlobalStyles = () => (
     @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@700;800&display=swap');
 
     :root {
-      --bg-color: #f8fafc;
-      --card-bg: #ffffff;
-      --card-inner-bg: rgba(255, 255, 255, 0.9);
-      --text-main: #0f172a;
-      --text-muted: #64748b;
-      --glass-bg: rgba(255, 255, 255, 0.7);
-      --glass-border: rgba(0, 0, 0, 0.33);
-        --card-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.08), inset 0 0 20px rgba(255,255,255,0.5);
-
-      --glow-opacity: 0.1;
-
-       --card-border: rgba(160, 160, 160, 1);
-     
-      --card-border: rgba(0, 0, 0, 0.08);
-    }
-
-    .dark {
-      --bg-color: #020617;
-      --card-bg: rgba(7, 24, 46, 0.8);
-      --card-inner-bg: rgba(3, 6, 10, 0.7);
+      --bg-color: rgba(8, 12, 22, 0.92);
+      --card-bg: rgba(10, 18, 38, 0.85);
+      --card-inner-bg: rgba(5, 10, 20, 0.75);
       --text-main: #ffffff;
-      --text-muted: rgba(255, 255, 255, 0.5);
-      --glass-bg: rgba(255, 255, 255, 0.11);
-      --glass-border: rgba(255, 255, 255, 0.24);
-      --card-shadow: 0 0 40px rgba(255, 255, 255, 0.1), inset 0 0 20px rgba(0,0,0,0.2);
-      --glow-opacity: 0.4;
-      --card-border: rgba(255, 255, 255, 0.15);
+      --text-muted: rgba(255, 255, 255, 0.55);
+      --glass-bg: rgba(255, 255, 255, 0.08);
+      --glass-border: rgba(255, 255, 255, 0.38);
+      --card-shadow: 0 0 60px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255,255,255,0.04), inset 0 0 20px rgba(0,0,0,0.3);
+      --glow-opacity: 0.35;
+      --card-border: rgba(255, 255, 255, 1);
     }
 
     /* --- Common Animations --- */

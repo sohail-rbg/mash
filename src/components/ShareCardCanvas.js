@@ -17,21 +17,27 @@ export default function ShareCardCanvas({ food, user, onClose }) {
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d', { alpha: true });
-    const W = 900, H = 1130;
-    canvas.width = W;
-    canvas.height = H;
+    const W = 900;
 
-    // Design styles based on theme
+    // ── Pre-calculate layout to get exact canvas height ──
+    // badge: y=32, h=26 → bottom=58
+    // nameY = 58+38 = 96, email = 96+26=122, divider = 96+44=140
+    // imgY = 140+16=156, imgH=700 → imgBottom=856
+    // nameBlock = 856+30=886, nameLines≈1, nameBottom=886+56=942
+    // desc = 942+8=950, branding = 950+44=994, H = 994+20=1014
+    // We'll compute precisely after measuring text
+    canvas.width = W;
+
     const designStyles = theme === 'dark' ? [
-      { bg: '#020617', accent: '#3b82f6', gold: '#fbbf24', text: '#ffffff', muted: 'rgba(255,255,255,0.6)', cardInner: 'rgba(255,255,255,0.05)', texture: 'grid' },
-      { bg: '#0f172a', accent: '#10b981', gold: '#34d399', text: '#ffffff', muted: 'rgba(255,255,255,0.6)', cardInner: 'rgba(255,255,255,0.05)', texture: 'lines' },
-      { bg: '#1e1b4b', accent: '#818cf8', gold: '#e879f9', text: '#ffffff', muted: 'rgba(255,255,255,0.6)', cardInner: 'rgba(255,255,255,0.05)', texture: 'dots' },
-      { bg: '#18181b', accent: '#f43f5e', gold: '#fb923c', text: '#ffffff', muted: 'rgba(255,255,255,0.6)', cardInner: 'rgba(255,255,255,0.05)', texture: 'none' },
+      { bg: '#000000', accent: '#3b82f6', gold: '#fbbf24', text: '#ffffff', muted: 'rgba(255,255,255,0.6)', texture: 'grid' },
+      { bg: '#0f172a', accent: '#10b981', gold: '#34d399', text: '#ffffff', muted: 'rgba(255,255,255,0.6)', texture: 'lines' },
+      { bg: '#1e1b4b', accent: '#818cf8', gold: '#e879f9', text: '#ffffff', muted: 'rgba(255,255,255,0.6)', texture: 'dots' },
+      { bg: '#18181b', accent: '#f43f5e', gold: '#fb923c', text: '#ffffff', muted: 'rgba(255,255,255,0.6)', texture: 'none' },
     ] : [
-      { bg: '#ffffff', accent: '#2563eb', gold: '#d97706', text: '#0f172a', muted: 'rgba(15,23,42,0.7)', cardInner: 'rgba(0,0,0,0.03)', texture: 'grid' },
-      { bg: '#f8fafc', accent: '#059669', gold: '#0d9488', text: '#0f172a', muted: 'rgba(15,23,42,0.7)', cardInner: 'rgba(0,0,0,0.03)', texture: 'lines' },
-      { bg: '#fff7ed', accent: '#ea580c', gold: '#c2410c', text: '#431407', muted: 'rgba(67,20,7,0.7)', cardInner: 'rgba(0,0,0,0.03)', texture: 'dots' },
-      { bg: '#faf5ff', accent: '#7c3aed', gold: '#9333ea', text: '#1e1b4b', muted: 'rgba(30,27,75,0.7)', cardInner: 'rgba(0,0,0,0.03)', texture: 'none' },
+      { bg: '#ffffff', accent: '#2563eb', gold: '#d97706', text: '#0f172a', muted: 'rgba(15,23,42,0.7)', texture: 'grid' },
+      { bg: '#f8fafc', accent: '#059669', gold: '#0d9488', text: '#0f172a', muted: 'rgba(15,23,42,0.7)', texture: 'lines' },
+      { bg: '#fff7ed', accent: '#ea580c', gold: '#c2410c', text: '#431407', muted: 'rgba(67,20,7,0.7)', texture: 'dots' },
+      { bg: '#faf5ff', accent: '#7c3aed', gold: '#9333ea', text: '#1e1b4b', muted: 'rgba(30,27,75,0.7)', texture: 'none' },
     ];
 
     const style = designStyles[refreshKey % designStyles.length];
@@ -46,6 +52,29 @@ export default function ShareCardCanvas({ food, user, onClose }) {
 
     try {
       const foodImg = await loadImg(food.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800');
+
+      // ── Pre-calculate H based on food name line count ──
+      ctx.font = 'italic 800 36px serif';
+      const preWords = food.name.split(' ');
+      let preLines = [], preLine = '';
+      preWords.forEach(w => {
+        const t = preLine + w + ' ';
+        if (ctx.measureText(t).width > 720 && preLine) { preLines.push(preLine.trim()); preLine = w + ' '; }
+        else preLine = t;
+      });
+      preLines.push(preLine.trim());
+
+      const by = 28, badgeH = 28;          // badge: compact pill
+      const nameY  = by + badgeH + 32;     // name just below badge
+      const dividerY = nameY + 42;         // divider below email
+      const imgY   = dividerY + 20;        // image starts
+      const imgH   = 700;                  // image height
+      const nameBlockY = imgY + imgH + 60; // food name below image
+      const descY  = nameBlockY + preLines.length * 40;
+      const brandingY  = descY + 100;
+      const H = brandingY + 100;            // canvas height — snug
+
+      canvas.height = H;
 
       // Background
       ctx.fillStyle = style.bg;
@@ -74,161 +103,138 @@ export default function ShareCardCanvas({ food, user, onClose }) {
       ctx.save();
       ctx.globalAlpha = theme === 'dark' ? 0.05 : 0.07;
       ctx.strokeStyle = style.text;
-
       if (style.texture === 'lines') {
         for (let i = -H; i < W + H; i += 55) {
-          ctx.beginPath();
-          ctx.moveTo(i, 0);
-          ctx.lineTo(i + H, H);
-          ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i + H, H); ctx.stroke();
         }
       } else if (style.texture === 'grid') {
         for (let i = 0; i < W; i += 45) ctx.fillRect(i, 0, 1, H);
         for (let j = 0; j < H; j += 45) ctx.fillRect(0, j, W, 1);
       } else if (style.texture === 'dots') {
         ctx.fillStyle = style.text;
-        for (let i = 30; i < W; i += 55) {
+        for (let i = 30; i < W; i += 55)
           for (let j = 30; j < H; j += 55) {
-            ctx.beginPath();
-            ctx.arc(i, j, 1.8, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.beginPath(); ctx.arc(i, j, 1.8, 0, Math.PI * 2); ctx.fill();
           }
-        }
       }
       ctx.restore();
 
-      // Badge
-      const badgeW = 240, badgeH = 32, bx = (W - badgeW) / 2, by = 48;
+      // ── Top badge ──
+      const badgeW = 210, bx = (W - badgeW) / 2;
       ctx.save();
-      ctx.shadowColor = style.accent;
-      ctx.shadowBlur = 20;
-      ctx.beginPath();
-      ctx.roundRect(bx, by, badgeW, badgeH, 12);
-      ctx.fillStyle = style.accent + 'cc';
-      ctx.fill();
+      ctx.shadowColor = style.accent; ctx.shadowBlur = 14;
+      ctx.beginPath(); ctx.roundRect(bx, by, badgeW, badgeH, badgeH / 2);
+      ctx.fillStyle = style.accent + 'cc'; ctx.fill();
       ctx.restore();
+      ctx.fillStyle = '#fff'; ctx.font = '700 11px sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('✦ EXCLUSIVE DISCOVERY ✦', W / 2, by + badgeH / 2);
 
-      ctx.fillStyle = '#fff';
-      ctx.font = '700 11px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('✦ EXCLUSIVE DISCOVERY ✦', W / 2, by + 21);
-
-      // User Info
+      // ── User Info — compact, no avatar ──
+      ctx.textBaseline = 'alphabetic';
       ctx.textAlign = 'center';
       ctx.fillStyle = style.text;
-      ctx.font = '900 35px "Syne", sans-serif';
-      ctx.fillText(user.name.toUpperCase(), W / 2, 138);
+      ctx.font = '800 32px sans-serif';
+      ctx.fillText(user.name.toUpperCase(), W / 2, nameY);
 
+      // Email — small muted text, tight below name
       ctx.fillStyle = style.muted;
-      ctx.font = '500 25px "Inter", sans-serif';
-      ctx.fillText(user.email.toLowerCase(), W / 2, 168);
+      ctx.font = '400 18px sans-serif';
+      ctx.fillText(user.email.toLowerCase(), W / 2, nameY + 26);
 
-      // Divider
-      ctx.strokeStyle = style.muted + '44';
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
-      ctx.moveTo(220, 185);
-      ctx.lineTo(580, 185);
-      ctx.stroke();
+      // Gradient divider
+      const divGrad = ctx.createLinearGradient(100, 0, W - 100, 0);
+      divGrad.addColorStop(0, 'transparent');
+      divGrad.addColorStop(0.5, style.accent + '88');
+      divGrad.addColorStop(1, 'transparent');
+      ctx.strokeStyle = divGrad; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(100, dividerY); ctx.lineTo(W - 100, dividerY); ctx.stroke();
 
-      // Food Image Container
-      const imgX = 55, imgY = 215, imgW = 800, imgH = 800, r = 36;
+      // ── Food Image ──
+      const imgX = 50, imgW = 800, r = 32;
 
-      // Glow + borders
+      // Glow border
       ctx.save();
-      ctx.shadowColor = style.accent;
-      ctx.shadowBlur = 35;
-      ctx.strokeStyle = style.accent;
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.roundRect(imgX - 6, imgY - 6, imgW + 12, imgH + 12, r + 6);
-      ctx.stroke();
+      ctx.shadowColor = style.accent; ctx.shadowBlur = 28;
+      ctx.strokeStyle = style.accent; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.roundRect(imgX - 4, imgY - 4, imgW + 8, imgH + 8, r + 4); ctx.stroke();
       ctx.restore();
+      ctx.strokeStyle = style.gold + '99'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.roundRect(imgX - 1, imgY - 1, imgW + 2, imgH + 2, r + 1); ctx.stroke();
 
-      ctx.strokeStyle = style.gold + 'aa';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.roundRect(imgX - 2, imgY - 2, imgW + 4, imgH + 4, r + 2);
-      ctx.stroke();
-
-      // Clip and draw image
+      // Draw image
       ctx.save();
-      ctx.beginPath();
-      ctx.roundRect(imgX, imgY, imgW, imgH, r);
-      ctx.clip();
+      ctx.beginPath(); ctx.roundRect(imgX, imgY, imgW, imgH, r); ctx.clip();
       ctx.drawImage(foodImg, imgX, imgY, imgW, imgH);
-
-      // Gradient overlay
-      const grad = ctx.createLinearGradient(0, imgY + imgH - 180, 0, imgY + imgH);
-      grad.addColorStop(0, 'transparent');
-      grad.addColorStop(1, style.bg + 'f0');
-      ctx.fillStyle = grad;
-      ctx.fillRect(imgX, imgY + imgH - 180, imgW, 180);
       ctx.restore();
 
-      // Category & Calories
-      const catText = (food.category || 'DINNER').toUpperCase();
-      ctx.fillStyle = style.accent + 'ee';
-      ctx.beginPath();
-      ctx.roundRect(imgX + 20, imgY + 20, 110, 32, 16);
-      ctx.fill();
+      // ── Diet badge — top-left of image ──
+      const dietRaw = food.dietType?.[0] || food.category || '';
+      const isVeg = dietRaw.toLowerCase().includes('veg') && !dietRaw.toLowerCase().includes('non');
+      const dietLabel = isVeg ? '🌱 VEG' : dietRaw ? `🍖 ${dietRaw.toUpperCase()}` : null;
+      const dietColor = isVeg ? '#22c55e' : '#ef4444';
+      const dietBg   = isVeg ? 'rgba(34,197,94,0.88)' : 'rgba(239,68,68,0.88)';
 
-      ctx.fillStyle = '#fff';
-      ctx.font = '700 20px sans-serif';
-      ctx.textAlign = 'left';
-      ctx.fillText(catText, imgX + 38, imgY + 48);
+      if (dietLabel) {
+        const dx = imgX + 16, dy = imgY + 16, dw = 118, dh = 34;
+        ctx.save();
+        ctx.shadowColor = dietColor; ctx.shadowBlur = 10;
+        ctx.fillStyle = dietBg;
+        ctx.beginPath(); ctx.roundRect(dx, dy, dw, dh, 17); ctx.fill();
+        ctx.strokeStyle = dietColor; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.roundRect(dx, dy, dw, dh, 17); ctx.stroke();
+        ctx.fillStyle = '#fff'; ctx.font = '700 17px sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(dietLabel, dx + dw / 2, dy + dh / 2);
+        ctx.restore();
+      }
 
+      // ── Calories badge — top-right of image ──
       const calText = `${food.nutrition?.calories || 320} KCAL`;
-      const calW = ctx.measureText(calText).width + 32;
+      ctx.font = '700 17px sans-serif';
+      const calW = ctx.measureText(calText).width + 26;
       ctx.fillStyle = style.gold + 'ee';
-      ctx.beginPath();
-      ctx.roundRect(imgX + imgW - calW - 20, imgY + 20, calW, 32, 16);
-      ctx.fill();
-
+      ctx.beginPath(); ctx.roundRect(imgX + imgW - calW - 16, imgY + 16, calW, 30, 15); ctx.fill();
       ctx.fillStyle = style.bg;
-      ctx.font = '700 20px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(calText, imgX + imgW - calW / 2 - 20, imgY + 42);
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(calText, imgX + imgW - calW / 2 - 16, imgY + 16 + 15);
 
-      // Food Name
-      ctx.textAlign = 'center';
-      ctx.fillStyle = style.text;
-      ctx.font = 'italic 900 46px "Playfair Display", serif';
-      const words = food.name.split(' ');
-      let lines = [], line = '';
-      words.forEach(word => {
-        const testLine = line + word + ' ';
-        if (ctx.measureText(testLine).width > 580 && line) {
-          lines.push(line.trim());
-          line = word + ' ';
-        } else line = testLine;
+      // ── Food Name — BELOW image, gradient text ──
+      ctx.save();
+      ctx.font = 'italic 800 36px serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+
+      // Word-wrap with per-line gradient
+      const nameWords = food.name.split(' ');
+      let nameLines = [], nameLine = '';
+      nameWords.forEach(word => {
+        const test = nameLine + word + ' ';
+        if (ctx.measureText(test).width > 720 && nameLine) { nameLines.push(nameLine.trim()); nameLine = word + ' '; }
+        else nameLine = test;
       });
-      lines.push(line.trim());
-
-      const startY = imgY + imgH - (lines.length * 52) - 30;
-      lines.forEach((l, i) => {
-        ctx.fillText(l, W / 2, startY + i * 56);
+      nameLines.push(nameLine.trim());
+      nameLines.forEach((l, i) => {
+        const lw = ctx.measureText(l).width;
+        const lg = ctx.createLinearGradient(W / 2 - lw / 2, 0, W / 2 + lw / 2, 0);
+        lg.addColorStop(0, style.accent);
+        lg.addColorStop(0.5, style.gold);
+        lg.addColorStop(1, style.accent);
+        ctx.fillStyle = lg;
+        ctx.fillText(l, W / 2, nameBlockY + i * 46);
       });
+      ctx.restore();
 
-      // Description
-      ctx.fillStyle = style.gold;
-      ctx.font = '500 20px "Inter"';
-      ctx.fillText(
-        (food.description || 'Rich · Creamy · Delicious').slice(0, 45),
-        W / 2,
-        imgY + imgH - 22
-      );
+      // ── Description — tight below food name ──
+      ctx.fillStyle = style.muted;
+      ctx.font = '400 19px sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+      ctx.fillText((food.description || 'Rich · Creamy · Delicious').slice(0, 52), W / 2, descY);
 
-      // Footer
-      ctx.strokeStyle = style.muted + '55';
-      ctx.beginPath();
-      ctx.moveTo(120, H - 78);
-      ctx.lineTo(W - 120, H - 78);
-      ctx.stroke();
-
+      // ── MealMind branding — snug at bottom ──
       ctx.fillStyle = style.accent;
-      ctx.font = '900 28px "Syne", sans-serif';
-      ctx.fillText('🍽  MealMind', W / 2, H - 42);
+      ctx.font = '800 26px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('🍽  MealMind', W / 2, brandingY);
 
       const dataUrl = canvas.toDataURL('image/png', 0.92);
       setImgUrl(dataUrl);
@@ -240,9 +246,7 @@ export default function ShareCardCanvas({ food, user, onClose }) {
     }
   }, [food, user, refreshKey, theme]);
 
-  useEffect(() => {
-    drawCard();
-  }, [drawCard]);
+  useEffect(() => { drawCard(); }, [drawCard]);
 
   const handleDownload = () => {
     if (!imgUrl) return;
@@ -252,30 +256,9 @@ export default function ShareCardCanvas({ food, user, onClose }) {
     a.click();
   };
 
-  const handleShare = (platform) => {
-    if (!imgUrl) return;
-    
-    // For native sharing on mobile
-    if (navigator.share && platform === 'native') {
-      fetch(imgUrl)
-        .then(res => res.blob())
-        .then(blob => {
-          const file = new File([blob], `mealmind-${food.name}.png`, { type: 'image/png' });
-          navigator.share({
-            files: [file],
-            title: `I discovered ${food.name} on MealMind!`,
-          });
-        });
-      return;
-    }
-
-    // Fallback: Open in new tab (works well for IG, FB, WA)
-    window.open(imgUrl, '_blank');
-  };
-
   return (
     <>
-      <div className="cs-root" style={{
+      <div style={{
         width: '92%',
         maxWidth: '420px',
         margin: '0 auto',
@@ -286,8 +269,11 @@ export default function ShareCardCanvas({ food, user, onClose }) {
         padding: '24px',
         boxShadow: 'var(--card-shadow)',
       }}>
-        <h2 className="text-2xl font-black text-center mb-4 text-[var(--text-main)]">Your Share Card</h2>
+        <h2 className="text-2xl font-black text-center mb-4 text-[var(--text-main)]">
+          Your Share Card
+        </h2>
 
+        {/* Card preview */}
         <div className="aspect-[4/5] w-full bg-black/5 dark:bg-white/5 rounded-3xl overflow-hidden border border-[var(--glass-border)] flex items-center justify-center relative">
           {imgUrl ? (
             <img src={imgUrl} alt="Share card" className="w-full h-full object-contain" />
@@ -299,28 +285,136 @@ export default function ShareCardCanvas({ food, user, onClose }) {
           )}
         </div>
 
-        <div className="flex gap-3 mt-2">
+        {/* Availability — Swiggy & Zomato */}
+        <div className="mt-4">
+          <p className="text-center text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)] mb-2">
+            Order Online
+          </p>
+          <div className="flex gap-3">
+            {/* Swiggy */}
+            <a
+              href={`https://www.swiggy.com/search?query=${encodeURIComponent(food?.name || '')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl cursor-pointer transition-all duration-200 active:scale-95 hover:-translate-y-0.5"
+              style={{
+                border: '1.5px solid rgba(234,88,12,0.5)',
+                background: 'rgba(234,88,12,0.08)',
+                textDecoration: 'none',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(234,88,12,0.16)'; e.currentTarget.style.boxShadow = '0 0 14px rgba(234,88,12,0.3)'; e.currentTarget.style.borderColor = 'rgba(234,88,12,0.85)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(234,88,12,0.08)'; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = 'rgba(234,88,12,0.5)'; }}
+            >
+              {/* Swiggy logo */}
+              <svg width="18" height="18" viewBox="0 0 40 40" fill="none">
+                <circle cx="20" cy="20" r="20" fill="#FC8019"/>
+                <path d="M20 8c-5.5 0-9.5 4-9.5 9 0 3.5 2 6.5 5 8l-1 5 5-2.5c.5.1 1 .1 1.5.1 5.5 0 9.5-4 9.5-9S25.5 8 20 8z" fill="white"/>
+                <circle cx="16" cy="19" r="1.5" fill="#FC8019"/>
+                <circle cx="20" cy="19" r="1.5" fill="#FC8019"/>
+                <circle cx="24" cy="19" r="1.5" fill="#FC8019"/>
+              </svg>
+              <span className="text-xs font-bold" style={{ color: '#FC8019' }}>Swiggy</span>
+            </a>
+
+            {/* Zomato */}
+            <a
+              href={`https://www.zomato.com/search?q=${encodeURIComponent(food?.name || '')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl cursor-pointer transition-all duration-200 active:scale-95 hover:-translate-y-0.5"
+              style={{
+                border: '1.5px solid rgba(225,50,50,0.5)',
+                background: 'rgba(225,50,50,0.08)',
+                textDecoration: 'none',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(225,50,50,0.16)'; e.currentTarget.style.boxShadow = '0 0 14px rgba(225,50,50,0.3)'; e.currentTarget.style.borderColor = 'rgba(225,50,50,0.85)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(225,50,50,0.08)'; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = 'rgba(225,50,50,0.5)'; }}
+            >
+              {/* Zomato logo */}
+              <svg width="18" height="18" viewBox="0 0 40 40" fill="none">
+                <circle cx="20" cy="20" r="20" fill="#E23744"/>
+                <path d="M10 15h20v2H10zM10 19h20v2H10zM10 23h20v2H10z" fill="white"/>
+                <path d="M14 13l6 14 6-14" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span className="text-xs font-bold" style={{ color: '#E23744' }}>Zomato</span>
+            </a>
+          </div>
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex gap-3 mt-3">
+          {/* Cancel */}
           <button
             onClick={onClose}
-            className="flex-1 py-3 text-sm font-bold rounded-2xl border border-[var(--glass-border)] text-[var(--text-main)] hover:bg-black/5 dark:hover:bg-white/10 transition-all"
+            className="
+              flex-1 py-3 text-sm font-bold rounded-2xl cursor-pointer
+              border border-[var(--glass-border)] text-[var(--text-main)]
+              transition-all duration-200
+              hover:bg-red-500/10 hover:border-red-400/60 hover:text-red-500
+              dark:hover:bg-red-500/15 dark:hover:border-red-400/50 dark:hover:text-red-400
+              active:scale-95
+            "
           >
-            Cancel
+            ✕ Cancel
           </button>
 
+          {/* Shuffle */}
           <button
             onClick={() => setRefreshKey(p => p + 1)}
             disabled={isGenerating}
-            className="flex-1 py-2.5 text-sm font-bold rounded-2xl border border-[var(--glass-border)] text-orange-500 hover:bg-orange-500/5 dark:hover:bg-orange-500/10 transition-all"
+            className="
+              flex-1 py-3 text-sm font-bold rounded-2xl cursor-pointer
+              border border-orange-500/40 text-orange-500
+              transition-all duration-200
+              hover:bg-orange-500/15 hover:border-orange-400 hover:text-orange-400
+              hover:shadow-[0_0_14px_rgba(249,115,22,0.35)]
+              active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed
+            "
           >
-            Shuffle 
+            {isGenerating ? (
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-3.5 h-3.5 border-2 border-orange-400/40 border-t-orange-400 rounded-full animate-spin" />
+              </span>
+            ) : '⟳ Shuffle'}
           </button>
 
+          {/* Download */}
           <button
             onClick={handleDownload}
             disabled={!imgUrl || isGenerating}
-            className="flex-1 py-2.5 text-sm font-bold rounded-2xl bg-green-600 text-white hover:bg-green-700 transition-all disabled:opacity-50"
+            className="
+              py-3 text-sm font-extrabold rounded-2xl text-white
+              transition-all duration-200
+              active:scale-95 disabled:cursor-not-allowed
+            "
+            style={{
+              flex: 1.4,
+              cursor: imgUrl && !isGenerating ? 'pointer' : 'not-allowed',
+              background: imgUrl && !isGenerating
+                ? 'linear-gradient(135deg, #22c55e, #16a34a)'
+                : 'rgba(34,197,94,0.3)',
+              border: imgUrl && !isGenerating
+                ? '1.5px solid rgba(34,197,94,0.5)'
+                : '1.5px solid rgba(34,197,94,0.2)',
+              boxShadow: imgUrl && !isGenerating
+                ? '0 4px 20px rgba(34,197,94,0.35)'
+                : 'none',
+              letterSpacing: '0.03em',
+            }}
+            onMouseEnter={e => {
+              if (!imgUrl || isGenerating) return;
+              e.currentTarget.style.boxShadow = '0 6px 28px rgba(34,197,94,0.55), 0 0 0 2px rgba(34,197,94,0.35)';
+              e.currentTarget.style.border = '1.5px solid rgba(34,197,94,0.85)';
+              e.currentTarget.style.filter = 'brightness(1.08)';
+            }}
+            onMouseLeave={e => {
+              if (!imgUrl || isGenerating) return;
+              e.currentTarget.style.boxShadow = '0 4px 20px rgba(34,197,94,0.35)';
+              e.currentTarget.style.border = '1.5px solid rgba(34,197,94,0.5)';
+              e.currentTarget.style.filter = '';
+            }}
           >
-            Download
+            ↓ Download
           </button>
         </div>
       </div>
