@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { HEALTH_GOALS_OPTIONS } from '@/lib/constants';
 
 const MEAL_TIMINGS = [
   { value: "all",        label: "All",        emoji: "🍽️" },
@@ -65,6 +66,8 @@ export default function FoodManagerClient({
   const [activeMeal, setActiveMeal]     = useState("all");
   const [activeFoodType, setActiveFoodType] = useState("all");
   const [activeHealthGoal, setActiveHealthGoal] = useState(null);
+  const [activeCuisine, setActiveCuisine] = useState(null);
+  const [healthGoalOpen, setHealthGoalOpen] = useState(false);
   const [mealLoading, setMealLoading]   = useState(false);
   const [totalPages, setTotalPages]     = useState(initialTotalPages);
   const [totalCount, setTotalCount]     = useState(initialTotalCount);
@@ -81,6 +84,8 @@ export default function FoodManagerClient({
   const highlightId  = searchParams.get("highlight");
   const highlightRef = useRef(null);
   const urlHealthGoal = searchParams.get("healthGoals");
+  const urlCuisine = searchParams.get("cuisine");
+  const urlPage = parseInt(searchParams.get("page")) || 1;
 
   useEffect(() => {
     if (highlightId && highlightRef.current) {
@@ -91,31 +96,93 @@ export default function FoodManagerClient({
     }
   }, [highlightId, foods]);
 
+  const fetchByHealthGoal = async (goal, page = 1) => {
+    setMealLoading(true);
+    setSearch("");
+    setSearchResults(null);
+    try {
+      const params = new URLSearchParams({ fullImage: "true", limit: "20", page: String(page), healthGoals: goal });
+      const res = await fetch(`/api/foods?${params.toString()}`);
+      if (!res.ok) throw new Error("Failed to fetch");
+      const data = await res.json();
+      setFoods(data.foods || []);
+      setTotalPages(data.totalPages || 1);
+      setTotalCount(data.totalCount || 0);
+      setFilteredPage(page);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setMealLoading(false);
+    }
+  };
+
+  const handleHealthGoalFilter = (goal) => {
+    setActiveHealthGoal(goal);
+    setActiveMeal("all");
+    setActiveFoodType("all");
+    setFilteredPage(1);
+    setHealthGoalOpen(false);
+    fetchByHealthGoal(goal);
+    router.push(`/all-foods?healthGoals=${encodeURIComponent(goal)}`);
+  };
+
+  const clearHealthGoalFilter = () => {
+    setActiveHealthGoal(null);
+    setHealthGoalOpen(false);
+    setSearch("");
+    setSearchResults(null);
+    setActiveMeal("all");
+    setActiveFoodType("all");
+    setActiveCuisine(null);
+    setFilteredPage(1);
+    router.push("/all-foods");
+  };
+
+  const fetchByCuisine = async (cuisine, page = 1) => {
+    setMealLoading(true);
+    setSearch("");
+    setSearchResults(null);
+    setActiveHealthGoal(null);
+    setActiveMeal("all");
+    setActiveFoodType("all");
+    try {
+      const params = new URLSearchParams({ fullImage: "true", limit: "20", page: String(page), cuisine });
+      const res = await fetch(`/api/foods?${params.toString()}`);
+      if (!res.ok) throw new Error("Failed to fetch");
+      const data = await res.json();
+      setFoods(data.foods || []);
+      setTotalPages(data.totalPages || 1);
+      setTotalCount(data.totalCount || 0);
+      setFilteredPage(page);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setMealLoading(false);
+    }
+  };
+
+  const handleCuisineFilter = (cuisine) => {
+    setActiveCuisine(cuisine);
+    setFilteredPage(1);
+    fetchByCuisine(cuisine);
+    router.push(`/all-foods?cuisine=${encodeURIComponent(cuisine)}`);
+  };
+
+  // If URL contains a cuisine param, fetch filtered results
+  useEffect(() => {
+    if (!urlCuisine) return;
+    if (activeCuisine === urlCuisine && filteredPage === urlPage) return;
+    setActiveCuisine(urlCuisine);
+    fetchByCuisine(urlCuisine, urlPage);
+  }, [urlCuisine, activeCuisine, filteredPage, urlPage]);
+
   // If URL contains a healthGoals param, fetch filtered results
   useEffect(() => {
-    if (urlHealthGoal) {
-      const g = urlHealthGoal;
-      setActiveHealthGoal(g);
-      // fetch filtered by health goal
-      (async () => {
-        setMealLoading(true);
-        try {
-          const params = new URLSearchParams({ fullImage: "true", limit: "20", page: "1", healthGoals: g });
-          const res = await fetch(`/api/foods?${params.toString()}`);
-          if (!res.ok) throw new Error("Failed to fetch");
-          const data = await res.json();
-          setFoods(data.foods || []);
-          setTotalPages(data.totalPages || 1);
-          setTotalCount(data.totalCount || 0);
-          setFilteredPage(1);
-        } catch (err) {
-          console.error(err);
-        } finally {
-          setMealLoading(false);
-        }
-      })();
-    }
-  }, [urlHealthGoal]);
+    if (!urlHealthGoal) return;
+    if (activeHealthGoal === urlHealthGoal && filteredPage === urlPage) return;
+    setActiveHealthGoal(urlHealthGoal);
+    fetchByHealthGoal(urlHealthGoal, urlPage);
+  }, [urlHealthGoal, activeHealthGoal, filteredPage, urlPage]);
 
   // Fetch meal timing stats (counts + duplicate detection) once on mount
   useEffect(() => {
@@ -253,13 +320,19 @@ export default function FoodManagerClient({
   const handlePageChange = (newPage) => {
     if (activeMeal !== "all" || activeFoodType !== "all") {
       fetchByMeal(activeMeal, activeFoodType, newPage);
+    } else if (activeCuisine) {
+      setIsNavigating(true);
+      router.push(`/all-foods?cuisine=${encodeURIComponent(activeCuisine)}&page=${newPage}`);
+    } else if (activeHealthGoal) {
+      setIsNavigating(true);
+      router.push(`/all-foods?healthGoals=${encodeURIComponent(activeHealthGoal)}&page=${newPage}`);
     } else {
       setIsNavigating(true);
       router.push(`/all-foods?page=${newPage}`);
     }
   };
 
-  const displayPage  = activeMeal !== "all" ? filteredPage : currentPage;
+  const displayPage  = activeMeal !== "all" || activeCuisine || activeHealthGoal ? filteredPage : currentPage;
   // When searching: use API results. Otherwise: use current page foods.
   const filteredFoods = searchResults !== null ? searchResults : foods;
 

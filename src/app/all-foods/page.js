@@ -4,10 +4,16 @@ import { authOptions } from "@/lib/auth";
 import Header from "@/components/Header";
 import FoodManagerClient from "./FoodManagerClient";
 
-async function getAllFoods(page = 1) {
+async function getAllFoods(page = 1, queryParams = {}) {
   try {
     const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
-    const fetchUrl = `${baseUrl.replace(/\/$/, "")}/api/foods?page=${page}&limit=20&fullImage=true`;
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: "20",
+      fullImage: "true",
+      ...queryParams,
+    });
+    const fetchUrl = `${baseUrl.replace(/\/$/, "")}/api/foods?${params.toString()}`;
     const res = await fetch(fetchUrl, { cache: "no-store" });
     if (!res.ok) return { foods: [], totalPages: 0, totalCount: 0 };
     return await res.json();
@@ -21,7 +27,16 @@ export default async function AllFoodsPage({ searchParams }) {
   const resolvedParams = await searchParams;
   const page = parseInt(resolvedParams.page) || 1;
   await getServerSession(authOptions);
-  const { foods, totalPages, totalCount } = await getAllFoods(page);
+  
+  // Pass query params to API
+  const queryParams = {};
+  if (resolvedParams.cuisine) queryParams.cuisine = resolvedParams.cuisine;
+  if (resolvedParams.healthGoals) queryParams.healthGoals = resolvedParams.healthGoals;
+  if (resolvedParams.mealTiming) queryParams.mealTiming = resolvedParams.mealTiming;
+  if (resolvedParams.dietType) queryParams.dietType = resolvedParams.dietType;
+  if (resolvedParams.foodType) queryParams.foodType = resolvedParams.foodType;
+  
+  const { foods, totalPages, totalCount } = await getAllFoods(page, queryParams);
 
   return (
     <main
