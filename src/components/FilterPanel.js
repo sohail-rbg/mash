@@ -64,6 +64,11 @@ export default function FilterPanel({ currentParams, baseParams, onApply, onClos
       return normalized;
     }
 
+    if (categoryId === 'healthGoals') {
+      if (['no-goal', 'no goal', 'no', 'none'].includes(normalized)) return 'no-goal';
+      return normalized.replace(/\s+/g, '-');
+    }
+
     if (categoryId === 'allergies' && normalized === 'no-allergies') return 'no-allergies';
 
     return normalized;

@@ -551,7 +551,7 @@ export default function AddFoodForm({ editId, onAdded }) {
             name="dietType"
             value={form.dietType}
             onChange={handleChange}
-            className="mt-1 block w-full border rounded px-2 py-1"
+            className="mt-1 block w-full border border-white rounded px-2 py-1 bg-black text-white"
           >
             <option value="">-- choose --</option>
             {DIET_TYPE_OPTIONS.map((opt) => (
@@ -606,7 +606,7 @@ export default function AddFoodForm({ editId, onAdded }) {
           name="spiceLevel"
           value={form.spiceLevel}
           onChange={handleChange}
-          className="mt-1 block w-full border rounded px-2 py-1"
+          className="mt-1 block w-full border border-white rounded px-2 py-1 bg-black text-white"
         >
           <option value="">-- choose --</option>
           {SPICE_LEVEL_OPTIONS.map((opt) => (

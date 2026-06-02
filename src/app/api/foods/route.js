@@ -114,7 +114,16 @@ export async function GET(req) {
       const values = searchParams.getAll(key);
       // 1. Handle Enum Fields
       if (FIELD_VALIDATION[key]) {
-        const inputValues = processValues(values).map(v => v.replace(/\s+/g, '-'));
+        let inputValues = processValues(values).map(v => v.replace(/\s+/g, '-'));
+
+        if (key === 'healthGoals') {
+          // 'No Goal' means do NOT filter by health goals.
+          inputValues = inputValues.filter((val) => !['no-goal', 'no', 'none'].includes(val));
+          if (inputValues.length === 0) {
+            continue; // skip healthGoals filtering entirely
+          }
+        }
+
         const searchValues = new Set();
 
         inputValues.forEach(val => {
