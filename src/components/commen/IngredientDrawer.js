@@ -4,7 +4,7 @@ export default function IngredientDrawer({ visible, onClose, ingredients, active
   if (!visible) return null;
 
   const selectedCount = Object.values(checkedIngredients).filter(Boolean).length;
-  const isAllSelected = selectedCount === ingredients.length;
+  const hasSelection = selectedCount > 0;
 
   const handleSelectAll = () => {
     ingredients.forEach(item => {
@@ -67,10 +67,10 @@ export default function IngredientDrawer({ visible, onClose, ingredients, active
             {selectedCount === 0 ? "💡 No selection uses everything" : `${selectedCount} items selected`}
           </p>
           <button 
-            onClick={isAllSelected ? handleClearAll : handleSelectAll}
+            onClick={hasSelection ? handleClearAll : handleSelectAll}
             className="text-[10px] font-black uppercase tracking-wider text-green-400 hover:text-green-300 transition-colors cursor-pointer"
           >
-            {isAllSelected ? "Clear All" : "Select All"}
+            {hasSelection ? "Unselect All" : "Select All"}
           </button>
         </div>
 

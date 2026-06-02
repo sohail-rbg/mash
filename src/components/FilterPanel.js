@@ -133,6 +133,15 @@ export default function FilterPanel({ currentParams, baseParams, onApply, onClos
               ? currentValues.filter(v => v !== normalizedValue)
               : [...currentValues.filter(v => v !== 'no-allergies'), normalizedValue];
           }
+        } else if (categoryId === 'healthGoals') {
+          if (normalizedValue === 'no-goal') {
+            newValues = currentValues.includes('no-goal') ? [] : ['no-goal'];
+          } else {
+            const withoutNoGoal = currentValues.filter(v => v !== 'no-goal');
+            newValues = withoutNoGoal.includes(normalizedValue)
+              ? withoutNoGoal.filter(v => v !== normalizedValue)
+              : [...withoutNoGoal, normalizedValue];
+          }
         } else if (currentValues.includes(normalizedValue)) {
           newValues = currentValues.filter(v => v !== normalizedValue);
         } else {
