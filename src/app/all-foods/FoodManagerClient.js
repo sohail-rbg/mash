@@ -27,6 +27,7 @@ const DIET_META = {
 };
 
 function getDietMeta(diet) {
+  
   return DIET_META[diet?.toLowerCase()] || {
     icon: "🍽️", bg: "rgba(255,255,255,0.06)", border: "rgba(255,255,255,0.12)", text: "rgba(255,255,255,0.5)",
   };
@@ -96,6 +97,7 @@ export default function FoodManagerClient({
     }
   }, [highlightId, foods]);
 
+  console.log(foods);
   const fetchByHealthGoal = async (goal, page = 1) => {
     setMealLoading(true);
     setSearch("");

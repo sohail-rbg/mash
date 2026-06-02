@@ -2,19 +2,12 @@ import mongoose from "mongoose";
 import {
   MEAL_TIMING_OPTIONS,
   DIET_TYPE_OPTIONS,
-  HEALTH_GOALS_OPTIONS,
   CUISINE_OPTIONS,
-  MOOD_OPTIONS,
   WEATHER_OPTIONS,
-  FOOD_STYLE_OPTIONS,
   INGREDIENT_RESTRICTION_OPTIONS,
-  // COOK_TIME_OPTIONS,
-  // BUDGET_OPTIONS,
   FOOD_TYPE_OPTIONS,
   SPICE_LEVEL_OPTIONS,
-
-
-
+  HEALTH_GOALS_OPTIONS,
 } from "@/lib/constants";
 
 const FoodSchema = new mongoose.Schema(
@@ -23,9 +16,6 @@ const FoodSchema = new mongoose.Schema(
   name: { type: String, required: true, trim: true },
   image: { type: String, required: true },
   description: String,
-
-  // SEARCH KEYWORDS
-  searchKeywords: [String],
 
   // CATEGORY
   category: {
@@ -49,13 +39,12 @@ const FoodSchema = new mongoose.Schema(
     type: [String],
     enum: HEALTH_GOALS_OPTIONS
   },
+
   //spice level
   spiceLevel: {
     type: [String],
     enum: SPICE_LEVEL_OPTIONS
   },
-
-
   // CUISINE
   cuisine: {
     type: [String],
@@ -71,48 +60,17 @@ const FoodSchema = new mongoose.Schema(
     enum: INGREDIENT_RESTRICTION_OPTIONS
   },
 
-  // FOOD STYLE
-  foodStyle: {
-    type: [String],
-    enum: FOOD_STYLE_OPTIONS
-  },
-
-  // MOOD
-  mood: {
-    type: [String],
-    enum: MOOD_OPTIONS
-  },
-
   // WEATHER
   weather: {
     type: [String],
     enum: WEATHER_OPTIONS
   },
 
-  // NUTRITION
-  nutrition: {
-    calories: Number,
-    protein: Number,
-    carbs: Number,
-    fat: Number
-  },
   // Food Type
   foodType: {
     type: [String],
     enum: FOOD_TYPE_OPTIONS
   },
-  
-  //cooking time in minutes
-  // cookingTime:{
-  //   type: String,
-  //   enum: COOK_TIME_OPTIONS
-  // },
-  // // budget in dollars
-  // budget: {
-  //   type: String,
-  //   enum: BUDGET_OPTIONS
-  // }
-
 },
 { timestamps: true }
 );
@@ -130,8 +88,7 @@ FoodSchema.index({ dietType: 1, mealTiming: 1, foodType: 1 });
 
 export default (mongoose.models.Food && 
   // Validate cached model has current enum length — recompile if stale
-  mongoose.models.Food.schema.path('healthGoals').enumValues?.includes('energy') &&
-  mongoose.models.Food.schema.path('foodStyle').enumValues?.includes('deep-fried')
+  mongoose.models.Food.schema.path('healthGoals').enumValues?.includes('energy')
     ? mongoose.models.Food
     : (() => { delete mongoose.models.Food; return mongoose.model("Food", FoodSchema); })()
 );

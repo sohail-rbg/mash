@@ -72,7 +72,7 @@ export default function ModeRow({ selectedMode, showResult, suggestedFood, spinn
         .cursor-pointer:hover:not(:disabled) {
           // box-shadow: 0 8px 15px rgba(0,0,0,0.3), 0 -4px 4px rgba(255,255,255,0.05), 
                       // inset 0 0 3px 1px rgba(255,255,255,0.1);
-          transform: translateY(-2px);
+          /* transform: translateY(-2px); */
         }
 
         /* Active state - Pushing in */

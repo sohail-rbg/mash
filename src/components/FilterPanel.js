@@ -43,7 +43,7 @@ const FILTER_CONFIG = [
   },
 ];
 
-export default function FilterPanel({ currentParams, onApply, onClose }) {
+export default function FilterPanel({ currentParams, baseParams, onApply, onClose }) {
   const [filters, setFilters] = useState({});
   const { data: session } = useSession();
 
@@ -87,9 +87,10 @@ export default function FilterPanel({ currentParams, onApply, onClose }) {
       const paramValue = params.get(paramKey);
       let values = [];
 
-      if (paramValue) {
+      if (paramValue) { // If parameter is explicitly set in URL
         values = paramValue.split(',').filter(Boolean).map((value) => normalizeIncomingValue(category.id, value));
-      } else {
+      } else if (currentParams === baseParams) { // If no paramValue, and currentParams is the base/default state
+        // Fall back to questionnaire defaults
         const mappedQuestionIds =
           category.id === 'healthGoals'
             ? ['healthGoals', 'weightGoal']
@@ -97,6 +98,9 @@ export default function FilterPanel({ currentParams, onApply, onClose }) {
         values = getQuestionAnswer(mappedQuestionIds).map((value) => normalizeIncomingValue(category.id, value));
       }
 
+      // If no paramValue, and currentParams is not the base/default state (meaning it's a custom filter state or explicitly cleared all)
+      // Then this specific filter was explicitly cleared or never set.
+      // In this case, 'values' remains an empty array, which is the desired behavior.
       initialFilters[category.id] = values.map((v) =>
         String(v).trim().toLowerCase().replace(/\s+/g, '-')
       );
@@ -161,6 +165,14 @@ export default function FilterPanel({ currentParams, onApply, onClose }) {
       document.cookie = "temp_filters_expires=; path=/; max-age=0";
       onApply("", null);
     }
+  };
+
+  const handleResetToDefaults = () => {
+    // remove temporary filter cookies
+    document.cookie = "temp_filters=; path=/; max-age=0";
+    document.cookie = "temp_filters_expires=; path=/; max-age=0";
+    // notify parent to apply the base defaults (questionnaire-based)
+    onApply(baseParams, null);
   };
 
   const activeCount = Object.values(filters).flat().filter(Boolean).length;
@@ -248,13 +260,33 @@ export default function FilterPanel({ currentParams, onApply, onClose }) {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               {activeCount > 0 && (
-                <span style={{
-                  background: '#f97316', color: '#fff',
-                  fontSize: 12, fontWeight: 700, padding: '3px 10px',
-                  borderRadius: 20,
-                }}>
-                  {activeCount} active
-                </span>
+                <>
+                  <span style={{
+                    background: '#f97316', color: '#fff',
+                    fontSize: 12, fontWeight: 700, padding: '3px 10px',
+                    borderRadius: 20,
+                  }}>
+                    {activeCount} active
+                  </span>
+                  <button
+                    onClick={handleResetToDefaults}
+                    aria-label="Reset filters to defaults"
+                    title="Reset filters"
+                    style={{
+                      marginLeft: 6,
+                      padding: '6px 10px',
+                      borderRadius: 12,
+                      background: 'transparent',
+                      border: '1px solid rgba(255,255,255,0.06)',
+                      color: '#f97316',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      fontSize: 12,
+                    }}
+                  >
+                    Reset
+                  </button>
+                </>
               )}
               <button
                 onClick={onClose}

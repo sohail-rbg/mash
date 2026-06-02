@@ -26,7 +26,10 @@ export default function SpinHero({ timeLeft, onClearFilters, onOpenFilters }) {
           display: inline-flex;
           align-items: center;
           justify-content: center;
+          cursor: pointer;
+          z-index: 1;
           transition: box-shadow 0.3s ease;
+          position: relative; /* create stacking context for the clear badge */
         }
         .filter-grad-ring.active {
           box-shadow: 0 0 0 3px rgba(249,115,22,0.2), 0 4px 20px rgba(249,115,22,0.35);
@@ -35,19 +38,21 @@ export default function SpinHero({ timeLeft, onClearFilters, onOpenFilters }) {
         /* X badge */
         .filter-clear-badge {
           position: absolute;
-          top: -3px;
-          right: -3px;
-          width: 16px;
-          height: 16px;
+          top: -8px;
+          right: -8px;
+          width: 22px;
+          height: 22px;
           border-radius: 50%;
           background: #f97316;
           border: 2px solid #000;
           display: flex;
           align-items: center;
           justify-content: center;
-          cursor: pointer;
-          z-index: 20;
-          transition: transform 0.15s ease, background 0.15s ease;
+          cursor: pointer !important;
+          z-index: 9999 !important; /* ensure it's above everything */
+          transition: transform 0.12s ease, background 0.12s ease;
+          pointer-events: auto !important; /* ensure it receives clicks */
+          box-shadow: 0 6px 18px rgba(0,0,0,0.35);
         }
         .filter-clear-badge:hover {
           transform: scale(1.3);
@@ -89,12 +94,22 @@ export default function SpinHero({ timeLeft, onClearFilters, onOpenFilters }) {
         </div>
 
         {/* ── Right: filter button ── */}
-        <div style={{ position: "relative", display: "inline-flex", flexShrink: 0 }}>
+        <div
+          style={{ position: "relative", display: "inline-flex", flexShrink: 0, pointerEvents: 'auto', zIndex: 10 }}
+        >
 
           {/* Gradient ring wrapper — 1.5px gradient acts as border */}
-          <div className={`filter-grad-ring${filterActive ? " active" : ""}`}>
+          <div
+            className={`filter-grad-ring${filterActive ? " active" : ""}`}
+            onClick={onOpenFilters}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpenFilters(); } }}
+            role="button"
+            tabIndex={0}
+            aria-label={filterActive ? `Filters active — ${timeLeft}s left` : "Open filters"}
+            style={{ position: 'relative' }}
+          >
             <button
-              onClick={onOpenFilters}
+              type="button"
               className="filter-btn"
               title={filterActive ? `Filters active — ${timeLeft}s left` : "Open filters"}
               style={{
@@ -110,6 +125,9 @@ export default function SpinHero({ timeLeft, onClearFilters, onOpenFilters }) {
                 alignItems: "center",
                 justifyContent: "center",
                 color: filterActive ? "#f97316" : "var(--text-main, #fff)",
+                cursor: "pointer",
+                position: "relative",
+                zIndex: 1,
               }}
             >
               <svg
@@ -129,18 +147,25 @@ export default function SpinHero({ timeLeft, onClearFilters, onOpenFilters }) {
           {/* X badge — only when filters active */}
           {filterActive && (
             <button
-              onClick={(e) => { e.stopPropagation(); onClearFilters(); }}
+              type="button"
+              onClick={(e) => { e.stopPropagation(); e.preventDefault(); onClearFilters(); }}
               className="filter-clear-badge"
               title={`Clear filters (${timeLeft}s left)`}
               aria-label="Clear active filters"
-              style={{ cursor: "pointer" }}
+              style={{
+                zIndex: 9999,
+                cursor: "pointer",
+                top: -8,
+                right: -8,
+                position: 'absolute',
+                padding: 0,
+              }}
             >
-              <svg width="7" height="7" viewBox="0 0 10 10" fill="none" style={{ pointerEvents: "none" }}>
+              <svg width="9" height="9" viewBox="0 0 10 10" fill="none" style={{ display: 'block' }}>
                 <path d="M2 2l6 6M8 2l-6 6" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
               </svg>
             </button>
           )}
-
         </div>
       </div>
     </>

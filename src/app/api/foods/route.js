@@ -9,25 +9,21 @@ import {
   DIET_TYPE_OPTIONS,
   HEALTH_GOALS_OPTIONS,
   CUISINE_OPTIONS,
-  MOOD_OPTIONS,
   WEATHER_OPTIONS,
-  FOOD_STYLE_OPTIONS,
   FOOD_TYPE_OPTIONS,
   SPICE_LEVEL_OPTIONS,
 } from "@/lib/constants";
 
 // Map field names to their valid options for validation/sanitization
 const FIELD_VALIDATION = {
-  foodStyle: FOOD_STYLE_OPTIONS,
   mealTiming: MEAL_TIMING_OPTIONS,
   dietType: DIET_TYPE_OPTIONS,
   healthGoals: HEALTH_GOALS_OPTIONS,
   cuisine: CUISINE_OPTIONS,
-  mood: MOOD_OPTIONS,
   weather: WEATHER_OPTIONS,
   foodType: FOOD_TYPE_OPTIONS,
   spiceLevel: SPICE_LEVEL_OPTIONS,
-  category: ["vegetarian", "non-vegetarian", "veg", "non-veg", "fast-food"],
+  category: ["vegetarian", "non-vegetarian", "veg", "non-veg"],
 };
 
 const SYNONYM_MAP = {
@@ -37,9 +33,6 @@ const SYNONYM_MAP = {
     "pure-vegetarian": ["veg", "vegetarian"],
     "non-veg": ["non-veg", "non-vegetarian"],
     "non-vegetarian": ["non-veg", "non-vegetarian"],
-  },
-  mood: {
-    "happy": ["excited"],
   },
   // "self cooking" (with space) → match both variants in DB
   foodType: {
@@ -54,7 +47,7 @@ export async function POST(req) {
     await connectDB();
     const body = await req.json();
 
-    const arrayFields = ['mealTiming', 'dietType', 'healthGoals', 'cuisine', 'mood', 'weather', 'foodStyle', 'searchKeywords', 'ingredients', 'restrictedIngredients', 'foodType', 'spiceLevel', 'items'];
+    const arrayFields = ['mealTiming', 'dietType', 'healthGoals', 'cuisine', 'weather', 'searchKeywords', 'ingredients', 'restrictedIngredients', 'foodType', 'spiceLevel', 'items'];
     
     arrayFields.forEach(field => {
       if (body[field]) {
@@ -148,7 +141,8 @@ export async function GET(req) {
       } else if (key === 'ingredients') {
         const ingredientsList = processValues(values);
         if (ingredientsList.length > 0) {
-          query.ingredients = { $all: ingredientsList };
+          if (!query.ingredients) query.ingredients = {};
+          query.ingredients.$all = ingredientsList;
         }
       } else if (key === 'search' || key === 'searchKeywords') {
         const searchTerms = processValues(values);
@@ -159,7 +153,7 @@ export async function GET(req) {
 
         if (noIngredients.length > 0) {
           if (!query.ingredients) query.ingredients = {};
-          query.ingredients.$nin = noIngredients;
+          query.ingredients.$nin = [...(query.ingredients.$nin || []), ...noIngredients];
         }
 
         const normalTerms = searchTerms.filter((searchTerm) => !searchTerm.startsWith('no '));
@@ -187,9 +181,7 @@ export async function GET(req) {
     if (searchParams.get('details') === 'true' || searchParams.get('fullImage') === 'true') {
       projection.image = 1; // Only include the heavy image field when explicitly requested
       projection.ingredients = 1;
-      projection.mood = 1;
       projection.weather = 1;
-      projection.foodStyle = 1;
       projection.price = 1;
       projection.cookTime = 1;
     };

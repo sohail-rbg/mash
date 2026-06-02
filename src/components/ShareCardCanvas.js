@@ -189,16 +189,6 @@ export default function ShareCardCanvas({ food, user, onClose }) {
         ctx.restore();
       }
 
-      // ── Calories badge — top-right of image ──
-      const calText = `${food.nutrition?.calories || 320} KCAL`;
-      ctx.font = '700 17px sans-serif';
-      const calW = ctx.measureText(calText).width + 26;
-      ctx.fillStyle = style.gold + 'ee';
-      ctx.beginPath(); ctx.roundRect(imgX + imgW - calW - 16, imgY + 16, calW, 30, 15); ctx.fill();
-      ctx.fillStyle = style.bg;
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(calText, imgX + imgW - calW / 2 - 16, imgY + 16 + 15);
-
       // ── Food Name — BELOW image, gradient text ──
       ctx.save();
       ctx.font = 'italic 800 36px serif';
@@ -283,62 +273,6 @@ export default function ShareCardCanvas({ food, user, onClose }) {
               <p className="text-sm font-semibold text-[var(--text-muted)]">Crafting masterpiece...</p>
             </div>
           )}
-        </div>
-
-        {/* Availability — Swiggy & Zomato */}
-        <div className="mt-4">
-          <p className="text-center text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)] mb-2">
-            Order Online
-          </p>
-          <div className="flex gap-3">
-            {/* Swiggy */}
-            <a
-              href={`https://www.swiggy.com/search?query=${encodeURIComponent(food?.name || '')}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl cursor-pointer transition-all duration-200 active:scale-95 hover:-translate-y-0.5"
-              style={{
-                border: '1.5px solid rgba(234,88,12,0.5)',
-                background: 'rgba(234,88,12,0.08)',
-                textDecoration: 'none',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(234,88,12,0.16)'; e.currentTarget.style.boxShadow = '0 0 14px rgba(234,88,12,0.3)'; e.currentTarget.style.borderColor = 'rgba(234,88,12,0.85)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(234,88,12,0.08)'; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = 'rgba(234,88,12,0.5)'; }}
-            >
-              {/* Swiggy logo */}
-              <svg width="18" height="18" viewBox="0 0 40 40" fill="none">
-                <circle cx="20" cy="20" r="20" fill="#FC8019"/>
-                <path d="M20 8c-5.5 0-9.5 4-9.5 9 0 3.5 2 6.5 5 8l-1 5 5-2.5c.5.1 1 .1 1.5.1 5.5 0 9.5-4 9.5-9S25.5 8 20 8z" fill="white"/>
-                <circle cx="16" cy="19" r="1.5" fill="#FC8019"/>
-                <circle cx="20" cy="19" r="1.5" fill="#FC8019"/>
-                <circle cx="24" cy="19" r="1.5" fill="#FC8019"/>
-              </svg>
-              <span className="text-xs font-bold" style={{ color: '#FC8019' }}>Swiggy</span>
-            </a>
-
-            {/* Zomato */}
-            <a
-              href={`https://www.zomato.com/search?q=${encodeURIComponent(food?.name || '')}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl cursor-pointer transition-all duration-200 active:scale-95 hover:-translate-y-0.5"
-              style={{
-                border: '1.5px solid rgba(225,50,50,0.5)',
-                background: 'rgba(225,50,50,0.08)',
-                textDecoration: 'none',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(225,50,50,0.16)'; e.currentTarget.style.boxShadow = '0 0 14px rgba(225,50,50,0.3)'; e.currentTarget.style.borderColor = 'rgba(225,50,50,0.85)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(225,50,50,0.08)'; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = 'rgba(225,50,50,0.5)'; }}
-            >
-              {/* Zomato logo */}
-              <svg width="18" height="18" viewBox="0 0 40 40" fill="none">
-                <circle cx="20" cy="20" r="20" fill="#E23744"/>
-                <path d="M10 15h20v2H10zM10 19h20v2H10zM10 23h20v2H10z" fill="white"/>
-                <path d="M14 13l6 14 6-14" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              <span className="text-xs font-bold" style={{ color: '#E23744' }}>Zomato</span>
-            </a>
-          </div>
         </div>
 
         {/* Action buttons */}

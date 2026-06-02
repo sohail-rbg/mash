@@ -35,7 +35,7 @@ export default function StatusBar({ foods, error, spinning, loading, selectedMod
     if (selectedMode) return { // Ready to spin state
       bg: "bg-gray-100/70 dark:bg-white/[0.07]", border: "border-gray-300/70 dark:border-white/15",
       dot: selectedMode === "online" ? "bg-blue-500 dark:bg-blue-400 shadow-[0_0_6px_rgba(96,165,250,0.8)]" : "bg-green-500 dark:bg-green-400 shadow-[0_0_6px_rgba(74,222,128,0.8)]",
-      text: "text-gray-700 dark:text-white/65",
+      text: "text-gray-700 dark:text-white/40",
       label: "Ready to spin!",
     };
     return { // Default state: select a mode
@@ -47,7 +47,7 @@ export default function StatusBar({ foods, error, spinning, loading, selectedMod
   })();
 
   return (
-    <div className={`inline-flex flex-row items-center gap-2 px-4 py-[7.5px] rounded-full  backdrop-blur-sm font-[Outfit] text-[10px] font-semibold tracking-[0.07em] whitespace-nowrap transition-all duration-300 shadow-[0_2px_10px_rgba(0,0,0,0.18)] cursor-default select-none  ${cfg.border}`}>
+    <div className={`inline-flex flex-row items-center gap-2 px-4 py-[7.5px] rounded-full  backdrop-blur-sm font-[Outfit] text-[15px] font-semibold tracking-[0.07em] whitespace-nowrap transition-all duration-300 shadow-[0_2px_10px_rgba(0,0,0,0.18)] cursor-default select-none  ${cfg.border}`}>
       <span className={`rounded-full flex-shrink-0 transition-all duration-300 ${cfg.dot} ${loading ? 'w-3 h-3' : 'w-[5.5px] h-[5.5px]'}`} />
       <span className={`transition-colors duration-300 ${cfg.text}`}>{cfg.label}</span>
     </div>

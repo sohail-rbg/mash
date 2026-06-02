@@ -18,7 +18,25 @@ export async function POST(req) {
       return NextResponse.json({ message: "Unauthorized to update these preferences." }, { status: 403 });
     }
 
-    const user = await User.findById(session.user.id);
+    // session.user.id may be a MongoDB ObjectId string OR an OAuth provider id
+    // Try to lookup by ObjectId first, then fall back to provider id or email
+    let user = null;
+    try {
+      // Only attempt findById when id looks like a 24-char hex ObjectId
+      if (session?.user?.id && /^[a-fA-F0-9]{24}$/.test(String(session.user.id))) {
+        user = await User.findById(session.user.id);
+      }
+    } catch (err) {
+      // ignore cast errors and continue to fallback lookups
+      console.warn('findById failed, falling back to other lookups', err?.message || err);
+    }
+
+    if (!user) {
+      // Try googleId (OAuth) or fallback to email-based lookup
+      const lookupId = String(session?.user?.id || "");
+      user = await User.findOne({ $or: [{ googleId: lookupId }, { email: session?.user?.email }] });
+    }
+
     if (!user) {
       return NextResponse.json({ message: "User not found." }, { status: 404 });
     }

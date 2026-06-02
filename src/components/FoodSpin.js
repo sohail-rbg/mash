@@ -312,7 +312,9 @@ export default function FoodSpin({
   };
 
   const handleFilterApply = (newParams, expiryTime) => {
-    setCurrentQueryString(newParams || baseParams);
+    // If the user applied an empty filter set explicitly, preserve empty string
+    // so defaults from session/questionnaire are not re-applied automatically.
+    setCurrentQueryString(newParams === "" ? "" : newParams || baseParams);
     setFiltersVisible(false);
     setFoods([]);
     setRejectedIds(new Set());
@@ -326,6 +328,10 @@ export default function FoodSpin({
       setFilterExpiry(null);
       setTimeLeft(null);
     }
+  };
+
+  const toggleFiltersVisible = () => {
+    setFiltersVisible((prev) => !prev);
   };
 
   const getGradientColors = () => {
@@ -351,6 +357,7 @@ export default function FoodSpin({
     setFilterExpiry(null);
     setTimeLeft(null);
     setCurrentQueryString(baseParams);
+    setFiltersVisible(false);
     setRejectedIds(new Set());
     setIngredientsVisible(false);
     document.cookie = "temp_filters=; path=/; max-age=0";
@@ -362,6 +369,7 @@ export default function FoodSpin({
 
   const startSpin = async (providedRejected = null) => {
     if (spinning || loading || !selectedMode) return;
+    setFiltersVisible(false);
     const activeRejected =
       providedRejected && typeof providedRejected.has === "function"
         ? providedRejected
@@ -547,6 +555,7 @@ export default function FoodSpin({
       {filtersVisible && (
         <FilterPanel
           currentParams={currentQueryString}
+          baseParams={baseParams}
           onApply={handleFilterApply}
           onClose={() => setFiltersVisible(false)}
         />

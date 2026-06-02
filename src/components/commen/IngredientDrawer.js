@@ -75,7 +75,7 @@ export default function IngredientDrawer({ visible, onClose, ingredients, active
         </div>
 
         {/* Chips grid */}
-        <div className="flex-1 overflow-y-auto drawer-scroll grid grid-cols-2 gap-3 content-start pr-1">
+        <div className="flex-1 overflow-y-auto drawer-scroll grid grid-cols-2 gap-3 content-start pr-1 pb-6">
           {ingredients.map((item) => {
             const on = !!checkedIngredients[item.id];
             return (
@@ -85,7 +85,7 @@ export default function IngredientDrawer({ visible, onClose, ingredients, active
                   p-2 rounded-xl text-[12px] sm:text-[13px] font-bold font-[Outfit]
                   cursor-pointer select-none flex flex-col items-center justify-center text-center gap-2
                   border transition-all duration-[220ms] ease-[cubic-bezier(0.34,1.56,0.64,1)]
-                  hover:scale-[1.04]
+                  hover:scale-[1.0]
                   ${on
                     ? "bg-green-500/30 border-green-400/50 text-[var(--text-main)] shadow-[0_0_15px_rgba(34,197,94,0.3)]"
                     : "bg-black/5 dark:bg-white/5 border-[var(--glass-border)] text-[var(--text-muted)] hover:bg-black/10 dark:hover:bg-white/10 hover:text-[var(--text-main)]"

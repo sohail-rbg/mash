@@ -149,60 +149,6 @@ export default function ConfirmedSelection({ suggestedFood, selectedMode, onRest
             </span>
           </div>
 
-          {/* Swiggy & Zomato — only for online mode */}
-          {selectedMode === 'online' && (
-            <div style={{ marginTop: 10, width: '100%', maxWidth: 300 }}>
-              <p style={{
-                fontSize: 10, fontWeight: 600, color: 'var(--text-muted)',
-                marginBottom: 7, textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center',
-              }}>
-                Find on
-              </p>
-              <div style={{ display: 'flex', gap: 10 }}>
-                <a
-                  href={`https://www.swiggy.com/search?query=${encodeURIComponent(suggestedFood?.name || '')}`}
-                  target="_blank" rel="noopener noreferrer"
-                  style={{
-                    flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                    padding: '8px 0', borderRadius: 14, textDecoration: 'none', cursor: 'pointer',
-                    border: '1.5px solid rgba(252,128,25,0.45)', background: 'rgba(252,128,25,0.07)',
-                    transition: 'all 0.2s ease',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(252,128,25,0.18)'; e.currentTarget.style.borderColor = '#FC8019'; e.currentTarget.style.boxShadow = '0 0 12px rgba(252,128,25,0.3)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(252,128,25,0.07)'; e.currentTarget.style.borderColor = 'rgba(252,128,25,0.45)'; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none'; }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 40 40" fill="none">
-                    <circle cx="20" cy="20" r="20" fill="#FC8019"/>
-                    <path d="M20 8c-5.5 0-9.5 4-9.5 9 0 3.5 2 6.5 5 8l-1 5 5-2.5c.5.1 1 .1 1.5.1 5.5 0 9.5-4 9.5-9S25.5 8 20 8z" fill="white"/>
-                    <circle cx="16" cy="19" r="1.5" fill="#FC8019"/>
-                    <circle cx="20" cy="19" r="1.5" fill="#FC8019"/>
-                    <circle cx="24" cy="19" r="1.5" fill="#FC8019"/>
-                  </svg>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: '#FC8019' }}>Swiggy</span>
-                </a>
-                <a
-                  href={`https://www.zomato.com/search?q=${encodeURIComponent(suggestedFood?.name || '')}`}
-                  target="_blank" rel="noopener noreferrer"
-                  style={{
-                    flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                    padding: '8px 0', borderRadius: 14, textDecoration: 'none', cursor: 'pointer',
-                    border: '1.5px solid rgba(226,55,68,0.45)', background: 'rgba(226,55,68,0.07)',
-                    transition: 'all 0.2s ease',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(226,55,68,0.18)'; e.currentTarget.style.borderColor = '#E23744'; e.currentTarget.style.boxShadow = '0 0 12px rgba(226,55,68,0.3)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(226,55,68,0.07)'; e.currentTarget.style.borderColor = 'rgba(226,55,68,0.45)'; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none'; }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 40 40" fill="none">
-                    <circle cx="20" cy="20" r="20" fill="#E23744"/>
-                    <path d="M14 13l6 14 6-14" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M10 19h20" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-                  </svg>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: '#E23744' }}>Zomato</span>
-                </a>
-              </div>
-            </div>
-          )}
-
           {/* Action buttons — one line */}
           <div style={{ display: 'flex', gap: 10, marginTop: 12, width: '100%', maxWidth: 300, alignItems: 'center' }}>
             {/* Back — small ✕ circle */}

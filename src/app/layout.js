@@ -13,8 +13,6 @@ import AuthProvider from "./AuthProvider";
 import { GlobalStyles } from "./SharedStyles";
 import ThemeProvider from "./ThemeProvider";
 
-import { ClerkProvider, Show, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs'
-
 //  Default Fonts
 const geistSans = Geist({
   variable: "--font-geist-sans",

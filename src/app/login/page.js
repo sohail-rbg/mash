@@ -3,10 +3,12 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { signIn } from "next-auth/react";
+import { ArrowRight, Eye, EyeOff } from 'lucide-react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(''); 
   const router = useRouter();
 
@@ -59,7 +61,7 @@ export default function Login() {
 
         <form onSubmit={handleSubmit} className="w-full flex flex-col gap-2">
           <div className="space-y-1.5">
-            <label className="font-dm text-[8px] font-bold text-white/40 uppercase tracking-[0.2em] ml-4">Email Address</label>
+            <label className="font-dm text-[12px] font-bold text-white/40  tracking-[0.2em] ml-4">Email Address</label>
             <input 
               onChange={(e) => setEmail(e.target.value)} 
               type="email" 
@@ -69,17 +71,28 @@ export default function Login() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="font-dm text-[8px] font-bold text-white/40 uppercase tracking-[0.2em] ml-4">Password</label>
-            <input 
+            <label className="font-dm text-[12px] font-bold text-white/40  tracking-[0.2em] ml-4">Password</label>
+            <div className="relative">
+              <input 
               onChange={(e) => setPassword(e.target.value)} 
-              type="password" 
+              type={showPassword ? "text" : "password"} 
               placeholder="••••••••" 
-              className="w-full bg-white/[0.05] border border-white/10 px-6 py-4 rounded-2xl text-white font-dm focus:outline-none focus:border-green-400/50 focus:bg-white/[0.08] transition-all placeholder:text-white/20"
-            />
+              className="w-full bg-white/[0.05] border border-white/10 px-6 py-4 rounded-2xl text-white font-dm focus:outline-none focus:border-green-400/50 focus:bg-white/[0.08] transition-all placeholder:text-white/20 pr-12"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-4 flex items-center text-green-400 hover:text-green-300 focus:outline-none"
+              >
+                {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
+              </button>
+            </div>
           </div>
 
-          <button className="w-full mt-1 bg-green-500 hover:bg-green-400 text-black font-syne font-extrabold py-4.5 rounded-2xl transition-all active:scale-[0.98] shadow-[0_8px_30px_rgb(34,197,94,0.3)] cursor-pointer">
-            Login to Kitchen
+          <button type="submit" className="w-full mt-1 bg-green-500 hover:bg-green-400 text-black font-dm font-extrabold py-4.5 rounded-2xl transition-all active:scale-[0.98] shadow-[0_8px_30px_rgb(34,197,94,0.3)] cursor-pointer flex items-center justify-center gap-2">
+           
+            Login
+             <ArrowRight size={20} className="font-bold" />
           </button>
 
           <div className="flex items-center ">
@@ -98,14 +111,14 @@ export default function Login() {
           </button>
 
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold py-3.5 px-4 rounded-xl text-center animate-pulse">
+            <div className="bg-red-500/10 border border-red-500/20 text-white text-xs font-bold py-3.5 px-4 rounded-xl text-center ">
               {error}
             </div>
           )}
 
           <div className="mt-2 text-center">
             <Link className="font-dm text-sm text-white/40 group" href={'/register'}>
-              New here? <span className="text-green-400 font-bold group-hover:underline transition-all">Create an account</span>
+              Don't have an account? <span className="text-green-400 font-bold group-hover:underline transition-all">Sign Up</span>
             </Link>
           </div>
         </form>

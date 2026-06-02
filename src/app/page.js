@@ -162,14 +162,14 @@ export default async function Home() {
       </div>
 
       {/* ── LAYER 4: Header ── */}
-      <header className="absolute top-0 left-0 w-full flex items-center justify-between px-4 pt-3 pb-2 z-20"
+      <header className="absolute top-0 left-0 w-full flex items-center justify-between px-4 pt-3 pb-2 z-20 pointer-events-none"
         style={{
           background: "linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 100%)",
         }}
       >
 
         {/* Left Logo */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 pointer-events-auto">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center shadow-lg">
             <span className="text-xl">🍽️</span>
           </div>
@@ -179,7 +179,7 @@ export default async function Home() {
         </div>
         
         {/* Right Side: Theme Switch and User Avatar */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 pointer-events-auto">
           <RefreshButton />
           {/* <ThemeToggle /> */}
           <LogoutButton />

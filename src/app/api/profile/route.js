@@ -20,8 +20,26 @@ export async function PUT(req) {
       return NextResponse.json({ message: "User ID not found in session" }, { status: 400 });
     }
 
+    // Robust lookup: support ObjectId _id or OAuth provider id (googleId) or email
+    let existingUser = null;
+    try {
+      if (/^[a-fA-F0-9]{24}$/.test(String(userId))) {
+        existingUser = await User.findById(userId);
+      }
+    } catch (err) {
+      console.warn('findById failed on profile update, falling back', err?.message || err);
+    }
+
+    if (!existingUser) {
+      existingUser = await User.findOne({ $or: [{ googleId: String(userId) }, { email: session.user.email }] });
+    }
+
+    if (!existingUser) {
+      return NextResponse.json({ message: "User not found." }, { status: 404 });
+    }
+
     const updatedUser = await User.findByIdAndUpdate(
-      userId,
+      existingUser._id,
       { name, email, image },
       { new: true, runValidators: true } // Return the updated document and run schema validators
     ).select('-password'); // Exclude password from the returned user object

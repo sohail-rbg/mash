@@ -3,11 +3,13 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { signIn } from "next-auth/react";
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
 
@@ -96,36 +98,45 @@ export default function Register() {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-2">
           <div className="space-y-1.5">
-            <label className=" text-[8px] font-bold text-white/40 uppercase tracking-[0.2em] ml-4">Full Name</label>
+            <label className=" text-[12px] font-bold text-white/40  tracking-[0.2em] ml-4">Full Name</label>
             <input 
               onChange={(e) => setName(e.target.value)} 
               type="text" 
               placeholder="Your Name" 
-              className="w-full bg-white/5 border border-white/10 px-4 py-3 rounded-2xl text-white  focus:outline-none focus:border-orange-400/50 focus:bg-white/8 transition-all"
+              className="w-full bg-white/5 border border-white/10 px-4 py-3 text-[12px] rounded-2xl text-white  focus:outline-none focus:border-orange-400/50 focus:bg-white/8 transition-all"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className=" text-[8px] font-bold text-white/40 uppercase tracking-[0.2em] ml-4">Email Address</label>
+            <label className=" text-[12px] font-bold text-white/40  tracking-[0.2em] ml-4">Email Address</label>
             <input 
               onChange={(e) => setEmail(e.target.value)} 
               type="email" 
               placeholder="email@example.com" 
-              className="w-full bg-white/5 border border-white/10 px-4 py-3 rounded-2xl text-white  focus:outline-none focus:border-orange-400/50 focus:bg-white/8 transition-all"
+              className="w-full bg-white/5 border border-white/10 px-4 py-3 text-[12px] rounded-2xl text-white  focus:outline-none focus:border-orange-400/50 focus:bg-white/8 transition-all"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className=" text-[8px] font-bold text-white/40 uppercase tracking-[0.2em] ml-4">Create Password</label>
-            <input 
-              onChange={(e) => setPassword(e.target.value)} 
-              type="password" 
-              placeholder="••••••••" 
-              className="w-full bg-white/5 border border-white/10 px-4 py-3 rounded-2xl text-white  focus:outline-none focus:border-orange-400/50 focus:bg-white/8 transition-all"
-            />
+            <label className=" text-[12px] font-bold text-white/40  tracking-[0.2em] ml-4">Create Password</label>
+            <div className="relative">
+              <input 
+                onChange={(e) => setPassword(e.target.value)} 
+                type={showPassword ? "text" : "password"} 
+                placeholder="••••••••" 
+                className="w-full bg-white/5 border border-white/10 px-4 py-3 pr-12 rounded-2xl text-white  focus:outline-none focus:border-orange-400/50 focus:bg-white/8 transition-all"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-4 flex items-center text-green-400 hover:text-green-300 focus:outline-none"
+              >
+                {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
+              </button>
+            </div>
           </div>
 
-          <button className="w-full mt-1 bg-orange-500 hover:bg-orange-400 text-white font-syne font-extrabold py-4 rounded-2xl transition-all active:scale-[0.98] shadow-[0_8px_30px_rgb(249,115,22,0.3)] cursor-pointer">
+          <button className="w-full mt-1 bg-green-500 hover:bg-green-800 text-white font-dm font-extrabold py-4 rounded-2xl transition-all active:scale-[0.98] shadow-[0_8px_30px_rgb(249,115,22,0.3)] cursor-pointer">
             Create Account
           </button>
 
@@ -138,17 +149,17 @@ export default function Register() {
           <button
             type="button"
             onClick={() => signIn("google", { callbackUrl: `${window.location.origin}/` })}
-            className="flex items-center justify-center gap-3 bg-white/5 hover:bg-white/10 text-white border border-white/10  font-bold px-6 py-4 rounded-2xl transition-all cursor-pointer"
+            className="flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-gray-900 border border-white/10  font-bold px-6 py-4 rounded-2xl transition-all cursor-pointer"
           >
             <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5" alt="Google" />
-            Google
+           Continue with Google
           </button>
 
           {error && <div className="bg-red-500/20 text-red-200 text-xs font-bold py-3.5 px-4 rounded-xl text-center border border-red-500/20">{error}</div>}
 
           <div className=" text-center">
             <Link className=" text-sm text-white/30 group" href={'/login'}>
-              Already a chef? <span className="text-orange-400 font-bold group-hover:underline">Login here</span>
+              Already have an account? <span className="text-green-400 font-bold group-hover:underline">Log In</span>
             </Link>
           </div>
         </form>

@@ -3,7 +3,6 @@ import React from "react";
 import Link from "next/link";
 import Button from "./commen/Button";
 import LogoutButton from "./LogoutButton";
-import RefreshButton from "./RefreshButton";
 
 export default function Header() {
   return (
@@ -24,7 +23,6 @@ export default function Header() {
               Add <span className="hidden sm:inline">New</span> Food
             </Button>
           </Link>
-          <RefreshButton />
           <LogoutButton />
         </div>
       </div>

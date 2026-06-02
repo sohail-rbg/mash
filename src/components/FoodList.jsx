@@ -132,7 +132,6 @@ export default function FoodList({ initialFoods, isFiltered }) {
                         {h}
                       </button>
                     ))}
-                    {food.mood?.map((m) => <span key={m} className="bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[9px] px-2 py-1 rounded-lg capitalize"> {m}</span>)}
                   </div>
                 </div>
               </div>
@@ -218,13 +217,6 @@ export default function FoodList({ initialFoods, isFiltered }) {
                         </div>
 
                         <div>
-                            <span className="font-semibold block text-white/40 uppercase text-[10px] tracking-widest">Mood</span>
-                            <div className="flex flex-wrap gap-1 mt-1">
-                                {suggestedFood.mood?.map(m => <span key={m} className="bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2 py-1 rounded capitalize">{m}</span>)}
-                            </div>
-                        </div>
-
-                        <div>
                             <span className="font-semibold block text-white/40 uppercase text-[10px] tracking-widest">Health Goals</span>
                             <div className="flex flex-wrap gap-1 mt-1">
                                 {suggestedFood.healthGoals?.map(h => (
@@ -237,13 +229,6 @@ export default function FoodList({ initialFoods, isFiltered }) {
                                     {h}
                                   </button>
                                 ))}
-                            </div>
-                        </div>
-
-                        <div>
-                            <span className="font-semibold block text-white/40 uppercase text-[10px] tracking-widest">Food Style</span>
-                            <div className="flex flex-wrap gap-1 mt-1">
-                                {suggestedFood.foodStyle?.map(fs => <span key={fs} className="bg-pink-500/10 text-pink-400 border border-pink-500/20 px-2 py-1 rounded capitalize">{fs}</span>)}
                             </div>
                         </div>
 

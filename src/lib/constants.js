@@ -11,9 +11,6 @@ export const MEAL_TIMING_OPTIONS = [
 export const DIET_TYPE_OPTIONS = [
   "veg",
   "non-veg",
-  // "vegan",
-  // "jain",
-  // "keto",
 ];
 
 // HEALTH GOALS
@@ -45,35 +42,6 @@ export const CUISINE_OPTIONS = [
   "korean",
 ];
 
-// FOOD STYLE
-export const FOOD_STYLE_OPTIONS = [
-  "fast-food",
-  "street-food",
-  "home-style",
-  "restaurant-style",
-  "traditional",
-  "modern",
-  "fusion",
-  "deep-fried",
-  "grilled"
-];
-
-// MOOD
-export const MOOD_OPTIONS = [
-  "comfort",
-  "spicy-craving",
-  "sweet-craving",
-  "light-fresh",
-  "heavy-filling",
-  "party",
-  "romantic",
-  "excited",
-  "relaxed",
-  "energized",
-  "happy",
-  "fun",
-];
-
 // WEATHER
 export const WEATHER_OPTIONS = [
   "summer",
@@ -86,30 +54,14 @@ export const WEATHER_OPTIONS = [
 export const INGREDIENT_RESTRICTION_OPTIONS = [
   "onion",
   "garlic",
-  "Dairy Product",
-  "Nuts",
-  "Sugar",
-  "Oil",
-  "Eggs",
+  "dairy",
+  "nuts",
+  "sugar",
+  "oil",
+  "egg",
   "gluten"
 ];
 export const FOOD_TYPE_OPTIONS = [
   "online",
   "self-cooking",
 ];
-
-// // COOK TIME FILTER
-// export const COOK_TIME_OPTIONS = [
-//   "under-10",
-//   "under-20",
-//   "under-30",
-//   "above-30",
-// ];
-
-// // BUDGET FILTER
-// export const BUDGET_OPTIONS = [
-//   "under-50",
-//   "50-150",
-//   "150-300",
-//   "premium",
-// ];

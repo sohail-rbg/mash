@@ -29,12 +29,47 @@ export function getAutoWeatherCondition(month = new Date().getMonth()) {
  * @returns {boolean} - True if the food does NOT contain any of the user's allergens.
  */
 export function isFoodSafeForUser(food, userAllergies = []) {
-  if (!userAllergies || userAllergies.length === 0) return true;
-  const foodIngredients = (food.ingredients || []).map(i => i.toLowerCase());
-  // Food is safe if none of the user's allergens appear in the food's ingredients
-  return !userAllergies.some(allergy =>
-    foodIngredients.includes(allergy.toLowerCase())
-  );
+  const allergiesArray = Array.isArray(userAllergies) 
+    ? userAllergies 
+    : (typeof userAllergies === 'string' ? userAllergies.split(',').filter(Boolean) : []);
+
+  if (allergiesArray.length === 0) return true;
+
+  const clean = (s) => String(s || "").toLowerCase().trim().replace(/[\s\-_]/g, "");
+
+  const foodIngredients = (food.ingredients || []).map(i => {
+    if (typeof i === 'string') return clean(i);
+    return clean(i?.id || i?.label || i?.ingredient || i?.name || "");
+  }).filter(Boolean);
+
+  const searchableText = clean((food.name || "") + " " + (food.description || ""));
+  
+  const hasAllergen = allergiesArray.some(allergy => {
+    const restricted = clean(allergy);
+    if (!restricted) return false;
+
+    const inIngredients = foodIngredients.some(ing => ing.includes(restricted));
+    const inText = searchableText.includes(restricted);
+    return inIngredients || inText;
+  });
+
+  return !hasAllergen;
+}
+
+/**
+ * Checks if a food item matches the user's health goal.
+ * @param {Object} food - The food object.
+ * @param {string} userGoal - The selected health goal (e.g., "weight-loss", "No Goal").
+ * @returns {boolean} - True if the food matches the criteria.
+ */
+export function isFoodMatchingGoal(food, userGoal) {
+  if (!userGoal || userGoal === "No Goal") return true;
+
+  const clean = (s) => String(s || "").toLowerCase().trim().replace(/[\s\-_]/g, "");
+  const target = clean(userGoal);
+  
+  const foodGoals = (food.healthGoals || []).map(clean);
+  return foodGoals.includes(target);
 }
 
 /**
@@ -44,10 +79,12 @@ export function isFoodSafeForUser(food, userAllergies = []) {
 export const FOOD_INGREDIENTS = [
   // Grains & Staples
   { id: "rice",          label: "Rice",                   category: "Grains" },
+  // { id: "onion",         label: "Onion",                  category: "Grains" },
   { id: "wheat",         label: "Wheat / Atta",           category: "Grains" },
-  { id: "suji",          label: "Suji (Rava)",            category: "Grains" },
+  { id: "rava",          label: "Rava ",            category: "Grains" },
   { id: "poha",          label: "Poha (Flattened Rice)",  category: "Grains" },
   { id: "oats",          label: "Oats",                   category: "Grains" },
+  { id: "upma",          label: "Upma",                   category: "Grains" },
   { id: "bread",         label: "Bread",                  category: "Grains" },
   { id: "maida",         label: "Maida (Refined Flour)",  category: "Grains" },
   { id: "cornflour",     label: "Cornflour",              category: "Grains" },
@@ -60,25 +97,26 @@ export const FOOD_INGREDIENTS = [
   { id: "moong_dal",     label: "Moong Dal",              category: "Dal & Legumes" },
   { id: "masoor_dal",    label: "Masoor Dal",             category: "Dal & Legumes" },
   { id: "urad_dal",      label: "Urad Dal",               category: "Dal & Legumes" },
-  { id: "rajma",         label: "Rajma (Kidney Beans)",   category: "Dal & Legumes" },
+  { id: "rajma",         label: "Rajma ",   category: "Dal & Legumes" },
   { id: "chole",         label: "Chole (Chickpeas)",      category: "Dal & Legumes" },
   { id: "soybean",       label: "Soya Chunks",            category: "Dal & Legumes" },
-  { id: "besan",         label: "Besan (Gram Flour)",     category: "Dal & Legumes" },
+  { id: "besan",         label: "Besan",     category: "Dal & Legumes" },
   // Vegetables
-  { id: "potato",        label: "Potato (Aloo)",          category: "Vegetables" },
-  { id: "onion",         label: "Onion",                  category: "Vegetables" },
+  { id: "potato",        label: "Potato",          category: "Vegetables" },
+  { id: "onion",         label: "Onion",           category: "Vegetables" },
   { id: "tomato",        label: "Tomato",                 category: "Vegetables" },
   { id: "garlic",        label: "Garlic",                 category: "Vegetables" },
   { id: "ginger",        label: "Ginger",                 category: "Vegetables" },
   { id: "spinach",       label: "Spinach (Palak)",        category: "Vegetables" },
   { id: "cauliflower",   label: "Cauliflower (Gobi)",     category: "Vegetables" },
-  { id: "peas",          label: "Green Peas (Matar)",     category: "Vegetables" },
+  { id: "peas",          label: "Green Peas",     category: "Vegetables" },
   { id: "capsicum",      label: "Capsicum",               category: "Vegetables" },
   { id: "carrot",        label: "Carrot",                 category: "Vegetables" },
   { id: "brinjal",       label: "Brinjal (Baingan)",      category: "Vegetables" },
   { id: "corn",          label: "Corn",                   category: "Vegetables" },
   { id: "mushroom",      label: "Mushroom",               category: "Vegetables" },
   { id: "mixed_veg",     label: "Mixed Vegetables",       category: "Vegetables" },
+  { id: "pasta",         label: "Pasta",                  category: "Vegetables" },
   // Dairy
   { id: "milk",          label: "Milk",                   category: "Dairy" },
   { id: "curd",          label: "Curd (Dahi)",            category: "Dairy" },
@@ -108,12 +146,14 @@ export const FOOD_INGREDIENTS = [
   { id: "chaat_masala",  label: "Chaat Masala",           category: "Spices" },
   { id: "curry_leaves",  label: "Curry Leaves",           category: "Spices" },
   { id: "coriander_lf",  label: "Fresh Coriander",        category: "Spices" },
+  { id: "pizza_base",    label: "Pizza Base",             category: "Spices" },
   // Fruits & Nuts
   { id: "banana",        label: "Banana",                 category: "Fruits & Nuts" },
   { id: "fruits",        label: "Mixed Fruits",           category: "Fruits & Nuts" },
   { id: "dry_fruits",    label: "Dry Fruits",             category: "Fruits & Nuts" },
   { id: "peanuts",       label: "Peanuts",                category: "Fruits & Nuts" },
-  { id: "nuts",          label: "Nuts (Cashew/Almond)",   category: "Fruits & Nuts" },
+  { id: "nuts",          label: "Nuts",   category: "Fruits & Nuts" },
+{ id: "honey",         label: "Honey",                  category: "Fruits & Nuts" },
   { id: "coconut",       label: "Coconut",                category: "Fruits & Nuts" },
   // Other
   { id: "tofu",          label: "Tofu",                   category: "Other" },
@@ -121,121 +161,105 @@ export const FOOD_INGREDIENTS = [
   { id: "tamarind",      label: "Tamarind (Imli)",        category: "Other" },
   { id: "lemon",         label: "Lemon",                  category: "Other" },
   { id: "green_chilli",  label: "Green Chilli",           category: "Other" },
+  {id: "mongdal",         label: "Mong Dal",              category: "Dal & Legumes" },
 ];
 
 // export const MEAL_SPECIFIC_INGREDIENTS = { ... }  ← removed duplicate commented block
 
 export const MEAL_SPECIFIC_INGREDIENTS = {
  breakfast: [
-  { id: "poha_base", label: "Poha (Flattened Rice)", diets: ["veg","vegan","jain"] },
-  { id: "suji", label: "Suji (Rava)", diets: ["veg","vegan","jain"] },
-  { id: "besan", label: "Besan", diets: ["veg","vegan","jain"] },
-  { id: "wheat", label: "Wheat (Atta)", diets: ["veg","vegan","jain"] },
+  { id: "upma", label: "Upma", diets: ["veg"] },
+  { id: "besan", label: "Besan", diets: ["veg"] },
 
-  { id: "oats", label: "Oats", diets: ["veg","vegan"] },
-  { id: "bread", label: "Bread", diets: ["veg","vegan"] },
+  { id: "bread", label: "Bread", diets: ["veg"] },
+  { id: "oats", label: "Oats", diets: ["veg"] },
+  {id: "potato", label: "Potato", diets: ["veg"] },
 
-  { id: "paneer", label: "Paneer", diets: ["veg","keto"] },
-  { id: "curd", label: "Curd (Dahi)", diets: ["veg"] },
+  { id: "paneer", label: "Paneer", diets: ["veg"] },
   { id: "milk", label: "Milk", diets: ["veg"] },
 
-  { id: "egg", label: "Egg", diets: ["non-veg","eggitarian","keto"] },
-  { id: "chicken", label: "Chicken", diets: ["non-veg","keto"] },
+  { id: "fruits", label: "Fruits", diets: ["veg"] },
+  { id: "dry_fruits", label: "Dry Fruits", diets: ["veg"] },
+  { id: "rava", label: "Rava", diets: ["veg"] },
 
-  { id: "butter", label: "Butter", diets: ["veg","keto"] },
-
-  { id: "fruits", label: "Fruits", diets: ["veg","vegan","jain","keto"] },
-  { id: "dry_fruits", label: "Dry Fruits", diets: ["veg","vegan","jain","keto"] },
-
-  { id: "idli_batter", label: "Idli/Dosa Batter", diets: ["veg","vegan","jain"] }
+  { id: "egg", label: "Egg", diets: ["non-veg"] },
+  { id: "chicken", label: "Chicken", diets: ["non-veg"] },
+  { id: "omelette", label: "Omelette", diets: ["non-veg"] },
+  { id: "chicken-pasta", label: "Chicken Pasta", diets: ["non-veg"] },
+  
 ],
 
  lunch: [
-  { id: "rice", label: "Rice", diets: ["veg","non-veg","vegan","jain"] },
-  { id: "wheat", label: "Wheat (Atta)", diets: ["veg","non-veg","vegan","jain"] },
+  { id: "rice", label: "Rice", diets: ["veg","non-veg"] },
+  { id: "wheat", label: "Wheat", diets: ["veg","non-veg"] },
+  { id: "paneer", label: "Paneer", diets: ["veg"] },
 
-  { id: "dal", label: "Lentils (Dal)", diets: ["veg","vegan","jain"] },
-  { id: "rajma", label: "Rajma", diets: ["veg","vegan","jain"] },
-  { id: "chole", label: "Chickpeas", diets: ["veg","vegan","jain"] },
+  { id: "dal", label: "Lentils (Dal)", diets: ["veg"] },
+  { id: "rajma", label: "Rajma", diets: ["veg"] },
+  { id: "chole", label: "Chole", diets: ["veg"] },
 
-  { id: "paneer", label: "Paneer", diets: ["veg","keto"] },
-  { id: "tofu", label: "Tofu", diets: ["vegan","keto"] },
-
-  { id: "chicken", label: "Chicken", diets: ["non-veg","keto"] },
-  { id: "fish", label: "Fish", diets: ["non-veg","keto"] },
+  { id: "chicken", label: "Chicken", diets: ["non-veg"] },
+  { id: "fish", label: "Fish", diets: ["non-veg"] },
   { id: "mutton", label: "Mutton", diets: ["non-veg"] },
-  { id: "eggs", label: "Eggs", diets: ["non-veg","eggitarian","keto"] },
+  { id: "eggs", label: "Eggs", diets: ["non-veg"] },
 
-  { id: "vegetables", label: "Mixed Vegetables", diets: ["veg","vegan","jain","keto"] },
-  { id: "potato", label: "Potato", diets: ["veg","vegan"] },
+  { id: "mixed_veg", label: "Mixed Vegetables", diets: ["veg"] },
+  { id: "potato", label: "Potato", diets: ["veg"] },
 
-  { id: "curd", label: "Curd (Dahi)", diets: ["veg"] },
-  { id: "butter", label: "Butter", diets: ["veg","keto"] },
+  { id: "curd", label: "Curd", diets: ["veg"] },
+   { id: "cruciferous",      label: "Cruciferous",  diets: ["veg"] },
 
-  { id: "spices", label: "Spices", diets: ["veg","vegan","jain","keto"] },
-  { id: "salt", label: "Salt", diets: ["veg","vegan","jain","keto"] },
-  { id: "oil", label: "Cooking Oil", diets: ["veg","vegan","jain","keto"] }
+  {id: "Besan", label: "Besan", diets: ["veg"] }
 ],
 
  snacks: [
-  { id: "potato", label: "Potato", diets: ["veg","vegan"] },
-  { id: "besan", label: "Besan", diets: ["veg","vegan","jain"] },
-  { id: "murmura", label: "Puffed Rice (Murmura)", diets: ["veg","vegan","jain"] },
-  { id: "bread", label: "Bread", diets: ["veg","vegan"] },
-  { id: "peanuts", label: "Peanuts", diets: ["veg","vegan","jain","keto"] },
-  { id: "corn", label: "Corn", diets: ["veg","vegan","jain"] },
+  { id: "potato", label: "Potato", diets: ["veg"] },
+  {id : "carrot", label: "Carrot", diets: ["veg"] },
+  { id: "noodles", label: "Noodles", diets: ["veg"] },
+  { id: "maggi", label: "Maggi", diets: ["veg"] },
+  { id: "pasta", label: "Pasta", diets: ["veg"] },
+  { id: "corn", label: "Corn", diets: ["veg"] },
+  
+  { id: "tomato", label: "Tomato", diets: ["veg"] },
+  { id: "dry-fruits", label: "Dry Fruits", diets: ["veg"] },
+  { id: "egg", label: "Egg", diets: ["non-veg"] },
+  { id: "chicken", label: "Chicken", diets: ["non-veg"] },
 
-  { id: "egg", label: "Egg", diets: ["non-veg","eggitarian","keto"] },
-  { id: "chicken", label: "Chicken", diets: ["non-veg","keto"] },
-
-  { id: "cheese", label: "Cheese", diets: ["veg","keto"] },
-  { id: "fruits", label: "Fruits", diets: ["veg","vegan","jain"] }
+  { id: "cheese", label: "Cheese", diets: ["veg"] },
+  { id: "fruits", label: "Fruits", diets: ["veg"] }
 ],
 
  dinner: [
   // Main Staples
-  { id: "wheat",        label: "Roti / Aata",          diets: ["veg","non-veg","vegan","jain"] },
-  { id: "rice",         label: "Rice (Chawal)",         diets: ["veg","non-veg","vegan","jain"] },
-  { id: "dal",          label: "Dal",                   diets: ["veg","vegan","jain"] },
+  { id: "wheat",        label: "Wheat",          diets: ["veg"] },
+  { id: "rice",         label: "Rice",         diets: ["veg"] },
+  { id: "dal",          label: "Dal",                   diets: ["veg"] },
   // Protein
   { id: "paneer",       label: "Paneer",                diets: ["veg"] },
-  { id: "egg",          label: "Egg",                   diets: ["non-veg","eggitarian"] },
+  { id: "egg",          label: "Egg",                   diets: ["non-veg"] },
   { id: "chicken",      label: "Chicken",               diets: ["non-veg"] },
   { id: "fish",         label: "Fish",                  diets: ["non-veg"] },
   { id: "mutton",       label: "Mutton",                diets: ["non-veg"] },
   // Vegetables
-  { id: "potato",       label: "Potato (Aloo)",         diets: ["veg","vegan"] },
-  { id: "spinach",      label: "Spinach (Palak)",       diets: ["veg","vegan","jain"] },
- { id: "soybean",       label: "Soybean / Soya",       diets: ["veg","vegan"] },
-  { id: "okra",         label: "Okra (Bhindi)",         diets: ["veg","vegan","jain"] },
-  { id: "peas",         label: "Peas (Matar)",          diets: ["veg","vegan","jain"] },
-  { id: "cabbage/Cauliflower",      label: "Cabbage/Cauliflower",  diets: ["veg","vegan","jain"] },
-  { id: "mixed_veg",    label: "Mixed Vegetables",      diets: ["veg","vegan","jain"] },
-  // // Base Ingredients
-  // { id: "onion",        label: "Onion (Pyaz)",          diets: ["veg","non-veg","vegan"] },
-  // { id: "tomato",       label: "Tomato",                diets: ["veg","vegan","jain"] },
-  // { id: "garlic",       label: "Garlic (Lehsun)",       diets: ["veg","non-veg","vegan"] },
-  // { id: "ginger",       label: "Ginger (Adrak)",        diets: ["veg","non-veg","vegan","jain"] },
-  // { id: "green_chilli", label: "Green Chilli",          diets: ["veg","non-veg","vegan","jain"] },
-  // // Fats & Seasoning
-  // { id: "ghee",         label: "Ghee",                  diets: ["veg","keto"] },
-  // { id: "oil",          label: "Oil",                   diets: ["veg","vegan","jain"] },
-  // { id: "salt",         label: "Salt",                  diets: ["veg","non-veg","vegan","jain"] },
-  // { id: "turmeric",     label: "Haldi (Turmeric)",      diets: ["veg","non-veg","vegan","jain"] },
-  // { id: "cumin",        label: "Jeera (Cumin)",         diets: ["veg","non-veg","vegan","jain"] },
-  // { id: "garam_masala", label: "Garam Masala",          diets: ["veg","non-veg","vegan","jain"] },
+  { id: "potato",       label: "Potato",         diets: ["veg"] },
+  { id: "spinach",      label: "Spinach",       diets: ["veg"] },
+ { id: "soybean",       label: " Soya",       diets: ["veg"] },
+  { id: "okra",         label: "lady-finger",         diets: ["veg"] },
+  { id: "peas",         label: "Green-Peas",          diets: ["veg"] },
+  { id: "cruciferous",      label: "Cruciferous",  diets: ["veg"] },
+  { id: "mixed_veg",    label: "Mixed Vegetables",      diets: ["veg"] },
   // Sides
-  { id: "curd",         label: "Curd / Raita",          diets: ["veg"] },
+  { id: "curd",         label: "Curd",          diets: ["veg"] },
 ],
 
  "late-night": [
   { id: "milk", label: "Milk", diets: ["veg"] },
-  { id: "banana", label: "Banana", diets: ["veg","vegan","jain"] },
-  { id: "fruits", label: "Fruits", diets: ["veg","vegan","jain"] },
-  { id: "bread", label: "Bread", diets: ["veg","vegan"] },
-  { id: "egg", label: "Egg", diets: ["non-veg","eggitarian","keto"] },
-  { id: "nuts", label: "Nuts", diets: ["veg","vegan","jain","keto"] },
-  { id: "cheese", label: "Cheese", diets: ["veg","keto"] }
+  { id: "banana", label: "Banana", diets: ["veg"] },
+  { id: "fruits", label: "Fruits", diets: ["veg"] },
+  { id: "bread", label: "Bread", diets: ["veg"] },
+  { id: "egg", label: "Egg", diets: ["non-veg"] },
+  { id: "nuts", label: "Nuts", diets: ["veg"] },
+  { id: "cheese", label: "Cheese", diets: ["veg"] }
 ]
 };
 /**

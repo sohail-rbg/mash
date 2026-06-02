@@ -1,6 +1,12 @@
 "use client";
 import React, { forwardRef, useState, useEffect, useMemo } from 'react';
 
+const formatFoodName = (name) => {
+  if (!name) return "";
+  const normalized = String(name).trim().toLowerCase();
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+};
+
 const SpinWheel = forwardRef(({
   showResult,
   suggestedFood,
@@ -369,7 +375,7 @@ const SpinWheel = forwardRef(({
               whiteSpace: 'nowrap',
             }}
           >
-            {suggestedFood.name}
+            {formatFoodName(suggestedFood.name)}
           </span>
         </div>
       )}
