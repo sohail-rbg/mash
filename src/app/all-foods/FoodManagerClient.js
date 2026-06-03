@@ -334,6 +334,57 @@ export default function FoodManagerClient({
     }
   };
 
+  const downloadAllFoodsCsv = async () => {
+    try {
+      const allFoods = [];
+      let page = 1;
+      const limit = 50;
+
+      while (true) {
+        const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+        const res = await fetch(`/api/foods?${params.toString()}`);
+        if (!res.ok) throw new Error("Failed to fetch foods for export.");
+        const data = await res.json();
+        const pageFoods = Array.isArray(data.foods) ? data.foods : [];
+        allFoods.push(...pageFoods);
+
+        if (!data.totalPages || page >= data.totalPages || pageFoods.length === 0) break;
+        page += 1;
+      }
+
+      if (allFoods.length === 0) {
+        alert("No foods available to export.");
+        return;
+      }
+
+      const escapeCsv = (value) => {
+        const str = value == null ? "" : String(value);
+        return `"${str.replace(/"/g, '""')}"`;
+      };
+
+      const headings = ["Name", "Category", "Diet Type"];
+      const rows = allFoods.map((food) => [
+        escapeCsv(food.name),
+        escapeCsv(food.category),
+        escapeCsv(Array.isArray(food.dietType) ? food.dietType.join(" | ") : food.dietType),
+      ].join(","));
+
+      const csvContent = [headings.join(","), ...rows].join("\r\n");
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `foods-export-${new Date().toISOString().slice(0,10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(error);
+      alert("Unable to export foods. Please try again.");
+    }
+  };
+
   const displayPage  = activeMeal !== "all" || activeCuisine || activeHealthGoal ? filteredPage : currentPage;
   // When searching: use API results. Otherwise: use current page foods.
   const filteredFoods = searchResults !== null ? searchResults : foods;
@@ -400,7 +451,7 @@ export default function FoodManagerClient({
               className="fm-search"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Search by name, category…"
+              placeholder="Search by name, category, or diet type…"
               style={{
                 width: "100%", padding: "9px 12px 9px 34px",
                 background: "rgba(255,255,255,0.05)",
@@ -422,6 +473,19 @@ export default function FoodManagerClient({
           </div>
 
           {/* Add food */}
+          <button
+            onClick={downloadAllFoodsCsv}
+            className="fm-add-btn"
+            style={{
+              padding: "9px 18px", borderRadius: 12, fontSize: 12, fontWeight: 800,
+              cursor: "pointer", letterSpacing: "0.06em", textTransform: "uppercase",
+              background: "rgba(59,130,246,0.12)",
+              border: "1px solid rgba(59,130,246,0.4)",
+              color: "#93c5fd", whiteSpace: "nowrap",
+            }}
+          >
+            ↓ Export All
+          </button>
           <button
             onClick={() => router.push("/add-food")}
             className="fm-add-btn"

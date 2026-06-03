@@ -56,7 +56,6 @@ export const INGREDIENT_RESTRICTION_OPTIONS = [
   "garlic",
   "dairy",
   "nuts",
-  "sugar",
   "oil",
   "egg",
   "gluten"

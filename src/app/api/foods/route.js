@@ -170,6 +170,8 @@ export async function GET(req) {
           query.$or = normalTerms.flatMap((searchTerm) => [
             { name: { $regex: searchTerm, $options: 'i' } },
             { searchKeywords: { $regex: searchTerm, $options: 'i' } },
+            { category: { $regex: searchTerm, $options: 'i' } },
+            { dietType: { $regex: searchTerm, $options: 'i' } },
           ]);
         }
       }
