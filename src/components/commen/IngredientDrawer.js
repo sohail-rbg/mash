@@ -49,12 +49,22 @@ export default function IngredientDrawer({ visible, onClose, ingredients, active
     );
 
     if (!normalizedSearch) {
+      // Separate matched into selected and unselected
+      const selected = matched.filter(item => checkedIngredients[item.id]);
+      const unselected = matched.filter(item => !checkedIngredients[item.id]);
+      
       const seed = hashString(activeMealTiming || "default");
-      return shuffleWithSeed(matched, seed).slice(0, 10);
+      const shuffledUnselected = shuffleWithSeed(unselected, seed);
+      
+      // Show all selected items first, then fill up to 10 with random unselected items
+      const limit = 10;
+      const fillCount = Math.max(0, limit - selected.length);
+      
+      return [...selected, ...shuffledUnselected.slice(0, fillCount)];
     }
 
     return matched;
-  }, [normalizedSearch, ingredients, activeMealTiming]);
+  }, [normalizedSearch, ingredients, activeMealTiming, checkedIngredients]);
 
   const handleSelectAll = () => {
     displayedIngredients.forEach(item => {
@@ -128,12 +138,12 @@ export default function IngredientDrawer({ visible, onClose, ingredients, active
             </div>
           )}
           <div className="flex items-center justify-between px-1 pt-1">
-            <p className="text-[11px] font-bold text-[var(--text-muted)] italic">
+            <p className="text-[8px] font-bold text-[var(--text-muted)] italic">
               {selectedCount === 0 ? "💡 No selection uses everything" : `${selectedCount} items selected`}
             </p>
             <button 
               onClick={hasSelection ? handleClearAll : handleSelectAll}
-              className="text-[10px] font-black uppercase tracking-wider text-green-400 hover:text-green-300 transition-colors cursor-pointer"
+              className="text-[8px] font-black uppercase tracking-wider text-green-400 hover:text-green-300 transition-colors cursor-pointer"
             >
               {hasSelection ? "Unselect All" : "Select All"}
             </button>
@@ -189,16 +199,18 @@ export default function IngredientDrawer({ visible, onClose, ingredients, active
         {/* Apply button */}
         <button
           onClick={onApply || onClose}
+          disabled={!!error}
           className="
             w-full py-3.5 rounded-full flex-shrink-0
             font-[Outfit] text-[12px] font-extrabold tracking-[0.09em] uppercase
             bg-gradient-to-br from-green-500/35 to-green-700/28
             border border-green-400/50 text-[var(--text-main)]
             backdrop-blur-xl
-            transition-all duration-[280ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] shadow-lg shadow-green-900/20
-            hover:-translate-y-1 hover:brightness-110
-            active:scale-[0.96]
-          "
+            transition-all duration-[280ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] shadow-lg shadow-green-900/20"
+          style={{
+            filter: error ? "grayscale(1) opacity(0.5)" : "none",
+            pointerEvents: error ? "none" : "auto"
+          }}
         >
           {selectedCount > 0 ? `Apply Selected (${selectedCount})` : "Use All Ingredients"}
         </button>
