@@ -172,7 +172,7 @@ export default async function Home() {
         <div className="flex items-center gap-2 pointer-events-auto">
           <img src="/assets/logo 1.png" alt="Logo" className="w-10 h-10 object-contain shadow-lg" />
           <span className="text-[var(--text-main)] font-bold hidden md:block">
-            Meal<span className="text-green-400">Mind</span>
+            {/* Meal<span className="text-green-400">Mind</span> */}
           </span>
         </div>
         
