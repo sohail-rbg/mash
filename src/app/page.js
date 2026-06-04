@@ -69,23 +69,24 @@ export default async function Home() {
 
       const apiField = FIELD_MAP[pref.questionId] || pref.questionId;
       const values = pref.answer;
+      const firstValue = Array.isArray(values) && typeof values[0] === "string"
+        ? values[0].toLowerCase().trim()
+        : "";
 
-      if (!values || values.length === 0 || values[0] === "") return;
+      if (!values || values.length === 0 || firstValue === "") return;
 
       if (
         (apiField === "restrictedIngredients" &&
-          ["no allergies", "no-allergies", "no"].includes(
-            values[0].toLowerCase()
-          )) ||
+          ["no allergies", "no-allergies", "no"].includes(firstValue)) ||
         (apiField === "healthGoals" &&
           pref.questionId === "healthSuggestions" &&
-          values[0].toLowerCase() === "no")
+          firstValue === "no")
       )
         return;
 
-      let formattedValues = values.map((v) =>
-        v.toLowerCase().replace(/\s+/g, "-")
-      );
+      let formattedValues = values
+        .filter((v) => typeof v === "string")
+        .map((v) => v.toLowerCase().replace(/\s+/g, "-"));
 
       if (apiField === "dietType") {
         formattedValues = formattedValues.map((v) =>

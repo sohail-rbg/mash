@@ -66,8 +66,13 @@ export default function UserPreferences({ questionnaire, userId, updateSession }
     setIsDrawerOpen(true);
   };
 
+  const normalizeQuestionId = (id) => {
+    if (id === "healthSuggestions") return "healthGoals";
+    return id;
+  };
+
   const getLabel = (qId, val) => {
-    const opts = OPTIONS_MAP[qId];
+    const opts = OPTIONS_MAP[normalizeQuestionId(qId)];
     if (!opts) return val;
     const match = opts.find((o) => o.value === val);
     return match?.label || val;
@@ -113,11 +118,14 @@ export default function UserPreferences({ questionnaire, userId, updateSession }
                 </div>
 
                   <div className="flex flex-wrap gap-1.5">
-                    {(Array.isArray(pref.answer) ? pref.answer : [pref.answer]).map((ans, j) => (
-                      <span key={j} className={`px-2 py-0.5 border rounded-lg text-[10px] font-extrabold capitalize ${tagColors[i % 4]}`}>
-                        {getLabel(pref.questionId, ans)}
-                      </span>
-                    ))}
+                    {(Array.isArray(pref.answer) ? pref.answer : [pref.answer])
+                      .map(ans => getLabel(pref.questionId, ans))
+                      .filter(label => label && String(label).trim() !== "")
+                      .map((label, j) => (
+                        <span key={j} className={`px-2 py-0.5 border rounded-lg text-[10px] font-extrabold capitalize ${tagColors[i % 4]}`}>
+                          {label}
+                        </span>
+                      ))}
                   </div>
               </div>
             ))
@@ -166,7 +174,7 @@ export default function UserPreferences({ questionnaire, userId, updateSession }
 
               {/* Unified Grid: Now shows all options by default and filters when searching */}
               <div className="grid grid-cols-2 gap-3">
-                {OPTIONS_MAP[editingPref]
+                {OPTIONS_MAP[normalizeQuestionId(editingPref)]
                   ?.filter(opt => !allergySearch || opt.label.toLowerCase().includes(allergySearch.toLowerCase()))
                   .map((opt) => {
                     const isSelected = tempAnswers.includes(opt.value);

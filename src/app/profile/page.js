@@ -44,8 +44,13 @@ export default function ProfilePage() {
   );
 
   const q = session.user.questionnaire ?? [];
-  const diet = q.find(x => x.questionId === "dietType")?.answer?.[0];
-  const goals = q.find(x => x.questionId === "healthGoals" || x.questionId === "weightGoal")?.answer ?? [];
+  const getPreferenceAnswers = (ids) => {
+    const item = q.find((x) => ids.includes(x.questionId) && Array.isArray(x.answer) && x.answer.length > 0);
+    return item?.answer || [];
+  };
+
+  const diet = getPreferenceAnswers(["dietType"])?.[0] || "";
+  const goals = getPreferenceAnswers(["healthGoals", "weightGoal", "healthSuggestions"]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -275,16 +280,13 @@ export default function ProfilePage() {
       <div className="absolute inset-0 bg-black/80 z-[1]" />
 
       {/* Topbar */}
-      <header className="fixed top-2 inset-x-4 z-30">
+      <header className="absolute top-2 inset-x-4 z-30">
         <div className=" rounded-2xl ">
-          <div className="relative z-10 flex items-center justify-between px-5 py-2.5">
+          <div className="relative z-10 flex items-center justify-between px-5 ">
             {/* Left: Logo side */}
             <div className="flex items-center flex-1">
               <Link href="/" className="flex items-center gap-2 group">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                  <span className="text-sm">🍽️</span>
-                </div>
-                <span className="font-black text-[var(--text-main)] hidden sm:block">Meal<span className="text-green-400">Mind</span></span>
+                <img src="/assets/logo 1.png" alt="MealMind Logo" className="w-10 h-10 sm:w-14 sm:h-14 object-contain transition-transform hover:scale-110" />
               </Link>
             </div>
 
@@ -353,7 +355,7 @@ export default function ProfilePage() {
                   <p className="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Goals</p>
                 </div>
                 {goals.length > 0 ? (
-                  <p className="font-black text-orange-400 text-xs capitalize truncate leading-none">{goals[0]}</p>
+                  <p className="font-black text-orange-400 text-xs capitalize truncate leading-none">{goals.join(" ")}</p>
                 ) : (
                   <p className="font-black text-[var(--text-muted)] text-xs leading-none">—</p>
                 )}

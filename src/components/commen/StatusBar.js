@@ -2,6 +2,12 @@
 
 export default function StatusBar({ foods, error, spinning, loading, selectedMode, checkedIngredients, remainingCount }) {
   const cfg = (() => {
+    if (error && !loading) return { // Error state
+      bg: "bg-red-100/70 dark:bg-red-500/[0.15]", border: "border-red-300/70 dark:border-red-300/30",
+      dot: "bg-red-500 dark:bg-red-400 shadow-[0_0_6px_rgba(239,68,68,0.9)]",
+      text: "text-red-700 dark:text-red-300",
+      label: error,
+    };
     if (loading) return { // Loading state: fetching from API
       bg: "bg-orange-100/70 dark:bg-orange-500/[0.15]", border: "border-orange-300/70 dark:border-orange-400/35",
       dot: "animate-spin border-t-orange-500 border-2 border-orange-300/20",
@@ -14,12 +20,6 @@ export default function StatusBar({ foods, error, spinning, loading, selectedMod
     //   text: "text-green-700 dark:text-green-300",
     //   label: `${remainingCount} options ready`,
     // };
-    if (error) return { // Error state
-      bg: "bg-red-100/70 dark:bg-red-500/[0.15]", border: "border-red-300/70 dark:border-red-300/30",
-      dot: "bg-red-500 dark:bg-red-400 shadow-[0_0_6px_rgba(239,68,68,0.9)]",
-      text: "text-red-700 dark:text-red-300",
-      label: error,
-    };
     if (spinning) return { // Spinning state
       bg: "bg-amber-100/70 dark:bg-amber-400/10", border: "border-amber-300/70 dark:border-amber-300/25",
       dot: "bg-amber-500 dark:bg-amber-300 shadow-[0_0_6px_rgba(251,191,36,0.9)]",
@@ -46,10 +46,14 @@ export default function StatusBar({ foods, error, spinning, loading, selectedMod
     };
   })();
 
+  const labelContent = error && !loading
+    ? <span className="transition-colors duration-300 text-red-700 dark:text-red-300">{cfg.label}</span>
+    : cfg.label;
+
   return (
     <div className={`inline-flex flex-row items-center gap-2 px-4 py-[7.5px] rounded-full  backdrop-blur-sm font-[Outfit] text-[15px] font-semibold tracking-[0.07em] whitespace-nowrap transition-all duration-300 shadow-[0_2px_10px_rgba(0,0,0,0.18)] cursor-default select-none  ${cfg.border}`}>
-      <span className={`rounded-full flex-shrink-0 transition-all duration-300 ${cfg.dot} ${loading ? 'w-3 h-3' : 'w-[5.5px] h-[5.5px]'}`} />
-      <span className={`transition-colors duration-300 ${cfg.text}`}>{cfg.label}</span>
+      <span className={`rounded-full shrink-0 transition-all duration-300 ${cfg.dot} ${loading ? 'w-3 h-3' : 'w-[5.5px] h-[5.5px]'}`} />
+      <span className={`transition-colors duration-300 ${cfg.text}`}>{labelContent}</span>
     </div>
   );
 }
