@@ -107,11 +107,6 @@ export default function FoodSpin({
   useEffect(() => {
     if (initialFoods) {
       setFoods(initialFoods);
-      setError(
-        isFiltered && initialFoods.length === 0
-          ? "No food items found. Try changing your filters!"
-          : null,
-      );
     }
   }, [initialFoods, isFiltered]);
 

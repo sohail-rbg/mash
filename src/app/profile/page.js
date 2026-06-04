@@ -282,7 +282,7 @@ export default function ProfilePage() {
       {/* Topbar */}
       <header className="absolute top-2 inset-x-4 z-30">
         <div className=" rounded-2xl ">
-          <div className="relative z-10 flex items-center justify-between px-5 ">
+          <div className="relative z-10 flex items-center justify-between px-5 py-2.5">
             {/* Left: Logo side */}
             <div className="flex items-center flex-1">
               <Link href="/" className="flex items-center gap-2 group">
