@@ -7,6 +7,8 @@ import LogoutButton from "@/components/LogoutButton";
 import { cookies } from "next/headers";
 import RefreshButton from "@/components/RefreshButton";
 import PreferenceReminder from "@/components/PreferenceReminder";
+import Link from "next/link";
+import Image from "next/image";
 
 async function getFoods(queryString = "") {
   try {
@@ -169,14 +171,11 @@ export default async function Home() {
         }}
       >
 
-        {/* Left Logo */}
-        <div className="flex items-center gap-2 pointer-events-auto">
-          <img src="/assets/logo 1.png" alt="Logo" className="w-10 h-10 object-contain shadow-lg" />
-          <span className="text-[var(--text-main)] font-bold hidden md:block">
-            {/* Meal<span className="text-green-400">Mind</span> */}
-          </span>
+      <div className="flex items-center gap-2 pointer-events-auto">
+          <Link href="/" className=" flex items-center gap-2 sm:gap-3 hover:opacity-80 transition-opacity">
+          <Image src="/assets/logo.png" alt="Logo" width={100} height={100} className="rounded-xl" />
+        </Link>
         </div>
-        
         {/* Right Side: Theme Switch and User Avatar */}
         <div className="flex items-center gap-2 pointer-events-auto">
           <RefreshButton />

@@ -32,10 +32,13 @@ export default function UserPreferences({ questionnaire, userId, updateSession }
   const savePrefUpdate = async (questionId, newValues) => {
     if (!userId) return;
 
+    // Clean values before saving (remove nulls, undefined, and empty strings)
+    const cleanValues = newValues.filter(v => v !== null && v !== undefined && String(v).trim() !== "");
+
     const exists = localQuestionnaire.some(p => p.questionId === questionId);
-    const updatedQuestionnaire = exists 
-      ? localQuestionnaire.map(p => p.questionId === questionId ? { ...p, answer: newValues } : p)
-      : [...localQuestionnaire, { questionId, answer: newValues }];
+    const updatedQuestionnaire = exists
+      ? localQuestionnaire.map(p => p.questionId === questionId ? { ...p, answer: cleanValues } : p)
+      : [...localQuestionnaire, { questionId, answer: cleanValues }];
 
     // Optimistic UI update so the main list reflects changes immediately
     setLocalQuestionnaire(updatedQuestionnaire);
@@ -61,7 +64,9 @@ export default function UserPreferences({ questionnaire, userId, updateSession }
 
   const handleEditInit = (qId, answer) => {
     setEditingPref(qId);
-    const currentAnswers = Array.isArray(answer) ? answer : [answer];
+    // Ensure we start with a clean array of existing selections
+    const currentAnswers = (Array.isArray(answer) ? answer : [answer])
+      .filter(a => a !== null && a !== undefined && String(a).trim() !== "");
     setTempAnswers(currentAnswers);
     setIsDrawerOpen(true);
   };
@@ -100,33 +105,40 @@ export default function UserPreferences({ questionnaire, userId, updateSession }
 
       {preferencesOpen && (
         <div className="flex flex-col gap-3 max-h-[400px] overflow-y-auto pr-1 drawer-scroll scroll-smooth">
-          {localQuestionnaire.length > 0 ? (
-            localQuestionnaire.map((pref, i) => (
+          {localQuestionnaire.filter(p => {
+            const ans = Array.isArray(p.answer) ? p.answer : [p.answer];
+            return ans.some(val => val !== null && val !== undefined && String(val).trim() !== "");
+          }).length > 0 ? (
+            localQuestionnaire
+            .filter(p => {
+              const ans = Array.isArray(p.answer) ? p.answer : [p.answer];
+              return ans.some(val => val !== null && val !== undefined && String(val).trim() !== "");
+            })
+            .map((pref, i) => (
               <div key={i} className="bg-white/5 border border-[var(--glass-border)] rounded-2xl p-3">
                 <div className="flex justify-between items-center mb-1.5">
                   <p className="text-[9px] text-[var(--text-muted)] font-bold uppercase tracking-widest">
                     {pref.questionId.replace(/([A-Z])/g, " $1").trim()}
                   </p>
                   <div className="flex gap-2">
-                      <button
-                        onClick={() => handleEditInit(pref.questionId, pref.answer)}
-                        className="px-2 py-0.5 rounded-md bg-orange-500/10 border border-orange-500/20 text-orange-500 text-[8px] font-black uppercase hover:bg-orange-500/20 transition-all cursor-pointer"
-                      >
-                        Edit
-                      </button>
+                    <button
+                      onClick={() => handleEditInit(pref.questionId, pref.answer)}
+                      className="px-2 py-0.5 rounded-md bg-orange-500/10 border border-orange-500/20 text-orange-500 text-[8px] font-black uppercase hover:bg-orange-500/20 transition-all cursor-pointer"
+                    >
+                      Edit
+                    </button>
                   </div>
                 </div>
-
-                  <div className="flex flex-wrap gap-1.5">
-                    {(Array.isArray(pref.answer) ? pref.answer : [pref.answer])
-                      .map(ans => getLabel(pref.questionId, ans))
-                      .filter(label => label && String(label).trim() !== "")
-                      .map((label, j) => (
-                        <span key={j} className={`px-2 py-0.5 border rounded-lg text-[10px] font-extrabold capitalize ${tagColors[i % 4]}`}>
-                          {label}
-                        </span>
-                      ))}
-                  </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {(Array.isArray(pref.answer) ? pref.answer : [pref.answer])
+                    .map(ans => getLabel(pref.questionId, ans))
+                    .filter(label => label && String(label).trim() !== "" && String(label).toLowerCase() !== "null")
+                    .map((label, j) => (
+                      <span key={j} className={`px-2 py-0.5 border rounded-lg text-[10px] font-extrabold capitalize ${tagColors[i % 4]}`}>
+                        {label}
+                      </span>
+                    ))}
+                </div>
               </div>
             ))
           ) : (
