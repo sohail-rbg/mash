@@ -147,7 +147,7 @@ export default async function Home() {
         <div
           className="absolute inset-0"
           style={{
-            backgroundImage: "url('https://images.unsplash.com/photo-1543353071-873f17a7a088?q=80&w=2000&auto=format&fit=crop')",
+            backgroundImage: "url('/assets/bg-img.webp')",
             backgroundSize: "cover",
             backgroundPosition: "center",
             backgroundRepeat: "no-repeat",
@@ -170,9 +170,7 @@ export default async function Home() {
 
         {/* Left Logo */}
         <div className="flex items-center gap-2 pointer-events-auto">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center shadow-lg">
-            <span className="text-xl">🍽️</span>
-          </div>
+          <img src="/assets/logo 1.png" alt="Logo" className="w-10 h-10 object-contain shadow-lg" />
           <span className="text-[var(--text-main)] font-bold hidden md:block">
             Meal<span className="text-green-400">Mind</span>
           </span>

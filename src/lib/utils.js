@@ -164,110 +164,110 @@ export const FOOD_INGREDIENTS = [
   {id: "mongdal",         label: "Mong Dal",              category: "Dal & Legumes" },
 ];
 
-// export const MEAL_SPECIFIC_INGREDIENTS = { ... }  ← removed duplicate commented block
+export const MEAL_SPECIFIC_INGREDIENTS = {};
 
-export const MEAL_SPECIFIC_INGREDIENTS = {
- breakfast: [
-  { id: "upma", label: "Upma", diets: ["veg"] },
-  { id: "besan", label: "Besan", diets: ["veg"] },
+// export const MEAL_SPECIFIC_INGREDIENTS = {
+//  breakfast: [
+//   { id: "upma", label: "Upma", diets: ["veg"] },
+//   { id: "besan", label: "Besan", diets: ["veg"] },
 
-  { id: "bread", label: "Bread", diets: ["veg"] },
-  { id: "oats", label: "Oats", diets: ["veg"] },
-  {id: "potato", label: "Potato", diets: ["veg"] },
+//   { id: "bread", label: "Bread", diets: ["veg"] },
+//   { id: "oats", label: "Oats", diets: ["veg"] },
+//   {id: "potato", label: "Potato", diets: ["veg"] },
 
-  { id: "paneer", label: "Paneer", diets: ["veg"] },
-  { id: "milk", label: "Milk", diets: ["veg"] },
+//   { id: "paneer", label: "Paneer", diets: ["veg"] },
+//   { id: "milk", label: "Milk", diets: ["veg"] },
 
-  { id: "fruits", label: "Fruits", diets: ["veg"] },
-  { id: "dry_fruits", label: "Dry Fruits", diets: ["veg"] },
-  { id: "rava", label: "Rava", diets: ["veg"] },
+//   { id: "fruits", label: "Fruits", diets: ["veg"] },
+//   { id: "dry_fruits", label: "Dry Fruits", diets: ["veg"] },
+//   { id: "rava", label: "Rava", diets: ["veg"] },
 
-  { id: "egg", label: "Egg", diets: ["non-veg"] },
-  { id: "chicken", label: "Chicken", diets: ["non-veg"] },
-  { id: "omelette", label: "Omelette", diets: ["non-veg"] },
-  { id: "chicken-pasta", label: "Chicken Pasta", diets: ["non-veg"] },
+//   { id: "egg", label: "Egg", diets: ["non-veg"] },
+//   { id: "chicken", label: "Chicken", diets: ["non-veg"] },
+//   { id: "omelette", label: "Omelette", diets: ["non-veg"] },
+//   { id: "chicken-pasta", label: "Chicken Pasta", diets: ["non-veg"] },
   
-],
+// ],
 
- lunch: [
-  { id: "rice", label: "Rice", diets: ["veg","non-veg"] },
-  { id: "wheat", label: "Wheat", diets: ["veg","non-veg"] },
-  { id: "paneer", label: "Paneer", diets: ["veg"] },
+//  lunch: [
+//   { id: "rice", label: "Rice", diets: ["veg","non-veg"] },
+//   { id: "wheat", label: "Wheat", diets: ["veg","non-veg"] },
+//   { id: "paneer", label: "Paneer", diets: ["veg"] },
 
-  { id: "dal", label: "Lentils (Dal)", diets: ["veg"] },
-  { id: "rajma", label: "Rajma", diets: ["veg"] },
-  { id: "chole", label: "Chole", diets: ["veg"] },
+//   { id: "dal", label: "Lentils (Dal)", diets: ["veg"] },
+//   { id: "rajma", label: "Rajma", diets: ["veg"] },
+//   { id: "chole", label: "Chole", diets: ["veg"] },
 
-  { id: "chicken", label: "Chicken", diets: ["non-veg"] },
-  { id: "fish", label: "Fish", diets: ["non-veg"] },
-  { id: "mutton", label: "Mutton", diets: ["non-veg"] },
-  { id: "eggs", label: "Eggs", diets: ["non-veg"] },
+//   { id: "chicken", label: "Chicken", diets: ["non-veg"] },
+//   { id: "fish", label: "Fish", diets: ["non-veg"] },
+//   { id: "mutton", label: "Mutton", diets: ["non-veg"] },
+//   { id: "eggs", label: "Eggs", diets: ["non-veg"] },
 
-  { id: "mixed_veg", label: "Mixed Vegetables", diets: ["veg"] },
-  { id: "potato", label: "Potato", diets: ["veg"] },
+//   { id: "mixed_veg", label: "Mixed Vegetables", diets: ["veg"] },
+//   { id: "potato", label: "Potato", diets: ["veg"] },
 
-  { id: "curd", label: "Curd", diets: ["veg"] },
-   { id: "cruciferous",      label: "Cruciferous",  diets: ["veg"] },
+//   { id: "curd", label: "Curd", diets: ["veg"] },
+//    { id: "cruciferous",      label: "Cruciferous",  diets: ["veg"] },
 
-  {id: "Besan", label: "Besan", diets: ["veg"] }
-],
+//   {id: "Besan", label: "Besan", diets: ["veg"] }
+// ],
 
- snacks: [
-  { id: "potato", label: "Potato", diets: ["veg"] },
-  {id : "carrot", label: "Carrot", diets: ["veg"] },
-  { id: "noodles", label: "Noodles", diets: ["veg"] },
-  { id: "maggi", label: "Maggi", diets: ["veg"] },
-  { id: "pasta", label: "Pasta", diets: ["veg"] },
-  { id: "corn", label: "Corn", diets: ["veg"] },
+//  snacks: [
+//   { id: "potato", label: "Potato", diets: ["veg"] },
+//   {id : "carrot", label: "Carrot", diets: ["veg"] },
+//   { id: "noodles", label: "Noodles", diets: ["veg"] },
+//   { id: "maggi", label: "Maggi", diets: ["veg"] },
+//   { id: "pasta", label: "Pasta", diets: ["veg"] },
+//   { id: "corn", label: "Corn", diets: ["veg"] },
   
-  { id: "tomato", label: "Tomato", diets: ["veg"] },
-  { id: "dry-fruits", label: "Dry Fruits", diets: ["veg"] },
-  { id: "egg", label: "Egg", diets: ["non-veg"] },
-  { id: "chicken", label: "Chicken", diets: ["non-veg"] },
+//   { id: "tomato", label: "Tomato", diets: ["veg"] },
+//   { id: "dry-fruits", label: "Dry Fruits", diets: ["veg"] },
+//   { id: "egg", label: "Egg", diets: ["non-veg"] },
+//   { id: "chicken", label: "Chicken", diets: ["non-veg"] },
 
-  { id: "cheese", label: "Cheese", diets: ["veg"] },
-  { id: "fruits", label: "Fruits", diets: ["veg"] }
-],
+//   { id: "cheese", label: "Cheese", diets: ["veg"] },
+//   { id: "fruits", label: "Fruits", diets: ["veg"] }
+// ],
 
- dinner: [
-  // Main Staples
-  { id: "wheat",        label: "Wheat",          diets: ["veg"] },
-  { id: "rice",         label: "Rice",         diets: ["veg"] },
-  { id: "dal",          label: "Dal",                   diets: ["veg"] },
-  // Protein
-  { id: "paneer",       label: "Paneer",                diets: ["veg"] },
-  { id: "egg",          label: "Egg",                   diets: ["non-veg"] },
-  { id: "chicken",      label: "Chicken",               diets: ["non-veg"] },
-  { id: "fish",         label: "Fish",                  diets: ["non-veg"] },
-  { id: "mutton",       label: "Mutton",                diets: ["non-veg"] },
-  // Vegetables
-  { id: "potato",       label: "Potato",         diets: ["veg"] },
-  { id: "spinach",      label: "Spinach",       diets: ["veg"] },
- { id: "soybean",       label: " Soya",       diets: ["veg"] },
-  { id: "okra",         label: "lady-finger",         diets: ["veg"] },
-  { id: "peas",         label: "Green-Peas",          diets: ["veg"] },
-  { id: "cruciferous",      label: "Cruciferous",  diets: ["veg"] },
-  { id: "mixed_veg",    label: "Mixed Vegetables",      diets: ["veg"] },
-  // Sides
-  { id: "curd",         label: "Curd",          diets: ["veg"] },
-],
+//  dinner: [
+//   // Main Staples
+//   { id: "wheat",        label: "Wheat",          diets: ["veg"] },
+//   { id: "rice",         label: "Rice",         diets: ["veg"] },
+//   { id: "dal",          label: "Dal",                   diets: ["veg"] },
+//   // Protein
+//   { id: "paneer",       label: "Paneer",                diets: ["veg"] },
+//   { id: "egg",          label: "Egg",                   diets: ["non-veg"] },
+//   { id: "chicken",      label: "Chicken",               diets: ["non-veg"] },
+//   { id: "fish",         label: "Fish",                  diets: ["non-veg"] },
+//   { id: "mutton",       label: "Mutton",                diets: ["non-veg"] },
+//   // Vegetables
+//   { id: "potato",       label: "Potato",         diets: ["veg"] },
+//   { id: "spinach",      label: "Spinach",       diets: ["veg"] },
+//  { id: "soybean",       label: " Soya",       diets: ["veg"] },
+//   { id: "okra",         label: "lady-finger",         diets: ["veg"] },
+//   { id: "peas",         label: "Green-Peas",          diets: ["veg"] },
+//   { id: "cruciferous",      label: "Cruciferous",  diets: ["veg"] },
+//   { id: "mixed_veg",    label: "Mixed Vegetables",      diets: ["veg"] },
+//   // Sides
+//   { id: "curd",         label: "Curd",          diets: ["veg"] },
+// ],
 
- "late-night": [
-  { id: "milk", label: "Milk", diets: ["veg"] },
-  { id: "banana", label: "Banana", diets: ["veg"] },
-  { id: "fruits", label: "Fruits", diets: ["veg"] },
-  { id: "bread", label: "Bread", diets: ["veg"] },
-  { id: "egg", label: "Egg", diets: ["non-veg"] },
-  { id: "nuts", label: "Nuts", diets: ["veg"] },
-  { id: "cheese", label: "Cheese", diets: ["veg"] }
-]
-};
+//  "late-night": [
+//   { id: "milk", label: "Milk", diets: ["veg"] },
+//   { id: "banana", label: "Banana", diets: ["veg"] },
+//   { id: "fruits", label: "Fruits", diets: ["veg"] },
+//   { id: "bread", label: "Bread", diets: ["veg"] },
+//   { id: "egg", label: "Egg", diets: ["non-veg"] },
+//   { id: "nuts", label: "Nuts", diets: ["veg"] },
+//   { id: "cheese", label: "Cheese", diets: ["veg"] }
+// ]
+// };
 /**
  * Filter ingredients by meal timing AND diet type.
  * If no dietType provided, returns all ingredients for that meal.
  */
 export function getFilteredIngredients(mealTiming, dietType = null) {
-  const all = MEAL_SPECIFIC_INGREDIENTS[mealTiming] || [];
+  const all = MEAL_SPECIFIC_INGREDIENTS[mealTiming] || FOOD_INGREDIENTS;
   if (!dietType) return all;
 
   // Normalize diet type — handle both "vegetarian"→"veg", "non-vegetarian"→"non-veg" etc.
@@ -283,4 +283,32 @@ export function getFilteredIngredients(mealTiming, dietType = null) {
 
   // Safety: if filter returns nothing (unknown diet), return all
   return filtered.length > 0 ? filtered : all;
+}
+
+export function normalizeIngredientId(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+export function buildIngredientOptionsFromFoods(foods = []) {
+  const seen = new Set();
+  const options = [];
+
+  foods.forEach((food) => {
+    if (!Array.isArray(food.ingredients)) return;
+    food.ingredients.forEach((rawIngredient) => {
+      const label = String(rawIngredient || "").trim();
+      if (!label) return;
+
+      const id = normalizeIngredientId(label);
+      if (!id || seen.has(id)) return;
+      seen.add(id);
+      options.push({ id, label });
+    });
+  });
+
+  return options.sort((a, b) => a.label.localeCompare(b.label));
 }

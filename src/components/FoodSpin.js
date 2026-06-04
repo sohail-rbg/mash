@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-import { getFilteredIngredients } from "@/lib/utils";
+import { getFilteredIngredients, buildIngredientOptionsFromFoods } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import FilterPanel from "./FilterPanel";
@@ -67,7 +67,10 @@ export default function FoodSpin({
     : null;
 
   // Filter ingredients by both meal timing AND diet type
-  const COMMON_INGREDIENTS = getFilteredIngredients(activeMealTiming, activeDietType);
+  const [commonIngredients, setCommonIngredients] = useState(
+    getFilteredIngredients(activeMealTiming, activeDietType),
+  );
+  const [ingredientsLoading, setIngredientsLoading] = useState(false);
   const remainingCount = Math.max(0, foods.length - rejectedIds.size);
 
   /* ── helpers ── */
@@ -146,6 +149,47 @@ export default function FoodSpin({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentQueryString, selectedMode]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const loadIngredients = async () => {
+      setIngredientsLoading(true);
+      try {
+        const params = new URLSearchParams(currentQueryString || "");
+        params.delete("page");
+        params.delete("limit");
+        params.delete("details");
+        params.set("fullImage", "true");
+        params.set("limit", "200");
+        params.set("mealTiming", activeMealTiming);
+        if (activeDietType) params.set("dietType", activeDietType);
+
+        const response = await fetch(`/api/foods?${params.toString()}`, {
+          signal: controller.signal,
+        });
+        if (!response.ok) throw new Error("Failed to load ingredient options");
+        const data = await response.json();
+        const foodsForIngredients = Array.isArray(data) ? data : data.foods || [];
+        const ingredients = buildIngredientOptionsFromFoods(foodsForIngredients);
+
+        setCommonIngredients(
+          ingredients.length > 0
+            ? ingredients
+            : getFilteredIngredients(activeMealTiming, activeDietType),
+        );
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          console.error(error);
+          setCommonIngredients(getFilteredIngredients(activeMealTiming, activeDietType));
+        }
+      } finally {
+        if (!controller.signal.aborted) setIngredientsLoading(false);
+      }
+    };
+
+    loadIngredients();
+    return () => controller.abort();
+  }, [currentQueryString, activeMealTiming, activeDietType]);
    // Stop spinning if mode changes during spin
   useEffect(() => {
     if (spinning) {
@@ -234,7 +278,12 @@ export default function FoodSpin({
       const data = await res.json();
       console.log("[FoodSpin] fetched", data.length, "foods");
       if (data.length === 0) {
-        setError("No food found. Try changing filters.");
+        const hasSelectedIngredients = ingredients.length > 0;
+        setError(
+          hasSelectedIngredients
+            ? "No foods found for the selected ingredient(s). Try another ingredient or meal timing."
+            : "No food found. Try changing filters."
+        );
         setFoods([]);
         return [];
       }
@@ -298,7 +347,14 @@ export default function FoodSpin({
   };
 
   const toggleIngredient = (id) => {
-    setCheckedIngredients((prev) => ({ ...prev, [id]: !prev[id] }));
+    setCheckedIngredients((prev) => {
+      const next = { ...prev, [id]: !prev[id] };
+      const selectedIngredients = Object.keys(next).filter((k) => next[k]);
+      if (selectedMode === "self-cooking") {
+        fetchFoodsForMode(selectedMode, selectedIngredients);
+      }
+      return next;
+    });
     setFoods([]);
     resetSpinState();
   };
@@ -447,7 +503,7 @@ export default function FoodSpin({
   /* ── main spin UI ── */
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
           @keyframes toast-slide-in {
             from { transform: translate(-50%, -100%); opacity: 0; }
             to { transform: translate(-50%, 20px); opacity: 1; }
@@ -473,7 +529,7 @@ export default function FoodSpin({
             animation: mode-attention-pulse 0.5s ease-in-out 3;
           }
         @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.4} }
-      `}</style>
+      ` }} />
 
       {toast.show && (
         <div className="toast-container text-xs sm:text-[11px] uppercase tracking-[0.1em] flex items-center gap-2">
@@ -565,11 +621,12 @@ export default function FoodSpin({
       <IngredientDrawer
         visible={ingredientsVisible}
         onClose={() => setIngredientsVisible(false)}
-        ingredients={COMMON_INGREDIENTS}
+        ingredients={commonIngredients}
         activeMealTiming={activeMealTiming}
         checkedIngredients={checkedIngredients}
         onToggle={toggleIngredient}
         onApply={handleIngredientsApply}
+        error={error}
       />
     </>
   );

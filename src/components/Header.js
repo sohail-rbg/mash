@@ -8,12 +8,11 @@ export default function Header() {
   return (
     <header className="w-full">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&display=swap');
         .font-syne { font-family: 'Syne', sans-serif; }
       `}</style>
       <div className="flex items-center justify-between py-3 px-4 sm:py-4 sm:px-8 bg-[var(--glass-bg)] backdrop-blur-xl rounded-2xl shadow-lg border border-[var(--glass-border)]">
         <Link href="/" className="text-xl sm:text-3xl font-bold text-[var(--text-main)] flex items-center gap-2 sm:gap-3 hover:opacity-80 transition-opacity">
-          <span className="text-2xl sm:text-4xl -rotate-12 transition-transform hover:scale-110">🍽️</span>
+          <img src="/assets/logo 1.png" alt="MealMind Logo" className="w-10 h-10 sm:w-14 sm:h-14 object-contain transition-transform hover:scale-110" />
           <span className="font-syne">MealMind</span>
         </Link>
         

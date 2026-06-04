@@ -14,7 +14,7 @@ export default function ConfirmedSelection({ suggestedFood, selectedMode, onRest
 
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .cs-root {
           font-family: 'DM Sans', sans-serif;
           animation: fadeUpRoot 0.5s ease forwards;
@@ -80,7 +80,7 @@ export default function ConfirmedSelection({ suggestedFood, selectedMode, onRest
           box-shadow: 0 8px 24px rgba(139,92,246,0.45) !important;
         }
         .cs-gen-btn:active { transform: scale(0.97); }
-      `}</style>
+      ` }} />
 
       {!showShareCard ? (
         <div

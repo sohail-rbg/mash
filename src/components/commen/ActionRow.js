@@ -55,27 +55,28 @@ export default function ActionRow({
           ✓ Yes, This!
         </button>
 
-        <style>{`
+        <style dangerouslySetInnerHTML={{ __html: `
           @keyframes orbPulse {
             0%,100%{box-shadow:0 0 8px rgba(249,115,22,0.6);transform:scale(1)}
             50%{box-shadow:0 0 18px rgba(249,115,22,0.95);transform:scale(1.18)}
           }
-        `}</style>
+        ` }} />
       </div>
     );
   }
 
-  return (
-    <div className="w-full flex justify-center mt-1 min-h-[44px] items-center">
-      <StatusBar
-        foods={foods}
-        error={error}
-        spinning={spinning}
-        loading={loading}
-        selectedMode={selectedMode}
-        checkedIngredients={checkedIngredients}
-        remainingCount={remainingCount}
-      />
-    </div>
+   return (
+      <div className="w-full flex justify-center mt-1 min-h-[44px] items-center">
+        <StatusBar
+          foods={foods}
+          error={error}
+          spinning={spinning}
+          loading={loading}
+          selectedMode={selectedMode}
+          checkedIngredients={checkedIngredients}
+          remainingCount={remainingCount}
+        />
+      </div>
+      
   );
 }

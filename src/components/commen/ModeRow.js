@@ -22,7 +22,7 @@ export default function ModeRow({ selectedMode, showResult, suggestedFood, spinn
 
   return (
     <div className="w-full flex items-center p-1.5 mb-4 bg-[var(--glass-bg)] backdrop-blur-[40px] border border-[var(--glass-border)] rounded-[2.5rem] shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),0_15px_35px_rgba(0,0,0,0.2)] relative overflow-hidden">
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @keyframes attentionThump { 
           0%, 100% { transform: translateY(0) scale(1); }
           50% { transform: translateY(-15px) scale(1.1); }
@@ -89,7 +89,7 @@ export default function ModeRow({ selectedMode, showResult, suggestedFood, spinn
         .suggested-text-glow {
           animation: textGlow 3s ease-in-out infinite;
         }
-      `}</style>
+      ` }} />
       
       {/* Liquid Glass Shine Overlay */}
       <div className="absolute inset-0 pointer-events-none bg-gradient-to-tr from-transparent via-white/[0.03] to-white/[0.1] z-0" />

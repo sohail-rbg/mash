@@ -1,13 +1,63 @@
 "use client";
 
-export default function IngredientDrawer({ visible, onClose, ingredients, activeMealTiming, checkedIngredients, onToggle, onApply }) {
+import React, { useEffect, useMemo, useState } from "react";
+
+function hashString(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return hash >>> 0;
+}
+
+function seededRandom(seed) {
+  let value = seed || 1;
+  return () => {
+    value = Math.imul(48271, value) % 2147483647;
+    return (value & 0x7fffffff) / 2147483647;
+  };
+}
+
+function shuffleWithSeed(items, seed) {
+  const array = [...items];
+  const random = seededRandom(seed);
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+export default function IngredientDrawer({ visible, onClose, ingredients, activeMealTiming, checkedIngredients, onToggle, onApply, error }) {
   if (!visible) return null;
 
+  const [searchQuery, setSearchQuery] = useState("");
   const selectedCount = Object.values(checkedIngredients).filter(Boolean).length;
   const hasSelection = selectedCount > 0;
 
+  useEffect(() => {
+    if (!visible) setSearchQuery("");
+  }, [visible]);
+
+  const normalizedSearch = searchQuery.trim().toLowerCase();
+
+  const displayedIngredients = useMemo(() => {
+    const matched = ingredients.filter((item) =>
+      item.label.toLowerCase().includes(normalizedSearch) ||
+      item.id.toLowerCase().includes(normalizedSearch)
+    );
+
+    if (!normalizedSearch) {
+      const seed = hashString(activeMealTiming || "default");
+      return shuffleWithSeed(matched, seed).slice(0, 10);
+    }
+
+    return matched;
+  }, [normalizedSearch, ingredients, activeMealTiming]);
+
   const handleSelectAll = () => {
-    ingredients.forEach(item => {
+    displayedIngredients.forEach(item => {
       if (!checkedIngredients[item.id]) onToggle(item.id);
     });
   };
@@ -24,13 +74,13 @@ export default function IngredientDrawer({ visible, onClose, ingredients, active
       style={{ animation: "fadeIn 0.3s ease-out" }}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
         @keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
         .drawer-scroll::-webkit-scrollbar { width: 3px; }
         .drawer-scroll::-webkit-scrollbar-track { background: transparent; }
         .drawer-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
-      `}</style>
+      ` }} />
 
       <div
         className="
@@ -61,22 +111,54 @@ export default function IngredientDrawer({ visible, onClose, ingredients, active
         {/* Divider */}
         <div className="h-px bg-gradient-to-r from-transparent via-white/15 to-transparent flex-shrink-0" />
 
-        {/* Quick Actions */}
-        <div className="flex items-center justify-between px-1">
-          <p className="text-[11px] font-bold text-[var(--text-muted)] italic">
-            {selectedCount === 0 ? "💡 No selection uses everything" : `${selectedCount} items selected`}
-          </p>
-          <button 
-            onClick={hasSelection ? handleClearAll : handleSelectAll}
-            className="text-[10px] font-black uppercase tracking-wider text-green-400 hover:text-green-300 transition-colors cursor-pointer"
-          >
-            {hasSelection ? "Unselect All" : "Select All"}
-          </button>
+        {/* Search + Quick Actions */}
+        <div className="space-y-3">
+          <div className="relative">
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search ingredient..."
+              className="w-full rounded-2xl border border-white/10 bg-black/10 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:border-green-300 focus:outline-none focus:ring-2 focus:ring-green-300/20"
+            />
+          </div>
+          {error && Object.keys(checkedIngredients).some(Boolean) && (
+            <div className="px-1 text-sm font-semibold text-red-400">
+              {error}
+            </div>
+          )}
+          <div className="flex items-center justify-between px-1 pt-1">
+            <p className="text-[11px] font-bold text-[var(--text-muted)] italic">
+              {selectedCount === 0 ? "💡 No selection uses everything" : `${selectedCount} items selected`}
+            </p>
+            <button 
+              onClick={hasSelection ? handleClearAll : handleSelectAll}
+              className="text-[10px] font-black uppercase tracking-wider text-green-400 hover:text-green-300 transition-colors cursor-pointer"
+            >
+              {hasSelection ? "Unselect All" : "Select All"}
+            </button>
+          </div>
+          {activeMealTiming === "breakfast" && !searchQuery.trim() && (
+            <p className="text-[11px] text-[var(--text-muted)] italic px-1">
+              Showing top 10 ingredients for breakfast. Search to narrow down further.
+            </p>
+          )}
         </div>
 
         {/* Chips grid */}
         <div className="flex-1 overflow-y-auto drawer-scroll grid grid-cols-2 gap-3 content-start pr-1 pb-6">
-          {ingredients.map((item) => {
+          {displayedIngredients.length === 0 ? (
+            <button
+              type="button"
+              onClick={() => setSearchQuery("")}
+              className="col-span-2 w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-left text-sm font-semibold text-red-300 hover:bg-white/10 transition cursor-pointer"
+            >
+              {searchQuery.trim()
+                ? "No ingredient found. Tap to clear search and try another ingredient."
+                : "No ingredient available for this meal timing. Change ingredient or adjust your search."
+              }
+            </button>
+          ) : displayedIngredients.map((item) => {
             const on = !!checkedIngredients[item.id];
             return (
               <label
@@ -87,7 +169,7 @@ export default function IngredientDrawer({ visible, onClose, ingredients, active
                   border transition-all duration-[220ms] ease-[cubic-bezier(0.34,1.56,0.64,1)]
                   hover:scale-[1.0]
                   ${on
-                    ? "bg-green-500/30 border-green-400/50 text-[var(--text-main)] shadow-[0_0_15px_rgba(34,197,94,0.3)]"
+                    ? "bg-green-500/45 border-green-400 text-white shadow-[0_0_16px_rgba(34,197,94,0.35)]"
                     : "bg-black/5 dark:bg-white/5 border-[var(--glass-border)] text-[var(--text-muted)] hover:bg-black/10 dark:hover:bg-white/10 hover:text-[var(--text-main)]"
                   }
                 `}

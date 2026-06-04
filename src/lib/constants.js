@@ -40,6 +40,7 @@ export const CUISINE_OPTIONS = [
   "mexican",
   "continental",
   "korean",
+  "american",
 ];
 
 // WEATHER
@@ -48,6 +49,9 @@ export const WEATHER_OPTIONS = [
   "winter",
   "rainy",
   "all-season",
+];
+export const CATEGORY_OPTIONS_LIST = [
+  // "Coffee","Samosa","Tea","Pasta","Juice","Pizza","Salad","Burger","Dessert","Soup",
 ];
 
 // INGREDIENT RESTRICTIONS

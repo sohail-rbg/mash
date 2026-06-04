@@ -1,10 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Input from "./commen/Input";
+import { useRouter, useSearchParams } from "next/navigation";
+import Input from "./commen/Input"; // Keep this import
 import Button from "./commen/Button";
-import { MEAL_SPECIFIC_INGREDIENTS } from "@/lib/utils";
 import {
   MEAL_TIMING_OPTIONS,
   DIET_TYPE_OPTIONS,
@@ -13,11 +12,14 @@ import {
   WEATHER_OPTIONS,
   FOOD_TYPE_OPTIONS,
   SPICE_LEVEL_OPTIONS,
+  CATEGORY_OPTIONS_LIST,
 } from "@/lib/constants";
+
 
 export default function AddFoodForm({ editId, onAdded }) {
   const isEditing = !!editId;
   const router = useRouter();
+  const searchParams = useSearchParams(); // Get current URL search params
 
   const [form, setForm] = useState({
     name: "",
@@ -45,7 +47,39 @@ export default function AddFoodForm({ editId, onAdded }) {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [ingredientSearch, setIngredientSearch] = useState("");
+  const [categorySearch, setCategorySearch] = useState("");
   const [existingImage, setExistingImage] = useState(null); // Store existing image for editing
+  const [allCategories, setAllCategories] = useState(CATEGORY_OPTIONS_LIST);
+  const [allIngredients, setAllIngredients] = useState([]);
+
+  // Fetch unique categories and ingredients from the database on mount
+  useEffect(() => {
+    const fetchDynamicData = async () => {
+      try {
+        const res = await fetch("/api/foods?limit=500");
+        const data = await res.json();
+        const foods = Array.isArray(data) ? data : (data.foods || []);
+        
+        // Handle Categories
+        const uniqueCats = new Set([...CATEGORY_OPTIONS_LIST]);
+        // Handle Ingredients
+        const uniqueIngs = new Set();
+
+        foods.forEach(f => {
+          if (f.category) uniqueCats.add(f.category);
+          if (f.ingredients && Array.isArray(f.ingredients)) {
+            f.ingredients.forEach(ing => uniqueIngs.add(ing));
+          }
+        });
+
+        setAllCategories(Array.from(uniqueCats).sort());
+        setAllIngredients(Array.from(uniqueIngs).sort());
+      } catch (err) {
+        console.error("Failed to fetch dynamic data:", err);
+      }
+    };
+    fetchDynamicData();
+  }, []);
 
   // Fetch food data for editing
   useEffect(() => {
@@ -98,16 +132,8 @@ export default function AddFoodForm({ editId, onAdded }) {
 
   // Flatten ingredients for the dropdown
   const allIngredientsList = React.useMemo(() => {
-    const map = new Map();
-    Object.values(MEAL_SPECIFIC_INGREDIENTS).forEach((list) => {
-      list.forEach((item) => {
-        if (!map.has(item.id)) {
-          map.set(item.id, item.label);
-        }
-      });
-    });
-    return Array.from(map.entries()).map(([id, label]) => ({ id, label }));
-  }, []);
+    return allIngredients.map((ing) => ({ id: ing, label: ing }));
+  }, [allIngredients]);
 
   // Filtered list based on search and current selection
   const displayIngredients = React.useMemo(() => {
@@ -124,8 +150,19 @@ export default function AddFoodForm({ editId, onAdded }) {
       .filter(id => id.toLowerCase().includes(search))
       .map(id => ({ id, label: id, isCustom: true }));
 
-    return [...matchedPredefined, ...customCheckedItems];
+    return [...matchedPredefined, ...customCheckedItems].slice(0, 8);
   }, [allIngredientsList, ingredientSearch, form.ingredients]);
+
+  const filteredCategories = React.useMemo(() => {
+    const search = categorySearch.toLowerCase().trim();
+    return allCategories
+      .filter(cat => cat.toLowerCase().includes(search))
+      .slice(0, 8);
+  }, [categorySearch, allCategories]);
+
+  const showAddCustomCategory = categorySearch.trim() !== "" && 
+    !allCategories.some(cat => cat.toLowerCase() === categorySearch.toLowerCase().trim()) &&
+    form.category.toLowerCase() !== categorySearch.toLowerCase().trim();
 
   const showAddCustom = ingredientSearch.trim() !== "" && 
     !allIngredientsList.some(i => i.label.toLowerCase() === ingredientSearch.toLowerCase().trim()) &&
@@ -226,7 +263,7 @@ export default function AddFoodForm({ editId, onAdded }) {
                     onChange={() => toggleSelection(name, opt)}
                     className="rounded text-blue-600 focus:ring-blue-500"
                   />
-                  <span className="text-sm text-white group-hover:text-blue-400">{opt}</span>
+                  <span className={`text-sm ${form[name].includes(opt) ? 'text-blue-400' : 'text-white'} group-hover:text-blue-400`}>{opt}</span>
                 </label>
               ))}
             </div>
@@ -279,9 +316,6 @@ export default function AddFoodForm({ editId, onAdded }) {
     } else if (isEditing && existingImage && !form.image && !form.imageUrl) {
       // Keep existing image if no new image provided
       body.image = existingImage;
-    } else if (isEditing && originalFood?.image && !form.image) {
-      // Preserve original image if editing and no new image provided
-      body.image = originalFood.image;
     }
 
     try {
@@ -329,8 +363,11 @@ export default function AddFoodForm({ editId, onAdded }) {
 
       if (onAdded) onAdded(updatedFood);
       if (isEditing) {
-        // Go back to all-foods and highlight the edited food
-        router.push(`/all-foods?highlight=${updatedFood._id}`);
+        // Automatically go back to the exact list page with highlight
+        const currentParams = new URLSearchParams(searchParams.toString());
+        currentParams.delete("edit"); // Remove edit ID from the list view URL
+        currentParams.set("highlight", updatedFood._id);
+        router.push(`/all-foods?${currentParams.toString()}`);
       } else {
         router.push("/");
       }
@@ -355,12 +392,81 @@ export default function AddFoodForm({ editId, onAdded }) {
         required
       />
 
-      <Input
-        label="Category"
-        name="category"
-        value={form.category}
-        onChange={handleChange}
-      />
+      {/* Category Searchable Dropdown */}
+      <div className="relative">
+        <label className="block text-sm font-medium mb-1">Category</label>
+        <button
+          type="button"
+          onClick={() => setActiveDropdown(activeDropdown === 'category' ? null : 'category')}
+          className="block w-full border border-white/10 rounded-lg px-3 py-2 text-left bg-zinc-900 text-white min-h-[42px] flex justify-between items-center transition-all focus:ring-2 focus:ring-blue-500/50"
+        >
+          {form.category ? (
+            <span className="text-white">{form.category}</span>
+          ) : (
+            <span className="text-white/40">Select Category...</span>
+          )}
+          <span className="text-xs ml-2">▼</span>
+        </button>
+
+        {activeDropdown === 'category' && (
+          <>
+            <div className="fixed inset-0 z-10" onClick={() => { setActiveDropdown(null); setCategorySearch(""); }} />
+            <div className="absolute z-20 w-full bg-black border border-white/20 rounded shadow-lg mt-1 max-h-72 flex flex-col">
+              <div className="p-2 border-b border-white/10 sticky top-0 bg-black z-30">
+                <input
+                  type="text"
+                  placeholder="Search or type to add category..."
+                  value={categorySearch}
+                  onChange={(e) => setCategorySearch(e.target.value)}
+                  className="w-full bg-zinc-800 text-white text-xs border border-white/10 rounded px-2 py-2 focus:outline-none focus:border-blue-500"
+                  autoFocus
+                />
+              </div>
+              <div className="overflow-y-auto p-1 max-h-60">
+                {filteredCategories.map((cat) => (
+                  <div
+                    key={cat}
+                    onClick={() => {
+                      setForm(f => ({ ...f, category: cat }));
+                      setActiveDropdown(null);
+                      setCategorySearch("");
+                    }}
+                    className={`p-2 hover:bg-white/10 rounded cursor-pointer text-sm transition-colors flex items-center justify-between group ${form.category === cat ? 'text-blue-400 bg-white/5' : 'text-white'}`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${form.category === cat ? 'bg-blue-600 border-blue-600' : 'border-white/20 group-hover:border-blue-400'}`}>
+                        {form.category === cat && <span className="text-[10px] text-white">✓</span>}
+                      </div>
+                      <span>{cat}</span>
+                    </div>
+                  </div>
+                ))}
+                {showAddCustomCategory && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newCat = categorySearch.trim();
+                      setForm(f => ({ ...f, category: newCat }));
+                      // Add to local list immediately so it's available for the current session
+                      if (!allCategories.includes(newCat)) {
+                        setAllCategories(prev => [...prev, newCat].sort());
+                      }
+                      setActiveDropdown(null);
+                      setCategorySearch("");
+                    }}
+                    className="w-full text-left p-2 text-xs font-bold text-green-400 hover:bg-green-500/10 rounded border border-dashed border-green-500/30 mt-1"
+                  >
+                    + Add custom: "{categorySearch}"
+                  </button>
+                )}
+                {filteredCategories.length === 0 && !showAddCustomCategory && (
+                  <div className="p-4 text-center text-xs text-white/40 italic">No categories found.</div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
 
       <div>
         <label className="block text-sm font-medium" htmlFor="useUrl">
@@ -515,7 +621,7 @@ export default function AddFoodForm({ editId, onAdded }) {
                       onChange={() => toggleSelection('ingredients', item.id)}
                       className="rounded text-blue-600 focus:ring-blue-500 bg-transparent border-white/20"
                     />
-                    <span className="text-sm group-hover:text-blue-400 transition-colors">{item.label}</span>
+                    <span className={`text-sm ${form.ingredients.includes(item.id) ? 'text-blue-400' : 'text-white'} group-hover:text-blue-400 transition-colors`}>{item.label}</span>
                   </label>
                 ))}
 
@@ -523,7 +629,12 @@ export default function AddFoodForm({ editId, onAdded }) {
                   <button
                     type="button"
                     onClick={() => {
-                      toggleSelection('ingredients', ingredientSearch.toLowerCase().trim());
+                      const newIng = ingredientSearch.toLowerCase().trim();
+                      toggleSelection('ingredients', newIng);
+                      // Add to local available list immediately
+                      if (!allIngredients.includes(newIng)) {
+                        setAllIngredients(prev => [...prev, newIng].sort());
+                      }
                       setIngredientSearch("");
                     }}
                     className="w-full text-left p-2 text-xs font-bold text-green-400 hover:bg-green-500/10 rounded border border-dashed border-green-500/30 mt-1"

@@ -86,8 +86,11 @@ export default function FoodManagerClient({
   const highlightRef = useRef(null);
   const urlHealthGoal = searchParams.get("healthGoals");
   const urlCuisine = searchParams.get("cuisine");
+  const urlMealTiming = searchParams.get("mealTiming");
+  const urlFoodType = searchParams.get("foodType");
   const urlPage = parseInt(searchParams.get("page")) || 1;
-
+   
+  // Sync local active states with URL and handle prop updates from server re-renders
   useEffect(() => {
     if (highlightId && highlightRef.current) {
       const t = setTimeout(() => {
@@ -96,6 +99,20 @@ export default function FoodManagerClient({
       return () => clearTimeout(t);
     }
   }, [highlightId, foods]);
+
+  useEffect(() => {
+    const meal = urlMealTiming || "all";
+    setActiveMeal(meal);
+    setActiveFoodType(urlFoodType || "all");
+
+    if (urlMealTiming) {
+      setFilteredPage(urlPage);
+      setActiveCuisine(null);
+      setActiveHealthGoal(null);
+    } else if (!urlCuisine && !urlHealthGoal) {
+      setFilteredPage(urlPage);
+    }
+  }, [urlMealTiming, urlFoodType, urlPage, urlCuisine, urlHealthGoal]);
 
   console.log(foods);
   const fetchByHealthGoal = async (goal, page = 1) => {
@@ -115,21 +132,22 @@ export default function FoodManagerClient({
       console.error(err);
     } finally {
       setMealLoading(false);
+      setIsNavigating(false);
     }
   };
 
   const handleHealthGoalFilter = (goal) => {
+    setIsNavigating(true);
     setActiveHealthGoal(goal);
     setActiveMeal("all");
     setActiveFoodType("all");
     setFilteredPage(1);
     setHealthGoalOpen(false);
-    fetchByHealthGoal(goal);
     router.push(`/all-foods?healthGoals=${encodeURIComponent(goal)}`);
+    fetchByHealthGoal(goal);
   };
 
   const clearHealthGoalFilter = () => {
-    setActiveHealthGoal(null);
     setHealthGoalOpen(false);
     setSearch("");
     setSearchResults(null);
@@ -160,14 +178,19 @@ export default function FoodManagerClient({
       console.error(err);
     } finally {
       setMealLoading(false);
+      setIsNavigating(false);
     }
   };
 
   const handleCuisineFilter = (cuisine) => {
     setActiveCuisine(cuisine);
     setFilteredPage(1);
+    setIsNavigating(true);
+    const params = new URLSearchParams();
+    params.set("cuisine", cuisine);
+    params.set("page", "1");
+    router.push(`/all-foods?${params.toString()}`);
     fetchByCuisine(cuisine);
-    router.push(`/all-foods?cuisine=${encodeURIComponent(cuisine)}`);
   };
 
   // If URL contains a cuisine param, fetch filtered results
@@ -219,15 +242,6 @@ export default function FoodManagerClient({
     fetchStats();
   }, []);
 
-  useEffect(() => {
-    if (activeMeal === "all") {
-      setFoods(initialFoods);
-      setTotalPages(initialTotalPages);
-      setTotalCount(initialTotalCount);
-      setIsNavigating(false);
-    }
-  }, [initialFoods, initialTotalPages, initialTotalCount, activeMeal]);
-
   const fetchByMeal = async (meal, foodType = "all", page = 1) => {
     setMealLoading(true);
     setSearch("");
@@ -247,6 +261,7 @@ export default function FoodManagerClient({
       console.error(err);
     } finally {
       setMealLoading(false);
+      setIsNavigating(false);
     }
   };
 
@@ -280,28 +295,42 @@ export default function FoodManagerClient({
     return () => clearTimeout(searchTimerRef.current);
   }, [search]);
 
-  const handleMealFilter = (meal) => {    setActiveMeal(meal);
-    setFilteredPage(1);
-    if (meal === "all") setActiveFoodType("all"); // reset type when clearing meal
-    if (meal === "all" && activeFoodType === "all") {
-      setFoods(initialFoods);
-      setTotalPages(initialTotalPages);
-      setTotalCount(initialTotalCount);
+  const handleMealFilter = (meal) => {
+    setIsNavigating(true);
+    const params = new URLSearchParams(searchParams.toString());
+    if (meal === "all") {
+      params.delete("mealTiming");
+      params.delete("foodType");
     } else {
-      fetchByMeal(meal, meal === "all" ? "all" : activeFoodType, 1);
+      params.set("mealTiming", meal);
     }
+    params.set("page", "1");
+    params.delete("highlight"); // Clear highlight when filtering
+    router.push(`/all-foods?${params.toString()}`);
+    
+    setActiveCuisine(null);
+    setActiveHealthGoal(null);
+    setActiveMeal(meal);
+    if (meal === "all") setActiveFoodType("all");
+    fetchByMeal(meal, meal === "all" ? "all" : activeFoodType, 1);
   };
 
   const handleFoodTypeFilter = (foodType) => {
-    setActiveFoodType(foodType);
-    setFilteredPage(1);
-    if (activeMeal === "all" && foodType === "all") {
-      setFoods(initialFoods);
-      setTotalPages(initialTotalPages);
-      setTotalCount(initialTotalCount);
+    setIsNavigating(true);
+    const params = new URLSearchParams(searchParams.toString());
+    if (foodType === "all") {
+      params.delete("foodType");
     } else {
-      fetchByMeal(activeMeal, foodType, 1);
+      params.set("foodType", foodType);
     }
+    params.set("page", "1");
+    params.delete("highlight");
+    router.push(`/all-foods?${params.toString()}`);
+
+    setActiveCuisine(null);
+    setActiveHealthGoal(null);
+    setActiveFoodType(foodType);
+    fetchByMeal(activeMeal, foodType, 1);
   };
 
   const handleDelete = async (id) => {
@@ -320,17 +349,18 @@ export default function FoodManagerClient({
   };
 
   const handlePageChange = (newPage) => {
-    if (activeMeal !== "all" || activeFoodType !== "all") {
-      fetchByMeal(activeMeal, activeFoodType, newPage);
-    } else if (activeCuisine) {
-      setIsNavigating(true);
-      router.push(`/all-foods?cuisine=${encodeURIComponent(activeCuisine)}&page=${newPage}`);
+    setIsNavigating(true);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", String(newPage));
+    params.delete("highlight");
+    router.push(`/all-foods?${params.toString()}`);
+    
+    if (activeCuisine) {
+      fetchByCuisine(activeCuisine, newPage);
     } else if (activeHealthGoal) {
-      setIsNavigating(true);
-      router.push(`/all-foods?healthGoals=${encodeURIComponent(activeHealthGoal)}&page=${newPage}`);
+      fetchByHealthGoal(activeHealthGoal, newPage);
     } else {
-      setIsNavigating(true);
-      router.push(`/all-foods?page=${newPage}`);
+      fetchByMeal(activeMeal, activeFoodType, newPage);
     }
   };
 
@@ -385,7 +415,16 @@ export default function FoodManagerClient({
     }
   };
 
-  const displayPage  = activeMeal !== "all" || activeCuisine || activeHealthGoal ? filteredPage : currentPage;
+  const displayPage = filteredPage || currentPage;
+
+  const getVisiblePageNumbers = (current, total) => {
+    if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1);
+    if (current <= 3) return [1, 2, 3, 4, 5];
+    if (current >= total - 2) return [total - 4, total - 3, total - 2, total - 1, total];
+    return [current - 2, current - 1, current, current + 1, current + 2];
+  };
+
+  const pageNumbers = getVisiblePageNumbers(displayPage, totalPages);
   // When searching: use API results. Otherwise: use current page foods.
   const filteredFoods = searchResults !== null ? searchResults : foods;
 
@@ -827,7 +866,11 @@ export default function FoodManagerClient({
                   <div style={{ display: "flex", flexDirection: "column", gap: 8, flexShrink: 0, alignItems: "flex-end" }}>
                     <div style={{ display: "flex", gap: 7 }}>
                       <button
-                        onClick={() => router.push(`/add-food?edit=${food._id}`)}
+                        onClick={() => {
+                          const params = new URLSearchParams(searchParams.toString());
+                          params.set("edit", food._id);
+                          router.push(`/add-food?${params.toString()}`);
+                        }}
                         className="fm-edit-btn"
                         style={{
                           padding: "7px 15px", borderRadius: 10, fontSize: 11, fontWeight: 800,
@@ -886,8 +929,30 @@ export default function FoodManagerClient({
 
             {/* Page dots */}
             <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-              {Array.from({ length: Math.min(totalPages, 5) }).map((_, i) => {
-                const p = i + 1;
+              {pageNumbers[0] > 1 && (
+                <>
+                  <button
+                    key="first"
+                    onClick={() => handlePageChange(1)}
+                    className="fm-page-btn"
+                    style={{
+                      width: 22, height: 22, borderRadius: 999,
+                      fontSize: 10, fontWeight: 800, cursor: "pointer",
+                      background: "rgba(255,255,255,0.04)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      color: "rgba(255,255,255,0.3)",
+                      transition: "all 0.18s ease",
+                    }}
+                  >
+                    1
+                  </button>
+                  {pageNumbers[0] > 2 && (
+                    <span style={{ fontSize: 11, color: "rgba(255,255,255,0.2)" }}>…</span>
+                  )}
+                </>
+              )}
+
+              {pageNumbers.map((p) => {
                 const isCurrentPage = p === displayPage;
                 return (
                   <button
@@ -907,8 +972,28 @@ export default function FoodManagerClient({
                   </button>
                 );
               })}
-              {totalPages > 5 && (
-                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.2)" }}>…{totalPages}</span>
+
+              {pageNumbers[pageNumbers.length - 1] < totalPages && (
+                <>
+                  {pageNumbers[pageNumbers.length - 1] < totalPages - 1 && (
+                    <span style={{ fontSize: 11, color: "rgba(255,255,255,0.2)" }}>…</span>
+                  )}
+                  <button
+                    key="last"
+                    onClick={() => handlePageChange(totalPages)}
+                    className="fm-page-btn"
+                    style={{
+                      width: 22, height: 22, borderRadius: 999,
+                      fontSize: 10, fontWeight: 800, cursor: "pointer",
+                      background: "rgba(255,255,255,0.04)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      color: "rgba(255,255,255,0.3)",
+                      transition: "all 0.18s ease",
+                    }}
+                  >
+                    {totalPages}
+                  </button>
+                </>
               )}
             </div>
 

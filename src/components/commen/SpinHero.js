@@ -8,7 +8,7 @@ export default function SpinHero({ timeLeft, onClearFilters, onOpenFilters }) {
 
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 
         .filter-btn {
@@ -49,7 +49,7 @@ export default function SpinHero({ timeLeft, onClearFilters, onOpenFilters }) {
           align-items: center;
           justify-content: center;
           cursor: pointer !important;
-          z-index: 9999 !important; /* ensure it's above everything */
+          z-index: 9999 !important; /* ensure it is above everything */
           transition: transform 0.12s ease, background 0.12s ease;
           pointer-events: auto !important; /* ensure it receives clicks */
           box-shadow: 0 6px 18px rgba(0,0,0,0.35);
@@ -60,7 +60,7 @@ export default function SpinHero({ timeLeft, onClearFilters, onOpenFilters }) {
           cursor: pointer;
         }
         .filter-clear-badge svg { pointer-events: none; }
-      `}</style>
+      ` }} />
 
       <div className="flex items-start justify-between gap-3">
 

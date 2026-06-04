@@ -193,7 +193,7 @@ export default function FilterPanel({ currentParams, baseParams, onApply, onClos
 
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .fp-overlay {
           position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 10000;
           display: flex; justify-content: flex-end;
@@ -252,7 +252,7 @@ export default function FilterPanel({ currentParams, baseParams, onApply, onClos
           transition: all 0.2s ease;
         }
         .fp-close:hover { transform: rotate(90deg); background: #f3f4f6; }
-      `}</style>
+      ` }} />
 
       <div className="fp-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
         <div className="fp-panel">
