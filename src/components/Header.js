@@ -12,7 +12,7 @@ export default function Header() {
       `}</style>
       <div className="flex items-center justify-between py-3 px-4 sm:py-4 sm:px-8 bg-[var(--glass-bg)] backdrop-blur-xl rounded-2xl shadow-lg border border-[var(--glass-border)]">
         <Link href="/" className="text-xl sm:text-3xl font-bold text-[var(--text-main)] flex items-center gap-2 sm:gap-3 hover:opacity-80 transition-opacity">
-          <img src="/assets/logo 1.png" alt="MealMind Logo" className="w-10 h-10 sm:w-14 sm:h-14 object-contain transition-transform hover:scale-110" />
+          <img src="/assets/logo.png" alt="MealMind Logo" className="w-50 h-50 sm:w-14 sm:h-14 object-contain transition-transform hover:scale-110" />
           {/* <span className="font-syne">MealMind</span> */}
         </Link>
         

@@ -105,14 +105,10 @@ export default function UserPreferences({ questionnaire, userId, updateSession }
 
       {preferencesOpen && (
         <div className="flex flex-col gap-3 max-h-[400px] overflow-y-auto pr-1 drawer-scroll scroll-smooth">
-          {localQuestionnaire.filter(p => {
-            const ans = Array.isArray(p.answer) ? p.answer : [p.answer];
-            return ans.some(val => val !== null && val !== undefined && String(val).trim() !== "");
-          }).length > 0 ? (
+          {localQuestionnaire.some(p => p.questionId !== "preferenceSkipped") ? (
             localQuestionnaire
             .filter(p => {
-              const ans = Array.isArray(p.answer) ? p.answer : [p.answer];
-              return ans.some(val => val !== null && val !== undefined && String(val).trim() !== "");
+              return p.questionId !== "preferenceSkipped";
             })
             .map((pref, i) => (
               <div key={i} className="bg-white/5 border border-[var(--glass-border)] rounded-2xl p-3">
@@ -130,14 +126,25 @@ export default function UserPreferences({ questionnaire, userId, updateSession }
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  {(Array.isArray(pref.answer) ? pref.answer : [pref.answer])
-                    .map(ans => getLabel(pref.questionId, ans))
-                    .filter(label => label && String(label).trim() !== "" && String(label).toLowerCase() !== "null")
-                    .map((label, j) => (
-                      <span key={j} className={`px-2 py-0.5 border rounded-lg text-[10px] font-extrabold capitalize ${tagColors[i % 4]}`}>
+                  {(() => {
+                    const labels = (Array.isArray(pref.answer) ? pref.answer : [pref.answer])
+                      .map(ans => getLabel(pref.questionId, ans))
+                      .filter(label => label && String(label).trim() !== "" && String(label).toLowerCase() !== "null");
+                    
+                    if (labels.length === 0) {
+                      return (
+                        <span className="px-2 py-0.5 border border-white/5 rounded-lg text-[10px] font-medium text-white/20 italic animate-in fade-in duration-500">
+                          Not Specified
+                        </span>
+                      );
+                    }
+
+                    return labels.map((label, j) => (
+                      <span key={j} className={`px-2 py-0.5 border rounded-lg text-[10px] font-extrabold capitalize ${tagColors[i % 4]} animate-in fade-in zoom-in-95 duration-300`}>
                         {label}
                       </span>
-                    ))}
+                    ));
+                  })()}
                 </div>
               </div>
             ))

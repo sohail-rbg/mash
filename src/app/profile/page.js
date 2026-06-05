@@ -286,7 +286,7 @@ export default function ProfilePage() {
             {/* Left: Logo side */}
             <div className="flex items-center flex-1">
               <Link href="/" className="flex items-center gap-2 group">
-                <img src="/assets/logo 1.png" alt="MealMind Logo" className="w-10 h-10 sm:w-14 sm:h-14 object-contain transition-transform hover:scale-110" />
+                <img src="/assets/logo.png" alt="MealMind Logo" className="w-50 h-50 sm:w-14 sm:h-14 object-contain transition-transform hover:scale-110" />
               </Link>
             </div>
 
