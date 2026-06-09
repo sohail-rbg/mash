@@ -1,10 +1,12 @@
 "use client";
 import React, { useState } from 'react';
-import { useSession } from "next-auth/react";
+import { useUser } from "@clerk/nextjs";
 import ShareCardCanvas from './ShareCardCanvas';
+// import  {userSession} from "next-auth/react";
 
 export default function ConfirmedSelection({ suggestedFood, selectedMode, onRestart }) {
-  const { data: session } = useSession();
+  // const {data: session} = usesession();
+  const { user } = useUser();
   const [showShareCard, setShowShareCard] = useState(false);
 
   // Gradient colors based on mode
@@ -177,8 +179,11 @@ export default function ConfirmedSelection({ suggestedFood, selectedMode, onRest
         <div className="cs-share-transition">
           <ShareCardCanvas
             user={{
-              name: session?.user?.name || 'MealMind User',
-              email: session?.user?.email || 'user@mealmind.com',
+              // name :session?.user?.name || 'MealMind User',
+              // email: session?.user?.email || 'user@mealmind.com',
+            
+              name: user?.fullName || 'MealMind User',
+              email: user?.primaryEmailAddress?.emailAddress || 'user@mealmind.com',
             }}
             food={suggestedFood}
             onClose={() => setShowShareCard(false)}

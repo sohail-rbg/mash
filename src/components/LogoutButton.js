@@ -2,21 +2,25 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { signOut, useSession } from "next-auth/react";
+// import { signOut, useSession } from "next-auth/react";
+import { useAuth, useUser } from "@clerk/nextjs";
 import Button from "@/components/commen/Button";
 import Link from "next/link";
 
 export default function LogoutButton() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  //  const { data: session, status } = useSession();
+  const { user, isLoaded, isSignedIn } = useUser();
+  const { signOut } = useAuth();
   const [timeLeft, setTimeLeft] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     document.cookie = "user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     document.cookie = "temp_filters=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     localStorage.clear();
-    signOut({ callbackUrl: "/" }); // Redirect to home so they see the Login button on the main page
+    await signOut();
+    router.push("/");
   };
 
   useEffect(() => {
@@ -68,10 +72,12 @@ export default function LogoutButton() {
   };
 
   // If the user is not logged in, show a Login button instead of the avatar
-  if (status === "unauthenticated") {
+  
+  //  if (status === "unauthenticated") {
+  if (isLoaded && !isSignedIn) {
     return (
       <Link 
-        href="/login" 
+        href="/sign-in" 
         className="px-6 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-orange-500/20"
       >
         Login
@@ -80,7 +86,9 @@ export default function LogoutButton() {
   }
 
   // While checking session, show a small loader or nothing
-  if (status === "loading") return <div className="w-10 h-10 rounded-full bg-white/5 animate-pulse" />;
+    // if(status === "loading")<div className="w-10 h-10 rounded-full bg-white/5 animate-pulse" />;
+
+  if (!isLoaded) return <div className="w-10 h-10 rounded-full bg-white/5 animate-pulse" />;
 
   return (
     <div className="relative">
@@ -92,15 +100,16 @@ export default function LogoutButton() {
         title="Account"
       >
         <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden bg-neutral-900 border border-white/15 shadow-lg">
-          {session?.user?.image ? (
+          {user?.imageUrl ? (
             <img
-              src={session.user.image}
+            // {(session?.user?.image
+              src={user.imageUrl}
               alt="User"
               className="w-full h-full object-cover"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-white text-sm font-bold bg-gradient-to-br from-neutral-700 to-neutral-900">
-              {session?.user?.name?.charAt(0) || "U"}
+              {user?.fullName?.charAt(0) || "U"}
             </div>
           )}
         </div>
@@ -119,7 +128,7 @@ export default function LogoutButton() {
           <div className="absolute right-0 mt-3 w-64 bg-[var(--card-bg)] backdrop-blur-3xl border border-[var(--glass-border)] rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.2)] z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 origin-top-right">
             <div className="px-6 py-2 border-b border-white/10 bg-white/5">
               <p className="text-[9px] text-white/30 font-black uppercase tracking-[0.2em] mb-1">Session Active</p>
-              <p className="text-xs text-[var(--text-main)] font-bold truncate">{session?.user?.email}</p>
+              <p className="text-xs text-[var(--text-main)] font-bold truncate">{user?.primaryEmailAddress?.emailAddress || user?.emailAddresses?.[0]?.emailAddress}</p>
             </div>
             
             <div className="p-2 flex flex-col gap-1">

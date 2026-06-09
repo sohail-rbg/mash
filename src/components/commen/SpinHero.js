@@ -97,55 +97,58 @@ export default function SpinHero({ timeLeft, onClearFilters, onOpenFilters }) {
         <div
           style={{ position: "relative", display: "inline-flex", flexShrink: 0, pointerEvents: 'auto', zIndex: 10 }}
         >
-
-          {/* Gradient ring wrapper — 1.5px gradient acts as border */}
-          <div
-            className={`filter-grad-ring${filterActive ? " active" : ""}`}
-            onClick={onOpenFilters}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpenFilters(); } }}
-            role="button"
-            tabIndex={0}
-            aria-label={filterActive ? `Filters active — ${timeLeft}s left` : "Open filters"}
-            style={{ position: 'relative' }}
+        <button
+          type="button"
+          className={`filter-grad-ring${filterActive ? " active" : ""}`}
+          onClick={() => typeof onOpenFilters === 'function' && onOpenFilters()}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              typeof onOpenFilters === 'function' && onOpenFilters();
+            }
+          }}
+          aria-label={filterActive ? `Filters active — ${timeLeft}s left` : "Open filters"}
+          title={filterActive ? `Filters active — ${timeLeft}s left` : "Open filters"}
+          style={{
+            position: 'relative',
+            padding: 0,
+            border: 'none',
+            background: 'transparent',
+            cursor: 'pointer',
+          }}
+        >
+          <span
+            className="filter-btn"
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: "50%",
+              border: "none",
+              background: "var(--card-bg, rgba(18,18,28,0.95))",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: filterActive ? "#f97316" : "var(--text-main, #fff)",
+              position: "relative",
+              zIndex: 1,
+            }}
           >
-            <button
-              type="button"
-              className="filter-btn"
-              title={filterActive ? `Filters active — ${timeLeft}s left` : "Open filters"}
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: "50%",
-                border: "none",
-                /* solid bg matching card — makes gradient wrapper look like border only */
-                background: "var(--card-bg, rgba(18,18,28,0.95))",
-                backdropFilter: "blur(12px)",
-                WebkitBackdropFilter: "blur(12px)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: filterActive ? "#f97316" : "var(--text-main, #fff)",
-                cursor: "pointer",
-                position: "relative",
-                zIndex: 1,
-              }}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="17"
+              height="17"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              style={{ pointerEvents: "none" }}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="17"
-                height="17"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                style={{ pointerEvents: "none" }}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-              </svg>
-            </button>
-          </div>
-
-          {/* X badge — only when filters active */}
-          {filterActive && (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+            </svg>
+          </span>
+        </button>
+        {filterActive && (
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); e.preventDefault(); onClearFilters(); }}

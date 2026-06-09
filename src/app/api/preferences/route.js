@@ -1,52 +1,38 @@
 import { NextResponse } from 'next/server';
-import connectDB from '@/lib/db';
+import { getAuth } from '@clerk/nextjs/server';
+import {
+  buildQuestionnaireWithNulls,
+  createUserIfMissing,
+  syncPreferencesToClerk,
+} from '@/lib/clerkHelpers';
 import User from '@/models/Users';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 export async function POST(req) {
   try {
-    await connectDB();
-    const { userId, answers } = await req.json();
-
-    if (!userId || !answers) {
-      return NextResponse.json({ message: "Missing userId or answers." }, { status: 400 });
+    const { userId } = getAuth(req, { acceptsToken: 'any' });
+    if (!userId) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    const session = await getServerSession(authOptions);
-    if (!session || session.user.id !== userId) {
-      return NextResponse.json({ message: "Unauthorized to update these preferences." }, { status: 403 });
+    const { answers } = await req.json();
+    if (!answers) {
+      return NextResponse.json({ message: "Missing answers." }, { status: 400 });
     }
 
-    // session.user.id may be a MongoDB ObjectId string OR an OAuth provider id
-    // Try to lookup by ObjectId first, then fall back to provider id or email
-    let user = null;
-    try {
-      // Only attempt findById when id looks like a 24-char hex ObjectId
-      if (session?.user?.id && /^[a-fA-F0-9]{24}$/.test(String(session.user.id))) {
-        user = await User.findById(session.user.id);
-      }
-    } catch (err) {
-      // ignore cast errors and continue to fallback lookups
-      console.warn('findById failed, falling back to other lookups', err?.message || err);
-    }
-
-    if (!user) {
-      // Try googleId (OAuth) or fallback to email-based lookup
-      const lookupId = String(session?.user?.id || "");
-      user = await User.findOne({ $or: [{ googleId: lookupId }, { email: session?.user?.email }] });
-    }
-
+    let user = await createUserIfMissing(userId);
     if (!user) {
       return NextResponse.json({ message: "User not found." }, { status: 404 });
     }
 
-    // Save full questionnaire array
-    user.questionnaire = answers;
+    user.questionnaire = buildQuestionnaireWithNulls(answers);
     user.markModified('questionnaire');
     user.profileComplete = true;
 
     await user.save();
+
+    await syncPreferencesToClerk(userId, answers).catch((error) => {
+      console.error('Failed to sync preferences to Clerk:', error);
+    });
 
     return NextResponse.json({
       message: "Preferences Saved Successfully ✅",

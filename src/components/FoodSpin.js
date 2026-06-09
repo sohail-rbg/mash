@@ -1,8 +1,8 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { getFilteredIngredients, buildIngredientOptionsFromFoods } from "@/lib/utils";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import FilterPanel from "./FilterPanel";
 import ConfirmedSelection from "./ConfirmedSelect";
 import SpinWheel from "./SpinWheel";
@@ -11,6 +11,7 @@ import ModeRow from "./commen/ModeRow";
 import ActionRow from "./commen/ActionRow";
 import "./FoodSpin.css";
 import IngredientDrawer from "./commen/IngredientDrawer";
+import { useAuth } from "@clerk/nextjs";
 
 export default function FoodSpin({
   initialFoods,
@@ -18,9 +19,11 @@ export default function FoodSpin({
   mealTiming,
   baseParams,
   activeQueryString,
+  isGuest = false,
 }) {
-  const { data: session, status } = useSession();
+  // const {data: session, status } = useSession();
   const router = useRouter();
+  const { isSignedIn } = useAuth();
   const [foods, setFoods] = useState(initialFoods || []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -50,13 +53,8 @@ export default function FoodSpin({
     mealTiming?.toLowerCase() ||
     "lunch";
 
-  // Diet type — filter params override session preference
-  const rawDietType =
-    currentParams.get("dietType") ||                          // from active filter
-    session?.user?.questionnaire
-      ?.find(q => q.questionId === "dietType")
-      ?.answer?.[0] ||
-    null;
+  // Diet type — filter params override stored preference
+  const rawDietType = currentParams.get("dietType") || null;
 
   // Normalize: "vegetarian"→"veg", "non-vegetarian"→"non-veg"
   const activeDietType = rawDietType
@@ -235,18 +233,6 @@ export default function FoodSpin({
   }, [activeMealTiming, activeDietType]);
 
   // Clear all filters when user logs out
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      clearFilters();
-      setSelectedMode(null);
-      setPhase("select-mode");
-      setSuggestedFood(null);
-      setShowResult(false);
-      setCheckedIngredients({});
-      setRejectedIds(new Set());
-    }
-  }, [status]);
-
   /* ── API ── */
   const fetchFoodsForMode = async (mode, ingredients = []) => {
     if (abortControllerRef.current) abortControllerRef.current.abort();
@@ -303,12 +289,14 @@ export default function FoodSpin({
   };
 
   const handleModeSelect = async (mode) => {
-    // If guest clicks a mode, send them to login
-    if (status === "unauthenticated") {
-      showToast("Please login to choose a mode! 🔐");
-      setTimeout(() => router.push("/login"), 1500);
+    // Redirect to sign-in if guest user tries to select a mode
+    if (isGuest) {
+      showToast("Please login before selecting a mode! 👆");
+      setTimeout(() => router.push("/sign-in"), 1500);
       return;
     }
+
+    if (!mode) return;
 
     if (selectedMode === mode) {
       if (mode === "self-cooking") setIngredientsVisible(true);
@@ -330,15 +318,21 @@ export default function FoodSpin({
   };
 
   const handleCenterClick = () => {
-    if (status === "unauthenticated") {
-      showToast("Login to start spinning! 🎡");
-      setTimeout(() => router.push("/login"), 1500);
-    } else if (status === "authenticated" && !selectedMode) {
+    if (isGuest) {
+      showToast("Please login to spin the wheel! 👆");
+      setTimeout(() => router.push("/sign-in"), 1500);
+      return;
+    }
+    if (!selectedMode) {
       showToast("Please select a mode above! 👆");
       setPulseModes(true);
       setTimeout(() => setPulseModes(false), 1500);
+      return;
     }
-    // If authenticated, we allow the user to select a mode via ModeRow buttons
+
+    if (!spinning && !showResult) {
+      startSpin();
+    }
   };
 
   const toggleIngredient = (id) => {
@@ -578,9 +572,10 @@ export default function FoodSpin({
               onSpin={startSpin}
               loading={loading}
               disabled={
-                selectedMode === "self-cooking" &&
+                isGuest ||
+                (selectedMode === "self-cooking" &&
                 Object.values(checkedIngredients).filter(Boolean).length === 0 &&
-                foods.length === 0
+                foods.length === 0)
               }
             />
           </div>
@@ -598,6 +593,7 @@ export default function FoodSpin({
             selectedMode={selectedMode}
             checkedIngredients={checkedIngredients}
             remainingCount={remainingCount}
+            isGuest={isGuest}
           />
         </div>
       </div>

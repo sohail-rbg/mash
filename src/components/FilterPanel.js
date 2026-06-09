@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { useSession } from "next-auth/react";
+// import {useSession} from "next-auth/react"; 
 import { Salad, Target, AlertCircle, Clock } from 'lucide-react';
 import { OPTIONS_MAP } from '@/lib/question';
 
@@ -43,76 +43,60 @@ const FILTER_CONFIG = [
   },
 ];
 
-export default function FilterPanel({ currentParams, baseParams, onApply, onClose }) {
-  const [filters, setFilters] = useState({});
-  const { data: session } = useSession();
+const normalizeIncomingValue = (categoryId, value) => {
+  if (!value) return value;
+  const normalized = String(value).trim().toLowerCase();
 
-  const normalizeIncomingValue = (categoryId, value) => {
-    if (!value) return value;
-    const normalized = String(value).trim().toLowerCase();
-
-    if (categoryId === 'dietType') {
-      // Map all variants to the exact OPTIONS_MAP values
-      if (['veg', 'vegetarian', 'pure-vegetarian', 'pure vegetarian'].includes(normalized))
-        return 'vegetarian';
-      if (['non-veg', 'non-vegetarian', 'non vegetarian', 'omnivore', 'nonveg'].includes(normalized))
-        return 'non-veg';
-      if (['vegan'].includes(normalized)) return 'vegan';
-      if (['keto'].includes(normalized)) return 'keto';
-      if (['paleo'].includes(normalized)) return 'paleo';
-      if (['gluten-free', 'gluten free', 'glutenfree'].includes(normalized)) return 'gluten-free';
-      return normalized;
-    }
-
-    if (categoryId === 'healthGoals') {
-      if (['no-goal', 'no goal', 'no', 'none'].includes(normalized)) return 'no-goal';
-      return normalized.replace(/\s+/g, '-');
-    }
-
-    if (categoryId === 'allergies' && normalized === 'no-allergies') return 'no-allergies';
-
+  if (categoryId === 'dietType') {
+    // Map all variants to the exact OPTIONS_MAP values
+    if (['veg', 'vegetarian', 'pure-vegetarian', 'pure vegetarian'].includes(normalized))
+      return 'vegetarian';
+    if (['non-veg', 'non-vegetarian', 'non vegetarian', 'omnivore', 'nonveg'].includes(normalized))
+      return 'non-veg';
+    if (['vegan'].includes(normalized)) return 'vegan';
+    if (['keto'].includes(normalized)) return 'keto';
+    if (['paleo'].includes(normalized)) return 'paleo';
+    if (['gluten-free', 'gluten free', 'glutenfree'].includes(normalized)) return 'gluten-free';
     return normalized;
-  };
+  }
 
-  useEffect(() => {
-    const params = new URLSearchParams(currentParams);
-    const questionnaire = Array.isArray(session?.user?.questionnaire)
-      ? session.user.questionnaire
+  if (categoryId === 'healthGoals') {
+    if (['no-goal', 'no goal', 'no', 'none'].includes(normalized)) return 'no-goal';
+    return normalized.replace(/\s+/g, '-');
+  }
+
+  if (categoryId === 'allergies' && normalized === 'no-allergies') return 'no-allergies';
+
+  return normalized;
+};
+
+const buildFiltersFromParams = (queryString) => {
+  const params = new URLSearchParams(queryString || "");
+  const initialFilters = {};
+
+  FILTER_CONFIG.forEach((category) => {
+    const paramKey = category.id === 'allergies' ? 'restrictedIngredients' : category.id;
+    const paramValue = params.get(paramKey);
+    const values = paramValue
+      ? paramValue.split(',').filter(Boolean).map((value) => normalizeIncomingValue(category.id, value))
       : [];
 
-    const initialFilters = {};
+    initialFilters[category.id] = values.map((v) =>
+      String(v).trim().toLowerCase().replace(/\s+/g, '-')
+    );
+  });
 
-    const getQuestionAnswer = (questionIds) => {
-      const item = questionnaire.find((q) => questionIds.includes(q.questionId));
-      return Array.isArray(item?.answer) ? item.answer : [];
-    };
+  return initialFilters;
+};
 
-    FILTER_CONFIG.forEach((category) => {
-      const paramKey = category.id === 'allergies' ? 'restrictedIngredients' : category.id;
-      const paramValue = params.get(paramKey);
-      let values = [];
+export default function FilterPanel({ currentParams, baseParams, onApply, onClose }) {
 
-      if (paramValue) { // If parameter is explicitly set in URL
-        values = paramValue.split(',').filter(Boolean).map((value) => normalizeIncomingValue(category.id, value));
-      } else if (currentParams === baseParams) { // If no paramValue, and currentParams is the base/default state
-        // Fall back to questionnaire defaults
-        const mappedQuestionIds =
-          category.id === 'healthGoals'
-            ? ['healthGoals', 'weightGoal']
-            : [category.id];
-        values = getQuestionAnswer(mappedQuestionIds).map((value) => normalizeIncomingValue(category.id, value));
-      }
+  const [filters, setFilters] = useState(() => buildFiltersFromParams(currentParams));
+// const {data: session } = useSession();
 
-      // If no paramValue, and currentParams is not the base/default state (meaning it's a custom filter state or explicitly cleared all)
-      // Then this specific filter was explicitly cleared or never set.
-      // In this case, 'values' remains an empty array, which is the desired behavior.
-      initialFilters[category.id] = values.map((v) =>
-        String(v).trim().toLowerCase().replace(/\s+/g, '-')
-      );
-    });
-
-    setFilters(initialFilters);
-  }, [currentParams, session]);
+  useEffect(() => {
+    setFilters(buildFiltersFromParams(currentParams));
+  }, [currentParams]);
 
   const handleToggle = (categoryId, optionValue) => {
     const rawValue = typeof optionValue === 'object' ? optionValue.value : optionValue;

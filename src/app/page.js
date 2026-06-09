@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
+// import { getServerSession } from "next-auth/next";
+// import { authOptions } from "@/lib/auth";
 import { getAutoMealTiming, getAutoWeatherCondition } from "@/lib/utils";
 import FoodSpin from "@/components/FoodSpin";
 import LogoutButton from "@/components/LogoutButton";
@@ -9,6 +9,11 @@ import RefreshButton from "@/components/RefreshButton";
 import PreferenceReminder from "@/components/PreferenceReminder";
 import Link from "next/link";
 import Image from "next/image";
+
+import { auth as clerkAuth } from "@clerk/nextjs/server";
+import { createUserIfMissing } from "@/lib/clerkHelpers";
+import User from "@/models/Users";
+import connectDB from "@/lib/db";
 
 async function getFoods(queryString = "") {
   try {
@@ -44,12 +49,36 @@ async function getFoods(queryString = "") {
 }
 
 export default async function Home() {
-  const session = await getServerSession(authOptions);
-  const user = session?.user;
+  // const session = await getServerSession(authOptions);
+  // const user = session?.user;
+  const { userId } = await clerkAuth();
+
+  await connectDB();
+
+  let user = null;
+
+  // If authenticated, get user data
+  if (userId) {
+    user = await User.findOne({ clerkId: userId });
+
+    if (!user) {
+      try {
+        user = await createUserIfMissing(userId);
+      } catch (error) {
+        console.error("Unable to create DB user for Clerk user:", error);
+      }
+    }
+  }
+
   const userQuestionnaire = user?.questionnaire || [];
   const hasPreferenceData = userQuestionnaire.some(
     (pref) => pref.questionId !== 'preferenceSkipped' && Array.isArray(pref.answer) && pref.answer.length > 0,
   );
+
+  // Show a reminder only if the user is logged in AND has no questionnaire data at all.
+  // If they have any questionnaire data (even 'preferenceSkipped'), we assume they've
+  // been through the onboarding once and should not be redirected or shown a reminder.
+  const needsReminder = !!userId && userQuestionnaire.length === 0;
 
   const cookieStore = await cookies();
   const tempFilters = cookieStore.get("temp_filters");
@@ -106,11 +135,6 @@ export default async function Home() {
     });
   }
 
-  // Redirect logged-in users to preferences if they haven't filled them out
-  if (user && (!userQuestionnaire || userQuestionnaire.length === 0)) {
-    redirect("/preferences");
-  }
-
   if (!defaultParams.has("mealTiming"))
     defaultParams.set("mealTiming", getAutoMealTiming());
 
@@ -139,7 +163,6 @@ export default async function Home() {
   const mealTimingForComponent =
     finalParams.get("mealTiming")?.split(",")[0] || "Lunch";
   const baseParams = defaultQueryString;
-  const needsPreferences = user && !hasPreferenceData;
 
   return (
     <div className="h-screen w-screen overflow-hidden relative transition-colors duration-500"
@@ -176,15 +199,26 @@ export default async function Home() {
           <Image src="/assets/logo.png" alt="Logo" width={100} height={100} className="rounded-xl" />
         </Link>
         </div>
-        {/* Right Side: Theme Switch and User Avatar */}
+        {/* Right Side: Login Button or Profile */}
         <div className="flex items-center gap-2 pointer-events-auto">
           <RefreshButton />
           {/* <ThemeToggle /> */}
-          <LogoutButton />
+          {userId ? (
+            <>
+              <LogoutButton />
+            </>
+          ) : (
+            <Link
+              href="/sign-in"
+              className="px-6 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-300"
+            >
+              Login
+            </Link>
+          )}
         </div>
       </header>
 
-      <PreferenceReminder visible={needsPreferences} />
+      <PreferenceReminder visible={needsReminder} />
 
       {/* ── FoodSpin ── */}
       <div className="absolute inset-0 z-10 overflow-y-auto">
@@ -196,6 +230,7 @@ export default async function Home() {
               mealTiming={mealTimingForComponent}
               baseParams={baseParams}
               activeQueryString={queryString}
+              isGuest={!userId}
             />
           </div>
         </div>

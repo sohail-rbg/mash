@@ -1,56 +1,62 @@
 import { NextResponse } from 'next/server';
-import connectDB from '@/lib/db';
+import { getAuth } from '@clerk/nextjs/server';
+import {
+  createUserIfMissing,
+  syncProfileToClerk,
+} from '@/lib/clerkHelpers';
 import User from '@/models/Users';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 export async function PUT(req) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session || !session.user || !session.user.id) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-
-    await connectDB();
-    const { name, email, image } = await req.json();
-    const userId = session.user.id;
-
+    const { userId } = getAuth(req, { acceptsToken: 'any' });
     if (!userId) {
-      return NextResponse.json({ message: "User ID not found in session" }, { status: 400 });
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    // Robust lookup: support ObjectId _id or OAuth provider id (googleId) or email
-    let existingUser = null;
-    try {
-      if (/^[a-fA-F0-9]{24}$/.test(String(userId))) {
-        existingUser = await User.findById(userId);
-      }
-    } catch (err) {
-      console.warn('findById failed on profile update, falling back', err?.message || err);
-    }
+    const { name, email, image } = await req.json();
 
+
+
+
+    // const userId = session.user.id;
+
+    // if (!userId) {
+    //   return NextResponse.json({ message: "User ID not found in session" }, { status: 400 });
+    // }
+
+    // // Robust lookup: support ObjectId _id or OAuth provider id (googleId) or email
+    // let existingUser = null;
+    // try {
+    //   if (/^[a-fA-F0-9]{24}$/.test(String(userId))) {
+    //     existingUser = await User.findById(userId);
+    //   }
+    // } catch (err) {
+    //   console.warn('findById failed on profile update, falling back', err?.message || err);
+    // }
+    const existingUser = await createUserIfMissing(userId);
     if (!existingUser) {
-      existingUser = await User.findOne({ $or: [{ googleId: String(userId) }, { email: session.user.email }] });
-    }
-
-    if (!existingUser) {
-      return NextResponse.json({ message: "User not found." }, { status: 404 });
+      return NextResponse.json({ message: 'User not found.' }, { status: 404 });
     }
 
     const updatedUser = await User.findByIdAndUpdate(
       existingUser._id,
       { name, email, image },
-      { new: true, runValidators: true } // Return the updated document and run schema validators
-    ).select('-password'); // Exclude password from the returned user object
+      { new: true, runValidators: true }
+    ).select('-password');
 
     if (!updatedUser) {
-      return NextResponse.json({ message: "User not found." }, { status: 404 });
+      return NextResponse.json({ message: 'User not found.' }, { status: 404 });
     }
 
-    // Return only necessary user data for the session update
+    await syncProfileToClerk(userId, {
+      name: updatedUser.name,
+      image: updatedUser.image,
+    }).catch((error) => {
+      console.error('Failed to sync profile to Clerk:', error);
+    });
+
     return NextResponse.json({
-      message: "Profile updated successfully!",
+      message: 'Profile updated successfully!',
       user: {
         id: updatedUser._id.toString(),
         name: updatedUser.name,
@@ -58,11 +64,10 @@ export async function PUT(req) {
         image: updatedUser.image,
         profileComplete: updatedUser.profileComplete,
         questionnaire: updatedUser.questionnaire,
-      }
+      },
     }, { status: 200 });
-
   } catch (error) {
-    console.error("Error updating profile:", error);
-    return NextResponse.json({ message: "An error occurred while updating profile." }, { status: 500 });
+    console.error('Error updating profile:', error);
+    return NextResponse.json({ message: 'An error occurred while updating profile.' }, { status: 500 });
   }
 }

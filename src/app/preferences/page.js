@@ -1,7 +1,8 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+// import { useSession } from "next-auth/react";
+import { useAuth, useUser } from "@clerk/nextjs";
 import { OPTIONS_MAP, DIET_OPTIONS, ALLERGY_OPTIONS, GOAL_OPTIONS, CUISINE_OPTIONS } from "@/lib/question";
 
 // ─── Particle dot ─────────────────────────────────────────────────────────────
@@ -112,8 +113,11 @@ function Section({ step, title, subtitle, children }) {
 
 // ─── Main page ─────────────────────────────────────────────────────────────────
 export default function Preferences() {
-  const { data: session, update } = useSession();
+  const { user, isLoaded, isSignedIn } = useUser();
+  const { getToken } = useAuth();
   const router = useRouter();
+  const [profile, setProfile] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(true);
 
   // State for form inputs
   const [diet,      setDiet]      = useState("");
@@ -123,18 +127,62 @@ export default function Preferences() {
   const [saving,    setSaving]    = useState(false);
   const [toast,     setToast]     = useState({ show: false, message: "", type: "success" });
 
-  // Load initial preferences from session when it becomes available
-  useEffect(() => {
-    if (session?.user?.questionnaire) {
-      const q = session.user.questionnaire;
-      const getAns = (id) => q.find(p => p.questionId === id)?.answer;
+  const getAuthHeaders = useCallback(async (extra = {}) => {
+    const token = await getToken();
+    return {
+      ...extra,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+  }, [getToken]);
 
-      setDiet(getAns("dietType")?.[0] || "");
-      setAllergies(getAns("allergies") || []);
-      setGoals(getAns("healthGoals") || getAns("weightGoal") || []);
-      setCuisine(getAns("cuisine") || []);
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      router.push('/login');
+      return;
     }
-  }, [session]);
+
+    if (!isLoaded || !isSignedIn) return;
+
+    const controller = new AbortController();
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch('/api/me', {
+          signal: controller.signal,
+          credentials: 'include',
+          headers: await getAuthHeaders(),
+        });
+        if (!res.ok) throw new Error('Unable to fetch profile');
+        const data = await res.json();
+        setProfile(data);
+      } catch (err) {
+        console.error('Error fetching profile:', err);
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    fetchProfile();
+    return () => controller.abort();
+  }, [isLoaded, isSignedIn, router, getAuthHeaders]);
+
+  useEffect(() => {
+    if (!profile) return;
+
+    // If profile is already complete, redirect to home
+    if (profile?.profileComplete === true) {
+      router.push("/");
+      return;
+    }
+
+    if (!profile?.questionnaire) return;
+    const q = profile.questionnaire;
+    const getAns = (id) => q.find(p => p.questionId === id)?.answer;
+
+    setDiet(getAns("dietType")?.[0] || "");
+    setAllergies(getAns("allergies") || []);
+    setGoals(getAns("healthGoals") || getAns("weightGoal") || []);
+    setCuisine(getAns("cuisine") || []);
+  }, [profile, router]);
 
   const toggle = (setter) => (e) => {
     const v = e.target.value;
@@ -156,7 +204,7 @@ export default function Preferences() {
   const cuisineOpts = CUISINE_OPTIONS || OPTIONS_MAP?.cuisine || [];
 
   const handleSave = async () => {
-    if (!diet || !session?.user?.id) return; // Ensure diet is selected and user ID exists
+    if (!diet || !user?.id) return; // Ensure diet is selected and user ID exists
 
     setSaving(true);
 
@@ -171,20 +219,22 @@ export default function Preferences() {
     try {
       const res = await fetch('/api/preferences', {
         method: 'POST',
-        headers: {
+        credentials: 'include',
+        headers: await getAuthHeaders({
           'Content-Type': 'application/json',
-        },
+        }),
+        // Send profileComplete: true to indicate completion of the onboarding flow
         body: JSON.stringify({
-          userId: session.user.id,
           answers: preferencesData,
+          profileComplete: true, // Explicitly mark profile as complete
         }),
       });
 
       const data = await res.json();
 
       if (res.ok) {
+        // The API should update profileComplete to true based on this action
         setToast({ show: true, message: "Preferences saved successfully! ✅", type: "success" });
-        await update({ user: data.user });
         setTimeout(() => router.push("/"), 1500); // Redirect after short delay so they see success
       } else {
         setToast({ show: true, message: data.message || "Failed to save preferences.", type: "error" });
@@ -197,25 +247,27 @@ export default function Preferences() {
   };
 
   const handleSkip = async () => {
-    if (!session?.user?.id) return;
+    if (!user?.id) return;
     setSaving(true);
 
     try {
       const res = await fetch('/api/preferences', {
         method: 'POST',
-        headers: {
+        credentials: 'include',
+        headers: await getAuthHeaders({
           'Content-Type': 'application/json',
-        },
+        }),
+        // Send profileComplete: true to indicate completion of the onboarding flow
         body: JSON.stringify({
-          userId: session.user.id,
           answers: [{ questionId: 'preferenceSkipped', answer: ['true'] }],
+          profileComplete: true, // Explicitly mark profile as complete
         }),
       });
 
       const data = await res.json();
       if (res.ok) {
+        // The API should update profileComplete to true based on this action
         setToast({ show: true, message: 'Preferences skipped for now. You can update them anytime.', type: 'success' });
-        await update({ user: data.user });
         router.push('/');
       } else {
         setToast({ show: true, message: data.message || 'Unable to skip preferences.', type: 'error' });

@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { useAuth } from "@clerk/nextjs";
 import { OPTIONS_MAP } from "@/lib/question";
 
 const tagColors = [
@@ -9,13 +10,14 @@ const tagColors = [
   "bg-purple-50 text-purple-600 border-purple-200",
 ];
 
-export default function UserPreferences({ questionnaire, userId, updateSession }) {
+export default function UserPreferences({ questionnaire }) {
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [editingPref, setEditingPref] = useState(null);
   const [tempAnswers, setTempAnswers] = useState([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [allergySearch, setAllergySearch] = useState("");
   const [localQuestionnaire, setLocalQuestionnaire] = useState(questionnaire);
+  const { getToken } = useAuth();
 
   // Sync local state when external questionnaire prop changes
   React.useEffect(() => {
@@ -30,7 +32,7 @@ export default function UserPreferences({ questionnaire, userId, updateSession }
   };
 
   const savePrefUpdate = async (questionId, newValues) => {
-    if (!userId) return;
+    if (!questionId) return;
 
     // Clean values before saving (remove nulls, undefined, and empty strings)
     const cleanValues = newValues.filter(v => v !== null && v !== undefined && String(v).trim() !== "");
@@ -44,18 +46,22 @@ export default function UserPreferences({ questionnaire, userId, updateSession }
     setLocalQuestionnaire(updatedQuestionnaire);
 
     try {
+      const token = await getToken();
       const res = await fetch("/api/preferences", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        credentials: 'include',
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
-          userId: userId,
           answers: updatedQuestionnaire,
         }),
       });
 
       const data = await res.json();
-      if (res.ok) {
-        await updateSession({ user: data.user });
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to update preferences.');
       }
     } catch (error) {
       console.error("Failed to update preference:", error);

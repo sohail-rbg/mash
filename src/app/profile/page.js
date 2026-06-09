@@ -1,49 +1,85 @@
 "use client";
 import Link from "next/link";
-import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { useAuth, useUser } from "@clerk/nextjs";
 import RefreshButton from "@/components/RefreshButton";
 import { OPTIONS_MAP } from "@/lib/question";
 import UserPreferences from "@/components/UserPreferences";
 
 export default function ProfilePage() {
-  const { data: session, status, update } = useSession();
+  const { user, isLoaded, isSignedIn } = useUser();
+  const { signOut, getToken } = useAuth();
+  const router = useRouter();
+  const [profile, setProfile] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [errors, setErrors] = useState({});
 
   // Form state for editing
   const [editData, setEditData] = useState({
-    name: session?.user?.name ?? "",
-    email: session?.user?.email ?? "",
-    image: session?.user?.image ?? ""
+    name: "",
+    email: "",
+    image: ""
   });
 
-  // Move useEffect to the top, before any early returns
   useEffect(() => {
-    if (session) {
-      setEditData({
-        name: session.user.name ?? "",
-        email: session.user.email ?? "",
-        image: session.user.image ?? ""
-      });
+    if (isLoaded && !isSignedIn) {
+      router.push('/login');
     }
-  }, [session]);
+  }, [isLoaded, isSignedIn, router]);
 
-  if (status === "loading") return (
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
+
+    const controller = new AbortController();
+    const fetchProfile = async () => {
+      try {
+        const token = await getToken();
+        const res = await fetch('/api/me', {
+          signal: controller.signal,
+          credentials: 'include',
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        if (!res.ok) throw new Error('Unable to fetch profile');
+        const data = await res.json();
+        setProfile(data);
+      } catch (err) {
+        if (err?.name === 'AbortError') return;
+        console.error('Error fetching profile:', err);
+      }
+    };
+
+    fetchProfile();
+    return () => controller.abort();
+  }, [isLoaded, isSignedIn, getToken]);
+
+  useEffect(() => {
+    if (!profile) return;
+
+    setEditData({
+      name: profile.name || "",
+      email: profile.email || "",
+      image: profile.image || ""
+    });
+  }, [profile]);
+
+  if (!isLoaded) return (
     <div className="min-h-screen bg-[var(--bg-color)] flex items-center justify-center">
       <div className="w-10 h-10 border-2 border-t-orange-500 border-orange-500/20 rounded-full animate-spin" />
     </div>
   );
 
-  if (!session) return (
+  if (!isSignedIn) return (
     <div className="min-h-screen bg-[var(--bg-color)] flex flex-col items-center justify-center gap-4">
       <span className="text-4xl">🔒</span>
-      <Link href="/login" className="px-8 py-3 bg-orange-500 text-white rounded-xl font-bold text-sm">Login</Link>
+      <Link href="/sign-in" className="px-8 py-3 bg-orange-500 text-white rounded-xl font-bold text-sm">Login</Link>
     </div>
   );
 
-  const q = session.user.questionnaire ?? [];
+  const q = profile?.questionnaire ?? [];
   const getPreferenceAnswers = (ids) => {
     const item = q.find((x) => ids.includes(x.questionId) && Array.isArray(x.answer) && x.answer.length > 0);
     return item?.answer || [];
@@ -102,15 +138,20 @@ export default function ProfilePage() {
 
     setIsUpdatingProfile(true);
     try {
+      const token = await getToken();
       const res = await fetch('/api/profile', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify(editData),
       });
 
       const data = await res.json();
       if (res.ok) {
-        await update({ user: data.user }); // Update the session with new data
+        await router.refresh();
         console.log("Profile updated successfully!");
       } else {
         console.error("Failed to update profile:", data.message);
@@ -336,14 +377,14 @@ export default function ProfilePage() {
             <div className="flex flex-col items-center gap-4 relative z-10">
               <div className="profile-avatar-ring">
                 <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-[2.2rem] overflow-hidden bg-white/5 flex items-center justify-center text-5xl font-black text-orange-400">
-                  {session.user.image
-                    ? <img src={session.user.image} alt="" className="w-full h-full object-cover" />
-                    : <span>{session.user.name?.charAt(0) ?? "U"}</span>}
+                  {user.imageUrl
+                    ? <img src={user.imageUrl} alt="" className="w-full h-full object-cover" />
+                    : <span>{user.fullName?.charAt(0) ?? "U"}</span>}
                 </div>
               </div>
               <div className="text-center">
-                <p className="text-[var(--text-main)] font-black text-2xl tracking-tight">{session.user.name ?? "Chef"}</p>
-                <p className="text-[var(--text-muted)] text-sm font-medium mt-1">{session.user.email}</p>
+                <p className="text-[var(--text-main)] font-black text-2xl tracking-tight">{user.fullName ?? "Chef"}</p>
+                <p className="text-[var(--text-muted)] text-sm font-medium mt-1">{user.primaryEmailAddress?.emailAddress}</p>
               </div>
             </div>
 
@@ -374,8 +415,7 @@ export default function ProfilePage() {
             {/* ── Section 3: Preferences (Dropdown) ── */}
             <UserPreferences 
               questionnaire={q} 
-              userId={session?.user?.id} 
-              updateSession={update} 
+              userId={profile?.id} 
             />
 
             <div className="w-full h-px bg-white/10 relative z-10" />
@@ -386,7 +426,7 @@ export default function ProfilePage() {
               {/* <Link href="/preferences" className="flex-1 flex items-center justify-center px-4 py-3 bg-white/5 border border-[var(--glass-border)] rounded-2xl hover:bg-white/10 hover:border-orange-500/30 transition-all group">
                 <span className="text-[11px] font-bold text-[var(--text-main)] group-hover:text-orange-400 transition-colors uppercase tracking-wider">⚙️ Settings</span>
               </Link> */}
-              <button onClick={() => signOut({ callbackUrl: "/login" })}
+              <button onClick={async () => { await signOut(); router.push('/login'); }}
                 className="flex-1 py-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl text-[11px] font-bold hover:bg-red-500/20 transition-all uppercase tracking-wider">
                 🚪 Logout
               </button>

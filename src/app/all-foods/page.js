@@ -1,8 +1,8 @@
 'use server';
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
 import Header from "@/components/Header";
 import FoodManagerClient from "./FoodManagerClient";
+
+
 
 async function getAllFoods(page = 1, queryParams = {}) {
   try {
@@ -26,7 +26,6 @@ async function getAllFoods(page = 1, queryParams = {}) {
 export default async function AllFoodsPage({ searchParams }) {
   const resolvedParams = await searchParams;
   const page = parseInt(resolvedParams.page) || 1;
-  await getServerSession(authOptions);
   
   // Pass query params to API
   const queryParams = {};

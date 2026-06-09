@@ -9,9 +9,11 @@ import {
 } from "next/font/google";
 
 import "./globals.css";
-import AuthProvider from "./AuthProvider";
+// import AuthProvider from "./AuthProvider";
 import { GlobalStyles } from "./SharedStyles";
 import ThemeProvider from "./ThemeProvider";
+import { ClerkProvider } from "@clerk/nextjs";
+
 
 //  Default Fonts
 const geistSans = Geist({
@@ -75,9 +77,15 @@ export default function RootLayout({ children }) {
       >
         <GlobalStyles />
         <ThemeProvider>
-          <AuthProvider>
+          <ClerkProvider
+            publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+            signInUrl="/sign-in"
+            signUpUrl="/sign-up"
+            afterSignInUrl="/"
+            afterSignUpUrl="/"
+          >
             {children}
-          </AuthProvider>
+          </ClerkProvider>
         </ThemeProvider>
       </body>
     </html>
