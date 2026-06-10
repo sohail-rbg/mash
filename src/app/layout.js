@@ -9,7 +9,6 @@ import {
 } from "next/font/google";
 
 import "./globals.css";
-// import AuthProvider from "./AuthProvider";
 import { GlobalStyles } from "./SharedStyles";
 import ThemeProvider from "./ThemeProvider";
 import { ClerkProvider } from "@clerk/nextjs";

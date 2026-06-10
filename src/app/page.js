@@ -17,16 +17,8 @@ import connectDB from "@/lib/db";
 
 async function getFoods(queryString = "") {
   try {
-    // Robust base URL logic to prevent "Failed to fetch" errors
-    let baseUrl = process.env.NEXTAUTH_URL;
-    
-    if (!baseUrl) {
-      baseUrl = process.env.VERCEL_URL 
-        ? `https://${process.env.VERCEL_URL}` 
-        : "http://localhost:3000";
-    }
-    
-    if (!baseUrl.startsWith('http')) baseUrl = `http://${baseUrl}`;
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
+                   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
 
     const url = new URL("/api/foods", baseUrl);
     if (queryString) url.search = queryString;
@@ -149,9 +141,12 @@ export default async function Home() {
 
   if (tempFilters) {
     const tempParams = new URLSearchParams(tempFilters.value);
-    if (!Array.isArray(userAllergies) || userAllergies.length === 0) {
-      tempParams.delete("restrictedIngredients");
-    }
+    
+    // Remove restrictedIngredients filter if user has no allergies 
+    // or if the value is explicitly "no-allergies"
+    const hasNoAllergies = !Array.isArray(userAllergies) || userAllergies.length === 0;
+    if (hasNoAllergies) tempParams.delete("restrictedIngredients");
+
     queryString = tempParams.toString();
   }
 
