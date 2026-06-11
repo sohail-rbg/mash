@@ -257,18 +257,17 @@ export default function Preferences() {
         headers: await getAuthHeaders({
           'Content-Type': 'application/json',
         }),
-        // Send profileComplete: true to indicate completion of the onboarding flow
         body: JSON.stringify({
           answers: [{ questionId: 'preferenceSkipped', answer: ['true'] }],
-          profileComplete: true, // Explicitly mark profile as complete
+          profileComplete: false, // User skipped, so profile is not complete
         }),
       });
 
       const data = await res.json();
       if (res.ok) {
-        // The API should update profileComplete to true based on this action
         setToast({ show: true, message: 'Preferences skipped for now. You can update them anytime.', type: 'success' });
-        router.push('/');
+        // Redirect after short delay so user sees the message
+        setTimeout(() => router.push('/'), 1500);
       } else {
         setToast({ show: true, message: data.message || 'Unable to skip preferences.', type: 'error' });
       }

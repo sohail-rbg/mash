@@ -62,15 +62,8 @@ export default async function Home() {
     }
   }
 
-  const userQuestionnaire = user?.questionnaire || [];
-  const hasPreferenceData = userQuestionnaire.some(
-    (pref) => pref.questionId !== 'preferenceSkipped' && Array.isArray(pref.answer) && pref.answer.length > 0,
-  );
-
-  // Show a reminder only if the user is logged in AND has no questionnaire data at all.
-  // If they have any questionnaire data (even 'preferenceSkipped'), we assume they've
-  // been through the onboarding once and should not be redirected or shown a reminder.
-  const needsReminder = !!userId && userQuestionnaire.length === 0;
+  // Show a reminder if the user is logged in but hasn't completed their profile preferences.
+  const needsReminder = !!userId && user?.profileComplete !== true;
 
   const cookieStore = await cookies();
   const tempFilters = cookieStore.get("temp_filters");

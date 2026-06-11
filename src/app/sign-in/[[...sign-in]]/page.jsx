@@ -16,7 +16,15 @@ export default function SignInPage() {
   }, [isLoaded, userId, router]);
 
   if (!isLoaded || userId) {
-    return null;
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500 mb-4"></div>
+        <h2 className="text-2xl font-semibold italic tracking-wider">
+          Waiting...
+        </h2>
+        <p className="text-white/60 mt-2">Logging you in, please wait.</p>
+      </div>
+    );
   }
 
   return (
@@ -35,7 +43,7 @@ export default function SignInPage() {
       <div className="relative z-10 w-full max-w-md">
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl">
           <SignIn 
-            fallbackRedirectUrl="/" 
+            forceRedirectUrl="/" 
             signUpUrl="/sign-up" 
             appearance={{
               elements: {

@@ -1,6 +1,45 @@
 "use client";
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useTheme } from '@/app/ThemeProvider';
+import { Share2, X, Link } from 'lucide-react';
+
+// Lucide removed brand icons in recent versions.
+// We define them locally using standard Lucide SVG paths to fix the compilation error.
+const Instagram = ({ size = 24, strokeWidth = 2, ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={strokeWidth}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+  </svg>
+);
+
+const Facebook = ({ size = 24, strokeWidth = 2, ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={strokeWidth}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+  </svg>
+);
 
 export default function ShareCardCanvas({ food, user, onClose }) {
   const canvasRef = useRef(null);
@@ -33,14 +72,23 @@ export default function ShareCardCanvas({ food, user, onClose }) {
       { bg: '#0f172a', accent: '#10b981', gold: '#34d399', text: '#ffffff', muted: 'rgba(255,255,255,0.6)', texture: 'lines' },
       { bg: '#1e1b4b', accent: '#818cf8', gold: '#e879f9', text: '#ffffff', muted: 'rgba(255,255,255,0.6)', texture: 'dots' },
       { bg: '#18181b', accent: '#f43f5e', gold: '#fb923c', text: '#ffffff', muted: 'rgba(255,255,255,0.6)', texture: 'none' },
+      { bg: '#020617', accent: '#06b6d4', gold: '#8b5cf6', text: '#ffffff', muted: 'rgba(255,255,255,0.6)', texture: 'mesh' },
+      { bg: '#09090b', accent: '#f97316', gold: '#fde047', text: '#ffffff', muted: 'rgba(255,255,255,0.6)', texture: 'grid' },
+      { bg: '#171717', accent: '#ef4444', gold: '#3b82f6', text: '#ffffff', muted: 'rgba(255,255,255,0.6)', texture: 'lines' },
+      { bg: '#0c0a09', accent: '#22c55e', gold: '#a855f7', text: '#ffffff', muted: 'rgba(255,255,255,0.6)', texture: 'dots' },
     ] : [
       { bg: '#ffffff', accent: '#2563eb', gold: '#d97706', text: '#0f172a', muted: 'rgba(15,23,42,0.7)', texture: 'grid' },
       { bg: '#f8fafc', accent: '#059669', gold: '#0d9488', text: '#0f172a', muted: 'rgba(15,23,42,0.7)', texture: 'lines' },
       { bg: '#fff7ed', accent: '#ea580c', gold: '#c2410c', text: '#431407', muted: 'rgba(67,20,7,0.7)', texture: 'dots' },
       { bg: '#faf5ff', accent: '#7c3aed', gold: '#9333ea', text: '#1e1b4b', muted: 'rgba(30,27,75,0.7)', texture: 'none' },
+      { bg: '#f0f9ff', accent: '#0ea5e9', gold: '#f59e0b', text: '#0c4a6e', muted: 'rgba(12,74,110,0.7)', texture: 'mesh' },
+      { bg: '#fff1f2', accent: '#f43f5e', gold: '#fb923c', text: '#881337', muted: 'rgba(136,19,55,0.7)', texture: 'grid' },
+      { bg: '#f0fdf4', accent: '#22c55e', gold: '#8b5cf6', text: '#14532d', muted: 'rgba(20,83,45,0.7)', texture: 'lines' },
+      { bg: '#fffbeb', accent: '#f59e0b', gold: '#06b6d4', text: '#78350f', muted: 'rgba(120,53,15,0.7)', texture: 'dots' },
     ];
 
-    const style = designStyles[refreshKey % designStyles.length];
+    const styleIndex = refreshKey % designStyles.length;
+    const style = designStyles[styleIndex];
 
     const loadImg = (src) => new Promise((resolve, reject) => {
       const img = new Image();
@@ -80,24 +128,36 @@ export default function ShareCardCanvas({ food, user, onClose }) {
       ctx.fillStyle = style.bg;
       ctx.fillRect(0, 0, W, H);
 
-      // Glow blobs
-      const blob = (x, y, rx, ry, color, alpha) => {
+      // ── Complex Mesh Gradient Background ──
+      const drawMeshBlob = (x, y, rx, ry, color, alpha, composite = 'source-over') => {
         ctx.save();
+        ctx.globalCompositeOperation = composite;
+        const grad = ctx.createRadialGradient(x, y, 0, x, y, Math.max(rx, ry));
+        grad.addColorStop(0, color);
+        grad.addColorStop(1, 'transparent');
         ctx.globalAlpha = alpha;
-        ctx.fillStyle = color;
+        ctx.fillStyle = grad;
         ctx.beginPath();
         ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
       };
 
-      if (refreshKey % 2 === 0) {
-        blob(W / 2, -80, 400, 300, style.accent, 0.3);
-        blob(W * 0.8, H * 0.9, 300, 280, style.gold, 0.2);
-      } else {
-        blob(100, 100, 280, 280, style.accent, 0.25);
-        blob(W - 100, 150, 250, 250, style.gold, 0.25);
-      }
+      const compositeMode = theme === 'dark' ? 'screen' : 'multiply';
+      // Layer 1: Corner deep accents
+      drawMeshBlob(0, 0, 700, 600, style.accent, 0.5, compositeMode);
+      drawMeshBlob(W, 0, 600, 800, style.gold, 0.4, compositeMode);
+      drawMeshBlob(0, H, 800, 600, style.gold, 0.4, compositeMode);
+      drawMeshBlob(W, H, 700, 700, style.accent, 0.5, compositeMode);
+
+      // Layer 2: Drifting inner mesh (dynamic positions based on styleIndex)
+      const offX = (styleIndex * 50) % 300;
+      const offY = (styleIndex * 70) % 400;
+      drawMeshBlob(W / 2 + offX, H / 3 + offY, 500, 400, style.accent, 0.3, compositeMode);
+      drawMeshBlob(W / 2 - offX, (H * 2) / 3 - offY, 400, 500, style.gold, 0.3, compositeMode);
+      
+      // Layer 3: Subtle central highlights
+      drawMeshBlob(W / 2, H / 2, 600, 600, theme === 'dark' ? '#ffffff' : style.accent, 0.06, 'overlay');
 
       // Texture
       ctx.save();
@@ -116,6 +176,17 @@ export default function ShareCardCanvas({ food, user, onClose }) {
           for (let j = 30; j < H; j += 55) {
             ctx.beginPath(); ctx.arc(i, j, 1.8, 0, Math.PI * 2); ctx.fill();
           }
+      } else if (style.texture === 'mesh') {
+        ctx.save();
+        ctx.globalAlpha = 0.08;
+        const step = 80;
+        for (let x = 0; x < W; x += step) {
+          for (let y = 0; y < H; y += step) {
+            ctx.fillStyle = (x + y) % (step * 2) === 0 ? style.accent : style.gold;
+            ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI * 2); ctx.fill();
+          }
+        }
+        ctx.restore();
       }
       ctx.restore();
 
@@ -189,6 +260,34 @@ export default function ShareCardCanvas({ food, user, onClose }) {
         ctx.restore();
       }
 
+      // ── Premium Decorative Geometry ──
+      ctx.save();
+      ctx.globalAlpha = 0.12;
+      ctx.strokeStyle = style.gold;
+      ctx.lineWidth = 1;
+      const drawDecorations = (count) => {
+        const seed = (refreshKey + 1) * 12345;
+        const rnd = (i) => {
+          const x = Math.sin(seed + i) * 10000;
+          return x - Math.floor(x);
+        };
+        for (let i = 0; i < count; i++) {
+          const x = rnd(i) * W;
+          const y = rnd(i + 10) * H;
+          const radius = 50 + rnd(i + 20) * 150;
+          ctx.beginPath();
+          ctx.arc(x, y, radius, 0, Math.PI * 2);
+          ctx.stroke();
+          if (i % 2 === 0) {
+            ctx.beginPath();
+            ctx.arc(x, y, radius * 0.6, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+        }
+      };
+      drawDecorations(6);
+      ctx.restore();
+
       // ── Food Name — BELOW image, gradient text ──
       ctx.save();
       ctx.font = 'italic 800 36px serif';
@@ -246,27 +345,107 @@ export default function ShareCardCanvas({ food, user, onClose }) {
     a.click();
   };
 
+  const handleSocialShare = async (platform) => {
+    if (!imgUrl) return;
+    
+    try {
+      // Convert dataUrl to a file for native sharing
+      const res = await fetch(imgUrl);
+      const blob = await res.blob();
+      const fileName = `mealmind-${food.name.toLowerCase().replace(/\s+/g, '-')}.png`;
+      const file = new File([blob], fileName, { type: 'image/png' });
+
+      // 1. Specific Logic for Social Platforms per request
+      if (platform === 'instagram') {
+        window.open('https://www.instagram.com/accounts/login/?hl=en', '_blank');
+        return;
+      }
+
+      if (platform === 'facebook') {
+        window.open('https://www.facebook.com/', '_blank');
+        return;
+      }
+
+      // 2. Mobile/Native Share (Used for "More" button)
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: 'Check out my dish!',
+          text: `I just discovered ${food.name} on #MealMind! 🍽️`,
+        });
+      } else if (platform === 'link') {
+        // Copy Link Fallback
+        await navigator.clipboard.writeText(window.location.href);
+        alert("Link copied! 🔗");
+      } else if (platform === 'instagram' || platform === 'facebook') {
+        // Desktop Fallback: Copy Image to clipboard so users can PASTE it in Insta
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob })
+          ]);
+          alert("Image copied to clipboard! 🎨 Paste it into your post with #MealMind.");
+        } catch (e) {
+          window.open(platform === 'facebook' ? 'https://facebook.com' : 'https://instagram.com', '_blank');
+        }
+      } else {
+        handleDownload();
+      }
+    } catch (err) {
+      console.error('Sharing failed:', err);
+    }
+  };
+
   return (
     <>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes card-shuffle {
+          0% { transform: scale(1) rotate(0deg); filter: blur(0px); }
+          50% { transform: scale(0.92) rotate(4deg); filter: blur(6px); opacity: 0.6; }
+          100% { transform: scale(1) rotate(0deg); filter: blur(0px); }
+        }
+        @keyframes card-pop-in {
+          0% { transform: scale(0.96) translateY(10px); opacity: 0; }
+          100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        @keyframes icon-pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.15); }
+        }
+        .animate-card-shuffle { animation: card-shuffle 0.6s cubic-bezier(0.45, 0, 0.55, 1); }
+        .animate-card-pop-in { animation: card-pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+      ` }} />
+
       <div style={{
-        width: '92%',
+        width: '90%',
         maxWidth: '420px',
         margin: '0 auto',
         background: 'var(--glass-bg)',
         backdropFilter: 'blur(40px)',
         border: '1px solid var(--glass-border)',
         borderRadius: 28,
-        padding: '24px',
+        padding: '16px',
         boxShadow: 'var(--card-shadow)',
+        position: 'relative',
       }}>
-        <h2 className="text-2xl font-black text-center mb-4 text-[var(--text-main)]">
+        {/* Close/Back button moved to the main container */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 backdrop-blur-md text-white/50 hover:bg-red-500/20 hover:text-red-400 transition-all active:scale-90 z-20 cursor-pointer"
+          title="Close"
+        >
+          <X size={20} strokeWidth={3} />
+        </button>
+
+        <h2 className="text-lg font-black text-center mb-3 text-[var(--text-main)] uppercase tracking-wider">
           Your Share Card
         </h2>
 
         {/* Card preview */}
-        <div className="aspect-[4/5] w-full bg-black/5 dark:bg-white/5 rounded-3xl overflow-hidden border border-[var(--glass-border)] flex items-center justify-center relative">
+        <div 
+          className={`aspect-[4/5] w-full bg-black/5 dark:bg-white/5 rounded-3xl overflow-hidden flex items-center justify-center relative mb-1 transition-all duration-500 group/preview ${isGenerating ? 'animate-card-shuffle' : 'animate-card-pop-in'}`}
+        >
           {imgUrl ? (
-            <img src={imgUrl} alt="Share card" className="w-full h-full object-contain" />
+            <img src={imgUrl} alt="Share card" className="w-full h-full object-contain transition-transform duration-700 ease-out" />
           ) : (
             <div className="flex flex-col items-center gap-4">
               <div className="w-12 h-12 border-4 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" />
@@ -275,80 +454,76 @@ export default function ShareCardCanvas({ food, user, onClose }) {
           )}
         </div>
 
-        {/* Action buttons */}
-        <div className="flex gap-3 mt-3">
-          {/* Cancel */}
-          <button
-            onClick={onClose}
-            className="
-              flex-1 py-3 text-sm font-bold rounded-2xl cursor-pointer
-              border border-[var(--glass-border)] text-[var(--text-main)]
-              transition-all duration-200
-              hover:bg-red-500/10 hover:border-red-400/60 hover:text-red-500
-              dark:hover:bg-red-500/15 dark:hover:border-red-400/50 dark:hover:text-red-400
-              active:scale-95
-            "
-          >
-            ✕ Cancel
-          </button>
+        {/* Social Share Section - Grid style with Labels (Chrome/Post style) */}
+        <div className="mt-2 pt-4 border-t border-white/10">
+         {/* <p className="text-[9px] font-black text-white/30 uppercase tracking-[0.25em] mb-4 text-center">Share This Post</p> */}
+          <div className="grid grid-cols-4 gap-2 px-1">
+            <button
+              onClick={() => handleSocialShare('instagram')}
+              className="flex flex-col items-center gap-2 group cursor-pointer"
+            >
+              <div className="w-10 h-10 flex items-center justify-center rounded-2xl bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-600 text-white shadow-lg transition-all duration-300 group-hover:scale-125 group-hover:rotate-6 group-active:scale-90">
+                <Instagram size={20} strokeWidth={2.5} />
+              </div>
+              <span className="text-[8px] font-bold text-white/40 group-hover:text-white/70 transition-colors uppercase tracking-widest">Post</span>
+            </button>
 
-          {/* Shuffle */}
+            <button
+              onClick={() => handleSocialShare('facebook')}
+              className="flex flex-col items-center gap-2 group cursor-pointer"
+            >
+              <div className="w-10 h-10 flex items-center justify-center rounded-2xl bg-[#1877F2] text-white shadow-lg transition-all duration-300 group-hover:scale-125 group-hover:-rotate-6 group-active:scale-90">
+                <Facebook size={20} strokeWidth={2.5} fill="currentColor" />
+              </div>
+              <span className="text-[8px] font-bold text-white/40 group-hover:text-white/70 transition-colors uppercase tracking-widest">Feed</span>
+            </button>
+
+            <button
+              onClick={() => handleSocialShare('link')}
+              className="flex flex-col items-center gap-2 group cursor-pointer"
+            >
+              <div className="w-10 h-10 flex items-center justify-center rounded-2xl bg-white/10 border border-white/10 text-white shadow-lg transition-all duration-300 group-hover:scale-125 group-active:scale-90">
+                <Link size={20} strokeWidth={2.5} />
+              </div>
+              <span className="text-[8px] font-bold text-white/40 group-hover:text-white/70 transition-colors uppercase tracking-widest">Link</span>
+            </button>
+
+            <button
+              onClick={() => handleSocialShare('native')}
+              className="flex flex-col items-center gap-2 group cursor-pointer"
+            >
+              <div className="w-10 h-10 flex items-center justify-center rounded-2xl bg-white/10 border border-white/10 text-white shadow-lg transition-all duration-300 group-hover:scale-125 group-active:scale-90">
+                <Share2 size={20} strokeWidth={2.5} />
+              </div>
+              <span className="text-[8px] font-bold text-white/40 group-hover:text-white/70 transition-colors uppercase tracking-widest">More</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Main Action Row - Shuffle & Download combined */}
+        <div className="flex gap-2 mt-4">
           <button
-            onClick={() => setRefreshKey(p => p + 1)}
+            onClick={() => {
+              setRefreshKey(p => p + 1);
+            }}
             disabled={isGenerating}
-            className="
-              flex-1 py-3 text-sm font-bold rounded-2xl cursor-pointer
-              border border-orange-500/40 text-orange-500
-              transition-all duration-200
-              hover:bg-orange-500/15 hover:border-orange-400 hover:text-orange-400
-              hover:shadow-[0_0_14px_rgba(249,115,22,0.35)]
-              active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed
-            "
+            className="flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-2xl border border-orange-500/30 text-orange-500 hover:bg-orange-500/10 transition-all active:scale-95 disabled:opacity-40 cursor-pointer"
           >
-            {isGenerating ? (
-              <span className="inline-flex items-center gap-1.5">
-                <span className="w-3.5 h-3.5 border-2 border-orange-400/40 border-t-orange-400 rounded-full animate-spin" />
-              </span>
-            ) : '⟳ Shuffle'}
+            {isGenerating ? '...' : 'Shuffle'}
           </button>
 
-          {/* Download */}
           <button
             onClick={handleDownload}
             disabled={!imgUrl || isGenerating}
-            className="
-              py-3 text-sm font-extrabold rounded-2xl text-white
-              transition-all duration-200
-              active:scale-95 disabled:cursor-not-allowed
-            "
+            className="flex-[1.5] py-3 text-[10px] font-black uppercase tracking-[0.15em] rounded-2xl text-white shadow-lg transition-all active:scale-[0.98] disabled:cursor-not-allowed cursor-pointer"
             style={{
-              flex: 1.4,
-              cursor: imgUrl && !isGenerating ? 'pointer' : 'not-allowed',
               background: imgUrl && !isGenerating
-                ? 'linear-gradient(135deg, #22c55e, #16a34a)'
-                : 'rgba(34,197,94,0.3)',
-              border: imgUrl && !isGenerating
-                ? '1.5px solid rgba(34,197,94,0.5)'
-                : '1.5px solid rgba(34,197,94,0.2)',
-              boxShadow: imgUrl && !isGenerating
-                ? '0 4px 20px rgba(34,197,94,0.35)'
-                : 'none',
-              letterSpacing: '0.03em',
-            }}
-            onMouseEnter={e => {
-              if (!imgUrl || isGenerating) return;
-              e.currentTarget.style.boxShadow = '0 6px 28px rgba(34,197,94,0.55), 0 0 0 2px rgba(34,197,94,0.35)';
-              e.currentTarget.style.border = '1.5px solid rgba(34,197,94,0.85)';
-              e.currentTarget.style.filter = 'brightness(1.08)';
-            }}
-            onMouseLeave={e => {
-              if (!imgUrl || isGenerating) return;
-              e.currentTarget.style.boxShadow = '0 4px 20px rgba(34,197,94,0.35)';
-              e.currentTarget.style.border = '1.5px solid rgba(34,197,94,0.5)';
-              e.currentTarget.style.filter = '';
+                ? 'linear-gradient(135deg, #f97316, #fb923c)'
+                : 'rgba(255,255,255,0.05)',
+              boxShadow: imgUrl && !isGenerating ? '0 6px 20px rgba(249,115,22,0.3)' : 'none'
             }}
           >
-            ↓ Download
+            Download
           </button>
         </div>
       </div>
