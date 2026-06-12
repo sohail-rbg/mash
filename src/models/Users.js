@@ -45,16 +45,42 @@ const UserSchema = new mongoose.Schema(
     gender: {
       type: String,
     },
-
     profileComplete: {
       type: Boolean,
       default: false,
     },
-
     questionnaire: [
       {
         questionId: String,
         answer: [String],
+      },
+    ],
+    savedFoods: [
+      {
+        foodName: {
+          type: String,
+          required: true,
+        },
+        foodImage: {
+          type: String,
+          required: false,
+        },
+        foodCategory: {
+          type: String,
+          required: false,
+        },
+        dietType: {
+          type: String,
+          required: false,
+        },
+        mealTiming: {
+          type: String,
+          required: false,
+        },
+        savedAt: {
+          type: Date,
+          default: Date.now,
+        },
       },
     ],
   },

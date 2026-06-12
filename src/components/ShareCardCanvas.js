@@ -2,6 +2,8 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useTheme } from '@/app/ThemeProvider';
 import { Share2, X, Link } from 'lucide-react';
+import { cardThemes } from "@/lib/cardThemes";
+import { drawTheme } from "@/lib/drawThemes";
 
 // Lucide removed brand icons in recent versions.
 // We define them locally using standard Lucide SVG paths to fix the compilation error.
@@ -67,28 +69,7 @@ export default function ShareCardCanvas({ food, user, onClose }) {
     // We'll compute precisely after measuring text
     canvas.width = W;
 
-    const designStyles = theme === 'dark' ? [
-      { bg: '#000000', accent: '#3b82f6', gold: '#fbbf24', text: '#ffffff', muted: 'rgba(255,255,255,0.6)', texture: 'grid' },
-      { bg: '#0f172a', accent: '#10b981', gold: '#34d399', text: '#ffffff', muted: 'rgba(255,255,255,0.6)', texture: 'lines' },
-      { bg: '#1e1b4b', accent: '#818cf8', gold: '#e879f9', text: '#ffffff', muted: 'rgba(255,255,255,0.6)', texture: 'dots' },
-      { bg: '#18181b', accent: '#f43f5e', gold: '#fb923c', text: '#ffffff', muted: 'rgba(255,255,255,0.6)', texture: 'none' },
-      { bg: '#020617', accent: '#06b6d4', gold: '#8b5cf6', text: '#ffffff', muted: 'rgba(255,255,255,0.6)', texture: 'mesh' },
-      { bg: '#09090b', accent: '#f97316', gold: '#fde047', text: '#ffffff', muted: 'rgba(255,255,255,0.6)', texture: 'grid' },
-      { bg: '#171717', accent: '#ef4444', gold: '#3b82f6', text: '#ffffff', muted: 'rgba(255,255,255,0.6)', texture: 'lines' },
-      { bg: '#0c0a09', accent: '#22c55e', gold: '#a855f7', text: '#ffffff', muted: 'rgba(255,255,255,0.6)', texture: 'dots' },
-    ] : [
-      { bg: '#ffffff', accent: '#2563eb', gold: '#d97706', text: '#0f172a', muted: 'rgba(15,23,42,0.7)', texture: 'grid' },
-      { bg: '#f8fafc', accent: '#059669', gold: '#0d9488', text: '#0f172a', muted: 'rgba(15,23,42,0.7)', texture: 'lines' },
-      { bg: '#fff7ed', accent: '#ea580c', gold: '#c2410c', text: '#431407', muted: 'rgba(67,20,7,0.7)', texture: 'dots' },
-      { bg: '#faf5ff', accent: '#7c3aed', gold: '#9333ea', text: '#1e1b4b', muted: 'rgba(30,27,75,0.7)', texture: 'none' },
-      { bg: '#f0f9ff', accent: '#0ea5e9', gold: '#f59e0b', text: '#0c4a6e', muted: 'rgba(12,74,110,0.7)', texture: 'mesh' },
-      { bg: '#fff1f2', accent: '#f43f5e', gold: '#fb923c', text: '#881337', muted: 'rgba(136,19,55,0.7)', texture: 'grid' },
-      { bg: '#f0fdf4', accent: '#22c55e', gold: '#8b5cf6', text: '#14532d', muted: 'rgba(20,83,45,0.7)', texture: 'lines' },
-      { bg: '#fffbeb', accent: '#f59e0b', gold: '#06b6d4', text: '#78350f', muted: 'rgba(120,53,15,0.7)', texture: 'dots' },
-    ];
-
-    const styleIndex = refreshKey % designStyles.length;
-    const style = designStyles[styleIndex];
+    const themeName = cardThemes[refreshKey % cardThemes.length];
 
     const loadImg = (src) => new Promise((resolve, reject) => {
       const img = new Image();
@@ -124,71 +105,8 @@ export default function ShareCardCanvas({ food, user, onClose }) {
 
       canvas.height = H;
 
-      // Background
-      ctx.fillStyle = style.bg;
-      ctx.fillRect(0, 0, W, H);
-
-      // ── Complex Mesh Gradient Background ──
-      const drawMeshBlob = (x, y, rx, ry, color, alpha, composite = 'source-over') => {
-        ctx.save();
-        ctx.globalCompositeOperation = composite;
-        const grad = ctx.createRadialGradient(x, y, 0, x, y, Math.max(rx, ry));
-        grad.addColorStop(0, color);
-        grad.addColorStop(1, 'transparent');
-        ctx.globalAlpha = alpha;
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      };
-
-      const compositeMode = theme === 'dark' ? 'screen' : 'multiply';
-      // Layer 1: Corner deep accents
-      drawMeshBlob(0, 0, 700, 600, style.accent, 0.5, compositeMode);
-      drawMeshBlob(W, 0, 600, 800, style.gold, 0.4, compositeMode);
-      drawMeshBlob(0, H, 800, 600, style.gold, 0.4, compositeMode);
-      drawMeshBlob(W, H, 700, 700, style.accent, 0.5, compositeMode);
-
-      // Layer 2: Drifting inner mesh (dynamic positions based on styleIndex)
-      const offX = (styleIndex * 50) % 300;
-      const offY = (styleIndex * 70) % 400;
-      drawMeshBlob(W / 2 + offX, H / 3 + offY, 500, 400, style.accent, 0.3, compositeMode);
-      drawMeshBlob(W / 2 - offX, (H * 2) / 3 - offY, 400, 500, style.gold, 0.3, compositeMode);
-      
-      // Layer 3: Subtle central highlights
-      drawMeshBlob(W / 2, H / 2, 600, 600, theme === 'dark' ? '#ffffff' : style.accent, 0.06, 'overlay');
-
-      // Texture
-      ctx.save();
-      ctx.globalAlpha = theme === 'dark' ? 0.05 : 0.07;
-      ctx.strokeStyle = style.text;
-      if (style.texture === 'lines') {
-        for (let i = -H; i < W + H; i += 55) {
-          ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i + H, H); ctx.stroke();
-        }
-      } else if (style.texture === 'grid') {
-        for (let i = 0; i < W; i += 45) ctx.fillRect(i, 0, 1, H);
-        for (let j = 0; j < H; j += 45) ctx.fillRect(0, j, W, 1);
-      } else if (style.texture === 'dots') {
-        ctx.fillStyle = style.text;
-        for (let i = 30; i < W; i += 55)
-          for (let j = 30; j < H; j += 55) {
-            ctx.beginPath(); ctx.arc(i, j, 1.8, 0, Math.PI * 2); ctx.fill();
-          }
-      } else if (style.texture === 'mesh') {
-        ctx.save();
-        ctx.globalAlpha = 0.08;
-        const step = 80;
-        for (let x = 0; x < W; x += step) {
-          for (let y = 0; y < H; y += step) {
-            ctx.fillStyle = (x + y) % (step * 2) === 0 ? style.accent : style.gold;
-            ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI * 2); ctx.fill();
-          }
-        }
-        ctx.restore();
-      }
-      ctx.restore();
+      // Draw the selected theme background and get the style (colors)
+      const style = drawTheme(ctx, W, H, themeName);
 
       // ── Top badge ──
       const badgeW = 210, bx = (W - badgeW) / 2;

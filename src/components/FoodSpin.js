@@ -472,23 +472,38 @@ export default function FoodSpin({
     setSuggestedFood(null);
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!suggestedFood) return;
+
+    // Save selection to DB immediately when user clicks "Yes, This!"
+    if (isSignedIn) {
+      try {
+        const res = await fetch('/api/userfoods', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            food: suggestedFood,
+            mealTiming: activeMealTiming,
+            dietType: activeDietType,
+          }),
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          showToast(data.message || "Delicious! Food saved to your profile. 😋");
+        } else {
+          showToast(data.message || "Could not save to profile.");
+        }
+      } catch (error) {
+        console.error("Error saving user food:", error);
+        showToast("Server error while saving.");
+      }
+    }
+
     setPhase("confirmed");
   };
 
   /* ── confirmed phase ── */
-  if (phase === "confirmed") {
-    return (
-      <ConfirmedSelection
-        suggestedFood={suggestedFood}
-        selectedMode={selectedMode}
-        onRestart={handleReset}
-        onConfirm={handleConfirm}
-      />
-    );
-  }
-
   /* ── main spin UI ── */
   return (
     <>
@@ -526,6 +541,15 @@ export default function FoodSpin({
         </div>
       )}
 
+      {phase === "confirmed" ? (
+        <ConfirmedSelection
+          suggestedFood={suggestedFood}
+          selectedMode={selectedMode}
+          onRestart={handleReset}
+          onConfirm={handleConfirm}
+        />
+      ) : (
+        /* ── main spin UI ── */
       <div
         className={`food-engine-card w-full px-3 sm:px-5 py-4 sm:py-5 flex flex-col transition-all duration-700 ${isReadyToSpin ? "pulse-ready" : ""}`}
         style={{
@@ -586,7 +610,7 @@ export default function FoodSpin({
             suggestedFood={suggestedFood}
             spinning={spinning}
             onReject={handleReject}
-            onConfirm={() => setPhase("confirmed")}
+            onConfirm={handleConfirm}
             foods={foods}
             error={error}
             loading={loading}
@@ -597,6 +621,7 @@ export default function FoodSpin({
           />
         </div>
       </div>
+      )}
 
       {/* ── Filter Panel ── */}
       {filtersVisible && (

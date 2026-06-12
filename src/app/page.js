@@ -62,8 +62,16 @@ export default async function Home() {
     }
   }
 
-  // Show a reminder if the user is logged in but hasn't completed their profile preferences.
-  const needsReminder = !!userId && user?.profileComplete !== true;
+  // Check if user has actually saved any core preferences (ignoring the 'skipped' entry)
+  const hasSavedPreferences = (user?.questionnaire || []).some(
+    (pref) => 
+      pref.questionId !== 'preferenceSkipped' && 
+      Array.isArray(pref.answer) && 
+      pref.answer.length > 0
+  );
+
+  // Show a reminder if the user is logged in but hasn't saved actual preferences yet.
+  const needsReminder = !!userId && !hasSavedPreferences;
 
   const cookieStore = await cookies();
   const tempFilters = cookieStore.get("temp_filters");

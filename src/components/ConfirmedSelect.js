@@ -4,7 +4,7 @@ import { useUser } from "@clerk/nextjs";
 import ShareCardCanvas from './ShareCardCanvas';
 // import  {userSession} from "next-auth/react";
 
-export default function ConfirmedSelection({ suggestedFood, selectedMode, onRestart }) {
+export default function ConfirmedSelection({ suggestedFood, selectedMode, mealTiming, dietType, onRestart }) {
   // const {data: session} = usesession();
   const { user } = useUser();
   const [showShareCard, setShowShareCard] = useState(false);
@@ -13,6 +13,11 @@ export default function ConfirmedSelection({ suggestedFood, selectedMode, onRest
   const nameGradient = selectedMode === 'online'
     ? 'linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899)'
     : 'linear-gradient(90deg, #22c55e, #10b981, #06b6d4)';
+
+  const handleGenerateCard = () => {
+    // Data was already saved in the previous step
+    setShowShareCard(true);
+  };
 
   return (
     <>
@@ -160,7 +165,7 @@ export default function ConfirmedSelection({ suggestedFood, selectedMode, onRest
 
             {/* Generate Card — highlighted */}
             <button
-              onClick={() => setShowShareCard(true)}
+              onClick={handleGenerateCard}
               className="cs-gen-btn"
               style={{
                 background: selectedMode === 'online'

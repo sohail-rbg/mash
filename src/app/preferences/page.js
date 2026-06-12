@@ -153,11 +153,17 @@ export default function Preferences() {
         });
         if (!res.ok) throw new Error('Unable to fetch profile');
         const data = await res.json();
-        setProfile(data);
+        if (!controller.signal.aborted) {
+          setProfile(data);
+        }
       } catch (err) {
-        console.error('Error fetching profile:', err);
+        if (err.name !== 'AbortError') {
+          console.error('Error fetching profile:', err);
+        }
       } finally {
-        setProfileLoading(false);
+        if (!controller.signal.aborted) {
+          setProfileLoading(false);
+        }
       }
     };
 
@@ -168,8 +174,17 @@ export default function Preferences() {
   useEffect(() => {
     if (!profile) return;
 
-    // If profile is already complete, redirect to home
-    if (profile?.profileComplete === true) {
+    // Check if user has ACTUAL saved preferences (not just skipped)
+    const hasRealPreferences = (profile?.questionnaire || []).some(
+      (pref) => 
+        pref.questionId !== 'preferenceSkipped' && 
+        Array.isArray(pref.answer) && 
+        pref.answer.length > 0
+    );
+
+    // Redirect to home ONLY if they have already filled real data.
+    // If they only skipped, we allow them to stay here and "Fill Now".
+    if (hasRealPreferences) {
       router.push("/");
       return;
     }

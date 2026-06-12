@@ -1,0 +1,15 @@
+export const cardThemes = [
+  "glassmorphism",
+  "neon",
+  "paper",
+  "dark",
+  "organic",
+  "doodle",
+  "gradient",
+  "rustic",
+  "islamic",
+  "pastel",
+  "brush",
+  "cyber",
+  "watercolor",
+];
