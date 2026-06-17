@@ -1,13 +1,27 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useUser } from "@clerk/nextjs";
+import { useRouter } from 'next/navigation';
 import ShareCardCanvas from './ShareCardCanvas';
-// import  {userSession} from "next-auth/react";
 
-export default function ConfirmedSelection({ suggestedFood, selectedMode, mealTiming, dietType, onRestart }) {
-  // const {data: session} = usesession();
-  const { user } = useUser();
+export default function ConfirmedSelection({ suggestedFood, selectedMode, onRestart }) {
+  const { user, isSignedIn } = useUser();
+  const router = useRouter();
   const [showShareCard, setShowShareCard] = useState(false);
+
+  // Stable user object — only recreate when user data actually changes
+  const cardUser = React.useMemo(() => ({
+    name: user?.fullName || 'Mash User',
+    email: user?.primaryEmailAddress?.emailAddress || 'user@mash.com',
+  }), [user?.fullName, user?.primaryEmailAddress?.emailAddress]);
+
+  // If user logs out while share card is open → close it and go home
+  useEffect(() => {
+    if (isSignedIn === false) {
+      setShowShareCard(false);
+      router.push('/');
+    }
+  }, [isSignedIn, router]);
 
   // Gradient colors based on mode
   const nameGradient = selectedMode === 'online'
@@ -183,13 +197,7 @@ export default function ConfirmedSelection({ suggestedFood, selectedMode, mealTi
       ) : (
         <div className="cs-share-transition">
           <ShareCardCanvas
-            user={{
-              // name :session?.user?.name || 'MealMind User',
-              // email: session?.user?.email || 'user@mealmind.com',
-            
-              name: user?.fullName || 'MealMind User',
-              email: user?.primaryEmailAddress?.emailAddress || 'user@mealmind.com',
-            }}
+            user={cardUser}
             food={suggestedFood}
             onClose={() => setShowShareCard(false)}
           />

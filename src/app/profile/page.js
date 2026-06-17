@@ -423,11 +423,10 @@ export default function ProfilePage() {
 
             {/* ── Section 5: Actions ── */}
             <div className="flex flex-row gap-2 relative z-10">
-              {/* <Link href="/preferences" className="flex-1 flex items-center justify-center px-4 py-3 bg-white/5 border border-[var(--glass-border)] rounded-2xl hover:bg-white/10 hover:border-orange-500/30 transition-all group">
-                <span className="text-[11px] font-bold text-[var(--text-main)] group-hover:text-orange-400 transition-colors uppercase tracking-wider">⚙️ Settings</span>
-              </Link> */}
-              <button onClick={async () => { await signOut(); router.push('/login'); }}
-                className="flex-1 py-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl text-[11px] font-bold hover:bg-red-500/20 transition-all uppercase tracking-wider">
+              <button onClick={async () => {
+                  await signOut({ redirectUrl: "/" });
+                }}
+                className="flex-1 py-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl text-[11px] font-bold hover:bg-red-500/20 transition-all uppercase tracking-wider cursor-pointer">
                 🚪 Logout
               </button>
             </div>

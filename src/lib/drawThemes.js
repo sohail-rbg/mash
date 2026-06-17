@@ -1,10 +1,22 @@
 /**
- * Shared utility for drawing mesh blobs used in various themes.
+ * Draws a subtle radial gradient blob for background depth.
  */
-function drawMeshBlob(ctx, x, y, rx, ry, color, alpha, composite = 'source-over') {
+export function drawBlob(ctx, x, y, radius, color) {
+  ctx.save();
+  const grd = ctx.createRadialGradient(x, y, 0, x, y, radius);
+  grd.addColorStop(0, color);
+  grd.addColorStop(1, 'transparent');
+  ctx.fillStyle = grd;
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+export function drawMeshBlob(ctx, x, y, rx, ry, color, alpha, composite = 'source-over') {
   ctx.save();
   ctx.globalCompositeOperation = composite;
-  const grad = ctx.createRadialGradient(x, y, 0, x, y, Math.max(rx, ry));
+  const grad = ctx.createRadialGradient(x, y, 0, x, y, Math.max(rx, ry) * 1.1);
   grad.addColorStop(0, color);
   grad.addColorStop(1, 'transparent');
   ctx.globalAlpha = alpha;
@@ -15,159 +27,103 @@ function drawMeshBlob(ctx, x, y, rx, ry, color, alpha, composite = 'source-over'
   ctx.restore();
 }
 
-/**
- * Main entry point for theme drawing.
- * Returns the style object (colors) used by the component for text/accents.
- */
+export  function drawThemeTexture(ctx, W, H, textureType = 'dots', color = '#ffffff') {
+  ctx.save();
+  ctx.globalAlpha = 0.05;
+  ctx.fillStyle = color;
+  ctx.strokeStyle = color;
+  if (textureType === 'dots') {
+    for (let i = 35; i < W; i += 48) {
+      for (let j = 35; j < H; j += 48) {
+        ctx.beginPath();
+        ctx.arc(i, j, 1.3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+  ctx.restore();
+}
+
 export function drawTheme(ctx, W, H, themeName) {
   let style = {
-    bg: '#000000',
-    accent: '#3b82f6',
+    bg: '#0f172a',
+    accent: '#f97316',
     gold: '#fbbf24',
     text: '#ffffff',
-    muted: 'rgba(255,255,255,0.6)'
+    muted: 'rgba(255,255,255,0.75)',
   };
 
   ctx.save();
 
+  console.log("🎭 Switching to Theme:", themeName);
+
   switch (themeName) {
     case "glassmorphism":
-      style = { bg: '#0f172a', accent: '#3b82f6', gold: '#60a5fa', text: '#ffffff', muted: 'rgba(255,255,255,0.7)' };
+      style = { bg: '#0f172a', accent: '#3b82f6', gold: '#60a5fa', text: '#ffffff', muted: 'rgba(255,255,255,0.8)' };
       ctx.fillStyle = style.bg;
       ctx.fillRect(0, 0, W, H);
-      drawMeshBlob(ctx, 0, 0, 700, 600, style.accent, 0.4, 'screen');
-      drawMeshBlob(ctx, W, H, 600, 800, style.gold, 0.3, 'screen');
-      // Glassmorphism Card (Card 1)
-      ctx.fillStyle = "rgba(255,255,255,0.15)";
-      ctx.fillRect(30, 30, W - 60, H - 60);
-      ctx.strokeStyle = "rgba(255,255,255,0.25)";
-      ctx.strokeRect(30, 30, W - 60, H - 60);
-      break;
-
-    case "neon":
-      style = { bg: '#050110', accent: '#ff00ff', gold: '#00ffff', text: '#ffffff', muted: 'rgba(255,255,255,0.5)' };
-      ctx.fillStyle = style.bg;
-      ctx.fillRect(0, 0, W, H);
-      // Neon Card (Card 2)
-      ctx.shadowColor = "#ff00ff";
-      ctx.shadowBlur = 40;
-      ctx.strokeStyle = "#ff00ff";
-      ctx.lineWidth = 4;
-      ctx.strokeRect(40, 40, W - 80, H - 80);
+      drawMeshBlob(ctx, W * 0.2, H * 0.25, 620, 520, '#3b82f6', 0.38, 'screen');
+      drawMeshBlob(ctx, W * 0.85, H * 0.75, 680, 580, '#60a5fa', 0.3, 'screen');
+      ctx.fillStyle = "rgba(255,255,255,0.13)";
+      ctx.fillRect(32, 32, W - 64, H - 64);
+      ctx.strokeStyle = "rgba(255,255,255,0.32)";
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(32, 32, W - 64, H - 64);
       break;
 
     case "paper":
-      style = { bg: '#fdfbf7', accent: '#4b5563', gold: '#92400e', text: '#1f2937', muted: 'rgba(31,41,55,0.6)' };
+      style = { bg: '#f8f5f0', accent: '#3f2a1e', gold: '#b45309', text: '#1c1917', muted: 'rgba(31,41,55,0.8)' };
       ctx.fillStyle = style.bg;
       ctx.fillRect(0, 0, W, H);
-      // Paper Texture (Card 3)
-      ctx.fillStyle = 'rgba(0,0,0,0.03)';
-      for (let i = 0; i < 3000; i++) {
-        ctx.fillRect(Math.random() * W, Math.random() * H, 1, 1);
+      ctx.fillStyle = 'rgba(0,0,0,0.028)';
+      for (let i = 0; i < 4500; i++) {
+        ctx.fillRect(Math.random() * W, Math.random() * H, 1.5, 1);
       }
+      drawThemeTexture(ctx, W, H, 'dots', '#3f2a1e');
       break;
 
     case "dark":
-      style = { bg: '#0f0f0f', accent: '#333333', gold: '#aaaaaa', text: '#ffffff', muted: 'rgba(255,255,255,0.6)' };
-      // Dark Minimal (Card 4)
-      ctx.fillStyle = "#0f0f0f";
+      style = { bg: '#0a0a0a', accent: '#f97316', gold: '#fbbf24', text: '#f1f5f9', muted: 'rgba(241,245,249,0.75)' };
+      ctx.fillStyle = style.bg;
       ctx.fillRect(0, 0, W, H);
-      ctx.strokeStyle = "#333";
-      ctx.strokeRect(20, 20, W - 40, H - 40);
+      const darkGrad = ctx.createRadialGradient(W/2, H/2, 80, W/2, H/2, Math.max(W,H));
+      darkGrad.addColorStop(0, 'rgba(249,115,22,0.09)');
+      darkGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = darkGrad;
+      ctx.fillRect(0, 0, W, H);
       break;
 
     case "organic":
-      style = { bg: '#f0fdf4', accent: '#16a34a', gold: '#ca8a04', text: '#14532d', muted: 'rgba(20,83,45,0.6)' };
+      style = { bg: '#f0fdf4', accent: '#16a34a', gold: '#ca8a04', text: '#14532d', muted: 'rgba(20,83,45,0.75)' };
       ctx.fillStyle = style.bg;
       ctx.fillRect(0, 0, W, H);
-      // Green Organic (Card 5)
-      ctx.fillStyle = "rgba(34,197,94,.1)";
-      ctx.beginPath();
-      ctx.arc(0, 0, 300, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(W, H, 300, 0, Math.PI * 2);
-      ctx.fill();
-      break;
-
-    case "doodle":
-      style = { bg: '#ffffff', accent: '#000000', gold: '#2563eb', text: '#000000', muted: 'rgba(0,0,0,0.5)' };
-      ctx.fillStyle = style.bg;
-      ctx.fillRect(0, 0, W, H);
-      // Doodle Sketch (Card 6)
-      ctx.strokeStyle = "rgba(0,0,0,.08)";
-      for (let i = 0; i < W; i += 40) {
-        ctx.beginPath();
-        ctx.moveTo(i, 0);
-        ctx.lineTo(i, H);
-        ctx.stroke();
-      }
-      break;
-
-    case "gradient":
-      style = { bg: '#ff9a9e', accent: '#a18cd1', gold: '#ff9a9e', text: '#ffffff', muted: 'rgba(255,255,255,0.7)' };
-      // Gradient Mesh (Card 7)
-      const g = ctx.createLinearGradient(0, 0, W, H);
-      g.addColorStop(0, "#ff9a9e");
-      g.addColorStop(1, "#a18cd1");
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, W, H);
+      drawMeshBlob(ctx, W * 0.15, H * 0.3, 480, 420, '#4ade80', 0.45);
+      drawMeshBlob(ctx, W * 0.8, H * 0.75, 520, 380, '#86efac', 0.38);
       break;
 
     case "rustic":
-      style = { bg: '#451a03', accent: '#f59e0b', gold: '#fbbf24', text: '#fffbeb', muted: 'rgba(255,251,235,0.6)' };
+      style = { bg: '#3f2720', accent: '#f59e0b', gold: '#fbbf24', text: '#fefce8', muted: 'rgba(254,252,232,0.75)' };
       ctx.fillStyle = style.bg;
       ctx.fillRect(0, 0, W, H);
-      // Rustic Wood (Card 8)
-      ctx.fillStyle = "#4a2c17";
+      ctx.fillStyle = 'rgba(245,158,11,0.09)';
       ctx.fillRect(0, 0, W, H);
-      ctx.strokeStyle = "rgba(255,255,255,.05)";
-      for (let i = 0; i < W; i += 20) {
-        ctx.strokeRect(i, 0, 2, H);
-      }
-      break;
-
-    case "islamic":
-      style = { bg: '#064e3b', accent: '#fbbf24', gold: '#f59e0b', text: '#ecfdf5', muted: 'rgba(236,253,245,0.6)' };
-      ctx.fillStyle = style.bg;
-      ctx.fillRect(0, 0, W, H);
-      // Islamic Pattern (Card 9)
-      ctx.strokeStyle = "rgba(255,215,0,.12)";
-      for (let i = 0; i < W + H; i += 60) {
-        ctx.beginPath();
-        ctx.moveTo(i, 0);
-        ctx.lineTo(0, i);
-        ctx.stroke();
-      }
       break;
 
     case "pastel":
-      style = { bg: '#f5f3ff', accent: '#a78bfa', gold: '#f472b6', text: '#4c1d95', muted: 'rgba(76,29,149,0.5)' };
+      style = { bg: '#f3e8ff', accent: '#a855f7', gold: '#ec4899', text: '#4c1d95', muted: 'rgba(76,29,149,0.7)' };
       ctx.fillStyle = style.bg;
       ctx.fillRect(0, 0, W, H);
-      // Pastel Card (Card 10)
-      drawMeshBlob(ctx, W, 0, 500, 500, "#fbcfe8", 1);
-      drawMeshBlob(ctx, 0, H, 500, 500, "#ddd6fe", 1);
-      break;
-
-    case "brush":
-      style = { bg: '#fafafa', accent: '#ef4444', gold: '#1e2937', text: '#111827', muted: 'rgba(17,24,39,0.6)' };
-      ctx.fillStyle = style.bg;
-      ctx.fillRect(0, 0, W, H);
-      // Brush Stroke (Card 11)
-      ctx.fillStyle = "rgba(239,68,68,.05)";
-      ctx.beginPath();
-      ctx.ellipse(W / 2, H / 2, 300, 100, Math.PI / 4, 0, Math.PI * 2);
-      ctx.fill();
+      drawMeshBlob(ctx, W * 0.25, H * 0.2, 550, 480, '#c084fc', 0.6);
+      drawMeshBlob(ctx, W * 0.75, H * 0.75, 480, 520, '#f9a8d4', 0.55);
       break;
 
     case "cyber":
-      style = { bg: '#020617', accent: '#22d3ee', gold: '#f97316', text: '#ffffff', muted: 'rgba(255,255,255,0.5)' };
+      style = { bg: '#020617', accent: '#22d3ee', gold: '#f97316', text: '#e0f2fe', muted: 'rgba(224,242,254,0.7)' };
       ctx.fillStyle = style.bg;
       ctx.fillRect(0, 0, W, H);
-      // Cyber Tech (Card 12)
-      ctx.strokeStyle = "rgba(34,211,238,.1)";
-      for (let i = 0; i < W; i += 50) {
+      ctx.strokeStyle = "rgba(34,211,238,0.15)";
+      ctx.lineWidth = 1;
+      for (let i = 0; i < W; i += 36) {
         ctx.beginPath();
         ctx.moveTo(i, 0);
         ctx.lineTo(i, H);
@@ -176,50 +132,29 @@ export function drawTheme(ctx, W, H, themeName) {
       break;
 
     case "watercolor":
-      style = { bg: '#f8fafc', accent: '#a78bfa', gold: '#f472b6', text: '#4c1d95', muted: 'rgba(76,29,149,0.5)' };
+      style = { bg: '#f8fafc', accent: '#8b5cf6', gold: '#ec4899', text: '#1e2937', muted: 'rgba(30,41,59,0.75)' };
       ctx.fillStyle = style.bg;
       ctx.fillRect(0, 0, W, H);
-      // Watercolor effect
-      drawMeshBlob(ctx, W * 0.2, H * 0.3, 400, 300, 'rgba(173, 216, 230, 0.6)', 0.8, 'source-over'); // Light blue
-      drawMeshBlob(ctx, W * 0.7, H * 0.2, 350, 250, 'rgba(255, 192, 203, 0.6)', 0.7, 'source-over'); // Pink
-      drawMeshBlob(ctx, W * 0.4, H * 0.7, 450, 350, 'rgba(144, 238, 144, 0.6)', 0.9, 'source-over'); // Light green
-      drawMeshBlob(ctx, W * 0.9, H * 0.8, 300, 400, 'rgba(255, 223, 186, 0.6)', 0.6, 'source-over'); // Peach
-      ctx.globalCompositeOperation = 'multiply'; // Blend colors
-      ctx.fillStyle = 'rgba(0,0,0,0.02)'; // Subtle texture
+      drawMeshBlob(ctx, W * 0.2, H * 0.3, 420, 380, 'rgba(167,139,250,0.7)', 0.75);
+      drawMeshBlob(ctx, W * 0.7, H * 0.25, 380, 340, 'rgba(251,146,154,0.65)', 0.7);
+      drawMeshBlob(ctx, W * 0.4, H * 0.75, 460, 390, 'rgba(134,239,172,0.6)', 0.65);
+      ctx.globalCompositeOperation = 'multiply';
+      ctx.fillStyle = 'rgba(0,0,0,0.035)';
       ctx.fillRect(0, 0, W, H);
       break;
 
-
     default:
-      ctx.fillStyle = style.bg;
+      const grad = ctx.createLinearGradient(0, 0, W, H);
+      grad.addColorStop(0, '#1e2937');
+      grad.addColorStop(1, '#334155');
+      ctx.fillStyle = grad;
       ctx.fillRect(0, 0, W, H);
   }
 
+  drawThemeTexture(ctx, W, H, 'dots', style.text);
+
+  console.log("✨ Applied Style Properties:", style);
+
   ctx.restore();
   return style;
-}
-
-/**
- * Optional global texture layer that can be applied on top of any theme.
- */
-export function drawThemeTexture(ctx, W, H, textureType, color) {
-  ctx.save();
-  ctx.globalAlpha = 0.06;
-  ctx.strokeStyle = color;
-  ctx.fillStyle = color;
-
-  if (textureType === 'lines') {
-    for (let i = -H; i < W + H; i += 55) {
-      ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i + H, H); ctx.stroke();
-    }
-  } else if (textureType === 'grid') {
-    for (let i = 0; i < W; i += 45) ctx.fillRect(i, 0, 1, H);
-    for (let j = 0; j < H; j += 45) ctx.fillRect(0, j, W, 1);
-  } else if (textureType === 'dots') {
-    for (let i = 30; i < W; i += 55)
-      for (let j = 30; j < H; j += 55) {
-        ctx.beginPath(); ctx.arc(i, j, 1.8, 0, Math.PI * 2); ctx.fill();
-      }
-  }
-  ctx.restore();
 }

@@ -30,8 +30,7 @@ function shuffleWithSeed(items, seed) {
 }
 
 export default function IngredientDrawer({ visible, onClose, ingredients, activeMealTiming, checkedIngredients, onToggle, onApply, error }) {
-  if (!visible) return null;
-
+  // ── Hooks must be called unconditionally ──
   const [searchQuery, setSearchQuery] = useState("");
   const selectedCount = Object.values(checkedIngredients).filter(Boolean).length;
   const hasSelection = selectedCount > 0;
@@ -43,28 +42,27 @@ export default function IngredientDrawer({ visible, onClose, ingredients, active
   const normalizedSearch = searchQuery.trim().toLowerCase();
 
   const displayedIngredients = useMemo(() => {
+    if (!visible) return [];
     const matched = ingredients.filter((item) =>
       item.label.toLowerCase().includes(normalizedSearch) ||
       item.id.toLowerCase().includes(normalizedSearch)
     );
 
     if (!normalizedSearch) {
-      // Separate matched into selected and unselected
       const selected = matched.filter(item => checkedIngredients[item.id]);
       const unselected = matched.filter(item => !checkedIngredients[item.id]);
-      
       const seed = hashString(activeMealTiming || "default");
       const shuffledUnselected = shuffleWithSeed(unselected, seed);
-      
-      // Show all selected items first, then fill up to 10 with random unselected items
       const limit = 10;
       const fillCount = Math.max(0, limit - selected.length);
-      
       return [...selected, ...shuffledUnselected.slice(0, fillCount)];
     }
 
     return matched;
-  }, [normalizedSearch, ingredients, activeMealTiming, checkedIngredients]);
+  }, [normalizedSearch, ingredients, activeMealTiming, checkedIngredients, visible]);
+
+  // ── Render nothing when not visible — after all hooks ──
+  if (!visible) return null;
 
   const handleSelectAll = () => {
     displayedIngredients.forEach(item => {

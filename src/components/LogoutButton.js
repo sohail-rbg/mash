@@ -9,18 +9,19 @@ import Link from "next/link";
 
 export default function LogoutButton() {
   const router = useRouter();
-  //  const { data: session, status } = useSession();
   const { user, isLoaded, isSignedIn } = useUser();
   const { signOut } = useAuth();
   const [timeLeft, setTimeLeft] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
+    setIsLoggingOut(true);
+    setIsOpen(false);
     document.cookie = "user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     document.cookie = "temp_filters=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     localStorage.clear();
-    await signOut();
-    router.push("/");
+    await signOut({ redirectUrl: "/" });
   };
 
   useEffect(() => {
@@ -77,7 +78,7 @@ export default function LogoutButton() {
   if (isLoaded && !isSignedIn) {
     return (
       <Link 
-        href="/sign-in" 
+        href="/login" 
         className="px-6 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-orange-500/20"
       >
         Login
@@ -85,10 +86,15 @@ export default function LogoutButton() {
     );
   }
 
-  // While checking session, show a small loader or nothing
-    // if(status === "loading")<div className="w-10 h-10 rounded-full bg-white/5 animate-pulse" />;
-
   if (!isLoaded) return <div className="w-10 h-10 rounded-full bg-white/5 animate-pulse" />;
+
+  // Full-screen loading overlay while logging out
+  if (isLoggingOut) return (
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm">
+      <div className="w-12 h-12 border-4 border-orange-500/30 border-t-orange-500 rounded-full animate-spin mb-4" />
+      <p className="text-white/60 text-sm font-semibold">Signing out…</p>
+    </div>
+  );
 
   return (
     <div className="relative">

@@ -30,7 +30,8 @@ async function connectDB() {
       dbName: "mealmind_dev",
       ssl: true,
       tls: true,
-      serverSelectionTimeoutMS: 10000,
+      serverSelectionTimeoutMS: 30000,
+      connectTimeoutMS: 30000,
     });
   }
 

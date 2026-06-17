@@ -1,19 +1,19 @@
 "use client";
 import { useEffect } from "react";
 import { SignIn, useAuth } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
- 
-
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function SignInPage() {
   const { isLoaded, userId } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "/";
 
   useEffect(() => {
     if (isLoaded && userId) {
-      router.replace("/");
+      router.replace(redirectTo);
     }
-  }, [isLoaded, userId, router]);
+  }, [isLoaded, userId, router, redirectTo]);
 
   if (!isLoaded || userId) {
     return (
@@ -42,9 +42,9 @@ export default function SignInPage() {
       {/* Glass Card Container */}
       <div className="relative z-10 w-full max-w-md">
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl">
-          <SignIn 
-            forceRedirectUrl="/" 
-            signUpUrl="/sign-up" 
+          <SignIn
+            forceRedirectUrl={redirectTo}
+            signUpUrl={`/sign-up?redirect=${encodeURIComponent(redirectTo)}`}
             appearance={{
               elements: {
                 rootBox: "w-full flex justify-center",

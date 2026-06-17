@@ -232,8 +232,25 @@ export default function FoodSpin({
     setCheckedIngredients({});
   }, [activeMealTiming, activeDietType]);
 
-  // Clear all filters when user logs out
-  /* ── API ── */
+  // Clear all filters and reset phase when user logs out
+  useEffect(() => {
+    if (isSignedIn === false) {
+      // Reset everything to initial state
+      setPhase("select-mode");
+      setSelectedMode(null);
+      setShowResult(false);
+      setSuggestedFood(null);
+      setFoods([]);
+      setCheckedIngredients({});
+      setRejectedIds(new Set());
+      setError(null);
+      setFilterExpiry(null);
+      setTimeLeft(null);
+      setCurrentQueryString(baseParams);
+      document.cookie = "temp_filters=; path=/; max-age=0";
+      document.cookie = "temp_filters_expires=; path=/; max-age=0";
+    }
+  }, [isSignedIn]);
   const fetchFoodsForMode = async (mode, ingredients = []) => {
     if (abortControllerRef.current) abortControllerRef.current.abort();
     abortControllerRef.current = new AbortController();

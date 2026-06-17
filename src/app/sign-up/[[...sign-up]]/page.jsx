@@ -11,12 +11,13 @@ export default function SignUpPage() {
 
 
   const redirectTo = searchParams.get("redirect") || "/";
+  const safeRedirect = redirectTo.startsWith("/") ? redirectTo : "/";
 
   useEffect(() => {
     if (isLoaded && userId) {
-      router.replace(redirectTo);
+      router.replace(safeRedirect);
     }
-  }, [isLoaded, userId, router, redirectTo]);
+  }, [isLoaded, userId, router, safeRedirect]);
 
   if (!isLoaded || userId) {
     return null;
@@ -37,9 +38,10 @@ export default function SignUpPage() {
       {/* Glass Card Container */}
       <div className="relative z-10 w-full max-w-md">
         <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-3xl p-6 shadow-2xl">
-          <SignUp 
-            fallbackRedirectUrl="/preferences" 
-            signInUrl="/sign-in"
+          <SignUp
+            forceRedirectUrl={safeRedirect}
+            fallbackRedirectUrl={safeRedirect}
+            signInUrl={`/sign-in?redirect=${encodeURIComponent(safeRedirect)}`}
             appearance={{
               elements: {
                 rootBox: "w-full flex justify-center",
