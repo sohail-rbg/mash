@@ -199,6 +199,7 @@ export default function ConfirmedSelection({ suggestedFood, selectedMode, onRest
           <ShareCardCanvas
             user={cardUser}
             food={suggestedFood}
+            selectedMode={selectedMode}
             onClose={() => setShowShareCard(false)}
           />
         </div>

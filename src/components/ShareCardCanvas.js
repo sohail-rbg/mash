@@ -1,7 +1,7 @@
 "use client";
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { X, Link } from 'lucide-react';
-import { cardThemes } from "@/lib/cardThemes";
+import { cardThemes, cardThemeLabels } from "@/lib/cardThemes";
 import { drawTheme, drawBlob } from "@/lib/drawThemes";
 
 // Lucide removed brand icons in recent versions.
@@ -42,12 +42,17 @@ const Facebook = ({ size = 24, strokeWidth = 2, ...props }) => (
   </svg>
 );
 
-export default function ShareCardCanvas({ food, user, onClose }) {
+export default function ShareCardCanvas({ food, user, selectedMode, onClose }) {
   const canvasRef = useRef(null);
   const [imgUrl, setImgUrl] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  // Which of the 10 designs is active right now — derived from refreshKey so
+  // it always stays perfectly in sync with what drawCard() actually paints.
+  const activeThemeKey = cardThemes[refreshKey % cardThemes.length];
+  const activeThemeLabel = cardThemeLabels[activeThemeKey] || activeThemeKey;
 
   const drawCard = useCallback(async () => {
     if (!food || !user) return;
@@ -80,15 +85,14 @@ export default function ShareCardCanvas({ food, user, onClose }) {
     const imgH = 680;
     const imgY = topH + 40;
     const nameY = imgY + imgH + 70;
-    const descY = nameY + preLines.length * 58 + 15;
-    const H = descY + 160; // Increased for watermark and footer padding
-
-    console.log("📏 Card Layout Calculated:", { name: food.name, lines: preLines.length, totalHeight: H, isVeg, accentColor });
-
+    const H = nameY + (preLines.length * 58) + 160; // Increased from 140 for better bottom padding
+    const footerY = H - 95; // Adjusted for new H and overall spacing
+    
     canvas.width = W;
     canvas.height = H;
 
-    const themeName = cardThemes[refreshKey % cardThemes.length];
+    // Active theme for this render — kept in sync with activeThemeKey above.
+    const themeName = activeThemeKey;
     const loadImg = (src) => new Promise((resolve, reject) => {
       const img = new Image();
       img.crossOrigin = "anonymous";
@@ -102,15 +106,13 @@ export default function ShareCardCanvas({ food, user, onClose }) {
       let logoImg = null;
       try { logoImg = await loadImg('/assets/logo.png'); } catch {}
 
-      console.log("🎨 Initializing Theme Drawing:", { themeName, refreshKey });
-
       // 1. DYNAMIC THEME & BACKGROUND ACCENTS
       const style = drawTheme(ctx, W, H, themeName);
 
       // Add organic mesh gradient blobs based on food type (Veg/Non-Veg)
       const secondaryColor = isVeg ? '#10b981' : '#f43f5e';
-      drawBlob(ctx, 0, 0, 800, isVeg ? 'rgba(34, 197, 94, 0.15)' : 'rgba(249, 115, 22, 0.15)');
-      drawBlob(ctx, W, H * 0.5, 600, `${secondaryColor}15`);
+      drawBlob(ctx, 0, 0, 800, isVeg ? `${style.accent}15` : `${style.gold}15`);
+      drawBlob(ctx, W, H * 0.5, 600, `${secondaryColor}10`);
 
       // Subtle texture overlay (Grain)
       ctx.save();
@@ -124,7 +126,7 @@ export default function ShareCardCanvas({ food, user, onClose }) {
       // Subtle Vignette for focus
       const vignette = ctx.createRadialGradient(W/2, H/2, W/4, W/2, H/2, W);
       vignette.addColorStop(0, 'transparent');
-      vignette.addColorStop(1, 'rgba(0,0,0,0.3)');
+      vignette.addColorStop(1, 'rgba(0,0,0,0.35)');
       ctx.fillStyle = vignette;
       ctx.globalCompositeOperation = 'multiply';
       ctx.fillRect(0, 0, W, H);
@@ -132,10 +134,30 @@ export default function ShareCardCanvas({ food, user, onClose }) {
 
       // Logo + App Name
       const logoSize = 54;
-      const logoX = PAD, logoY = (topH - logoSize) / 2;
+      const logoX = PAD, logoY = (topH - logoSize) / 1;
+
+      // NEW: Glassmorphic background panel for Logo + App Name
+      ctx.save();
+      const headerPanelWidth = 300; // Fixed width for the glass panel
+      const headerPanelHeight = 70; // Fixed height
+      const headerPanelX = logoX - 15;
+      const headerPanelY = logoY - 10;
+
+      const headerGrad = ctx.createLinearGradient(headerPanelX, headerPanelY, headerPanelX + headerPanelWidth, headerPanelY + headerPanelHeight);
+      headerGrad.addColorStop(0, 'rgba(255,255,255,0.1)');
+      headerGrad.addColorStop(1, 'rgba(255,255,255,0.02)');
+      ctx.fillStyle = headerGrad;
+      ctx.shadowColor = 'rgba(0,0,0,0.3)';
+      ctx.shadowBlur = 10;
+      ctx.shadowOffsetY = 4;
+      ctx.beginPath(); ctx.roundRect(headerPanelX, headerPanelY, headerPanelWidth, headerPanelHeight, 18); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.restore();
 
       if (logoImg) {
-        ctx.save();
+        ctx.save(); // Save for logo clip
         ctx.beginPath();
         ctx.roundRect(logoX, logoY, logoSize, logoSize, 12);
         ctx.clip();
@@ -144,7 +166,7 @@ export default function ShareCardCanvas({ food, user, onClose }) {
       } else {
         ctx.save();
         ctx.fillStyle = style.accent + 'dd';
-        ctx.beginPath(); ctx.roundRect(logoX, logoY, logoSize, logoSize, 12); ctx.fill();
+        ctx.beginPath(); ctx.roundRect(logoX, logoY, logoSize, logoSize, 12); ctx.fill(); // Draw 'M' background
         ctx.fillStyle = '#fff'; ctx.font = `bold ${logoSize * 0.5}px sans-serif`;
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText('M', logoX + logoSize / 2, logoY + logoSize / 2);
@@ -156,13 +178,37 @@ export default function ShareCardCanvas({ food, user, onClose }) {
       ctx.font = `bold 22px sans-serif`;
       ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
       ctx.fillText('Mash', logoX + logoSize + 12, logoY + logoSize * 0.38);
-      ctx.fillStyle = style.muted;
+      ctx.fillStyle = style.muted; // Use style.muted for consistency
       ctx.font = `400 14px sans-serif`;
       ctx.fillText('Food Discovery', logoX + logoSize + 12, logoY + logoSize * 0.72);
       ctx.restore();
 
       // User Info
+      // NEW: Glassmorphic background panel for User Info
       const userX = W - PAD;
+      ctx.save();
+      const userPanelWidth = 250; // Fixed width for the glass panel
+      const userPanelHeight = 70; // Fixed height
+      const userPanelX = W - PAD - userPanelWidth + 15; // Adjust for right alignment and padding
+      const userPanelY = logoY - 10;
+
+      const userGrad = ctx.createLinearGradient(userPanelX, userPanelY, userPanelX + userPanelWidth, userPanelY + userPanelHeight);
+      userGrad.addColorStop(0, 'rgba(255,255,255,0.1)');
+      userGrad.addColorStop(1, 'rgba(255,255,255,0.02)');
+      ctx.fillStyle = userGrad;
+      ctx.shadowColor = 'rgba(0,0,0,0.3)';
+      ctx.shadowBlur = 10;
+      ctx.shadowOffsetY = 4;
+      ctx.beginPath(); ctx.roundRect(userPanelX, userPanelY, userPanelWidth, userPanelHeight, 18); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.restore();
+
+      // User Avatar Placeholder
+      const avatarSize = 30;
+      const avatarX = userX - (userPanelWidth / 2) + (avatarSize / 2) - 100; // Position dynamically
+      const avatarY = logoY + logoSize / 2;
       ctx.save();
       ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
       ctx.fillStyle = style.text;
@@ -171,16 +217,27 @@ export default function ShareCardCanvas({ food, user, onClose }) {
       ctx.fillStyle = style.muted;
       ctx.font = `400 14px sans-serif`;
       ctx.fillText(user.email, userX, logoY + logoSize * 0.72);
+
+      // Draw avatar circle
+      ctx.beginPath();
+      ctx.arc(avatarX, avatarY, avatarSize / 2, 0, Math.PI * 2);
+      ctx.fillStyle = style.accent; // Use accent color for avatar background
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = `bold ${avatarSize * 0.5}px sans-serif`;
+      ctx.fillText(user.name.charAt(0).toUpperCase(), avatarX, avatarY + 1);
       ctx.restore();
 
       // 2. PIXEL-PERFECT IMAGE FRAME
       const imgX = PAD, imgW = W - PAD * 2, r = 34; 
       ctx.save();
       // Integrated Glow
-      ctx.shadowColor = accentColor; 
-      ctx.shadowBlur = 60;
+      ctx.shadowColor = accentColor;
+      ctx.shadowBlur = 50;
+      ctx.shadowOffsetY = 10;
+      ctx.shadowOffsetX = 0;
       // Double-stroke effect for "Hugged" border
-      ctx.strokeStyle = 'rgba(255,255,255,0.2)'; 
+      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
       ctx.lineWidth = 1;
       ctx.beginPath(); ctx.roundRect(imgX - 1, imgY - 1, imgW + 2, imgH + 2, r + 1); ctx.stroke();
       ctx.restore();
@@ -204,10 +261,15 @@ export default function ShareCardCanvas({ food, user, onClose }) {
       if (dietLabel) {
         const dx = imgX + 16, dy = imgY + 16, dw = 120, dh = 34;
         const dietColor = isVeg ? '#22c55e' : '#f97316';
+        const dietGrad = ctx.createLinearGradient(dx, dy, dx + dw, dy + dh);
+        dietGrad.addColorStop(0, 'rgba(255,255,255,0.1)');
+        dietGrad.addColorStop(1, 'rgba(255,255,255,0.02)');
         ctx.save();
-        ctx.shadowColor = 'rgba(0,0,0,0.3)'; ctx.shadowBlur = 10;
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)'; // Darker glass
+        ctx.shadowColor = 'rgba(0,0,0,0.4)'; ctx.shadowBlur = 15;
+        ctx.shadowOffsetY = 4;
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
         ctx.beginPath(); ctx.roundRect(dx, dy, dw, dh, 17); ctx.fill();
+        ctx.fillStyle = dietGrad; ctx.fill(); // Inner highlight
         ctx.strokeStyle = dietColor; ctx.lineWidth = 1.5; ctx.stroke();
         
         ctx.fillStyle = '#fff'; ctx.font = 'bold 16px sans-serif';
@@ -222,9 +284,15 @@ export default function ShareCardCanvas({ food, user, onClose }) {
         ctx.font = 'bold 16px sans-serif';
         const calW = ctx.measureText(calText).width + 24;
         const cx = imgX + imgW - calW - 16, cy = imgY + 16, ch = 34;
+        const calGrad = ctx.createLinearGradient(cx, cy, cx + calW, cy + ch);
+        calGrad.addColorStop(0, 'rgba(255,255,255,0.1)');
+        calGrad.addColorStop(1, 'rgba(255,255,255,0.02)');
         ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.4)'; ctx.shadowBlur = 15;
+        ctx.shadowOffsetY = 4;
         ctx.fillStyle = 'rgba(0,0,0,0.65)';
         ctx.beginPath(); ctx.roundRect(cx, cy, calW, ch, 17); ctx.fill();
+        ctx.fillStyle = calGrad; ctx.fill(); // Inner highlight
         ctx.fillStyle = '#fff';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText(calText, cx + calW / 2, cy + ch / 2);
@@ -238,10 +306,10 @@ export default function ShareCardCanvas({ food, user, onClose }) {
 
       preLines.forEach((l, i) => {
         const lw = ctx.measureText(l).width;
-        const lg = ctx.createLinearGradient(W / 2 - lw / 2, 0, W / 2 + lw / 2, 0); // Horizontal grad
-        lg.addColorStop(0, '#ffffff');
-        lg.addColorStop(0.5, style.gold);
-        lg.addColorStop(1, '#ffffff');
+        const textGradient = ctx.createLinearGradient(W / 2 - lw / 2, 0, W / 2 + lw / 2, 0); // Horizontal grad
+        textGradient.addColorStop(0, 'rgba(255,255,255,0.9)');
+        textGradient.addColorStop(0.5, style.gold);
+        textGradient.addColorStop(1, 'rgba(255,255,255,0.9)');
         
         // Layered Shadow for "Floating" effect
         ctx.save();
@@ -249,43 +317,109 @@ export default function ShareCardCanvas({ food, user, onClose }) {
         ctx.shadowBlur = 12;
         ctx.shadowOffsetY = 6;
         ctx.fillStyle = 'rgba(0,0,0,0.4)';
+        ctx.strokeStyle = 'rgba(0,0,0,0.2)'; // Subtle stroke for shadow
+        ctx.lineWidth = 0.5;
+        ctx.strokeText(l, W / 2 + 2, nameY + i * 58 + 3);
         ctx.fillText(l, W / 2 + 2, nameY + i * 58 + 3);
         ctx.restore();
 
-        ctx.fillStyle = lg;
+        // Main text with gradient and subtle inner glow
+        ctx.save();
+        ctx.fillStyle = textGradient;
+        ctx.shadowColor = 'rgba(255,255,255,0.3)'; // Inner glow effect
+        ctx.shadowBlur = 4;
+        ctx.shadowOffsetY = 0;
+        ctx.shadowOffsetX = 0;
         ctx.fillText(l, W / 2, nameY + i * 58);
+        ctx.restore();
       });
       ctx.restore();
 
-      // Description
-      ctx.fillStyle = style.muted;
-      ctx.font = '400 18px sans-serif';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-      ctx.fillText((food.description || 'Rich · Creamy · Delicious').slice(0, 55), W / 2, descY);
-
       // 5. SIGNATURE BRANDING FOOTER
-      const footerY = H - 80;
       ctx.save();
-      // Elegant Divider Line
-      const lineGrd = ctx.createLinearGradient(W * 0.3, 0, W * 0.7, 0);
+      
+      // High-End Gradient Separator Accent
+      const lineGrd = ctx.createLinearGradient(W * 0.2, 0, W * 0.8, 0);
       lineGrd.addColorStop(0, 'transparent');
-      lineGrd.addColorStop(0.5, 'rgba(255,255,255,0.15)');
+      lineGrd.addColorStop(0.3, style.accent + '25');
+      lineGrd.addColorStop(0.5, 'rgba(255,255,255,0.22)');
+      lineGrd.addColorStop(0.7, style.accent + '25');
       lineGrd.addColorStop(1, 'transparent');
       ctx.strokeStyle = lineGrd;
-      ctx.beginPath(); ctx.moveTo(W * 0.3, footerY - 20); ctx.lineTo(W * 0.7, footerY - 20); ctx.stroke();
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(W * 0.2, footerY - 35); ctx.lineTo(W * 0.8, footerY - 35); ctx.stroke();
+      ctx.restore();
 
-      // M Logo Circle
-      ctx.fillStyle = style.accent;
-      ctx.beginPath(); ctx.arc(W / 2, footerY, 18, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#fff'; ctx.font = '900 14px sans-serif';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText('M', W / 2, footerY + 1);
+      // PREMIUM GLASS MODE BADGE WITH GRAPHIC depth
+      if (selectedMode) {
+        ctx.save();
+        const isOnline = selectedMode === 'online';
+        const modeLabel = isOnline ? 'ORDER ONLINE' : 'SELF COOKING';
+        const icon = isOnline ? '🛵' : '🍳';
+        const fullText = `${icon}  ${modeLabel}`;
+        
+        ctx.font = '900 15px sans-serif';
+        ctx.letterSpacing = '2px';
+        const textMetrics = ctx.measureText(fullText);
+        
+        const badgeW = textMetrics.width + 56;
+        const badgeH = 46;
+        const badgeX = (W - badgeW) / 2;
+        const badgeY = footerY - (badgeH / 1) - 4;
 
-      // Watermark Text
-      ctx.font = 'bold 12px sans-serif';
-      ctx.fillStyle = 'rgba(255,255,255,0.3)';
-      ctx.letterSpacing = "5px";
-      ctx.fillText("SHARED VIA MASH", W / 2, footerY + 40);
+        // Dynamic Premium Gradient Base
+        const badgeGrad = ctx.createLinearGradient(badgeX, 0, badgeX + badgeW, 0);
+        if (isOnline) {
+          badgeGrad.addColorStop(0, '#ef4444');
+          badgeGrad.addColorStop(0.5, '#f97316');
+          badgeGrad.addColorStop(1, style.accent);
+        } else {
+          badgeGrad.addColorStop(0, '#22c55e');
+          badgeGrad.addColorStop(0.5, '#10b981');
+          badgeGrad.addColorStop(1, '#059669');
+        }
+
+        ctx.fillStyle = badgeGrad;
+        
+        // Outer Drop Shadow Glow
+        ctx.shadowColor = isOnline ? 'rgba(239, 68, 68, 0.35)' : 'rgba(34, 197, 94, 0.35)';
+        ctx.shadowBlur = 20;
+        ctx.shadowOffsetY = 8;
+        ctx.beginPath(); ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 23); ctx.fill();
+
+        // Subtle Inner Shadow (for depth)
+        ctx.shadowColor = 'rgba(0,0,0,0.6)';
+        ctx.shadowBlur = 8;
+        ctx.shadowOffsetY = -2;
+        ctx.globalCompositeOperation = 'source-atop'; // Draw shadow only on top of existing shape
+        ctx.fillStyle = 'rgba(0,0,0,0.1)'; // Very subtle dark overlay
+        ctx.beginPath(); ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 23); ctx.fill();
+        // Inner highlight for glass effect
+        const innerHighlightGrad = ctx.createLinearGradient(badgeX, badgeY, badgeX, badgeY + badgeH);
+        innerHighlightGrad.addColorStop(0, 'rgba(255,255,255,0.15)');
+        innerHighlightGrad.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = innerHighlightGrad; ctx.fill();
+
+        // Subtle Inner Border
+        ctx.globalCompositeOperation = 'source-over'; // Reset composite operation
+        ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+        ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+        
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(fullText, W / 2, badgeY + badgeH / 2 + 1);
+        ctx.restore();
+      }
+
+      // Modern Branding Watermark Text Layout
+      ctx.save();
+      ctx.font = '900 12px sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.18)'; // More subtle
+      ctx.letterSpacing = "8px";
+      ctx.textAlign = 'center';
+      ctx.fillText("MASH FOOD DISCOVERY", W / 2, footerY + 58); // Adjusted Y position
       ctx.restore();
 
       const dataUrl = canvas.toDataURL('image/png', 0.93);
@@ -295,7 +429,7 @@ export default function ShareCardCanvas({ food, user, onClose }) {
     } finally {
       setIsGenerating(false);
     }
-  }, [food, user, refreshKey]);
+  }, [food, user, refreshKey, selectedMode, activeThemeKey]);
 
   useEffect(() => { drawCard(); }, [drawCard]);
 
@@ -504,9 +638,14 @@ export default function ShareCardCanvas({ food, user, onClose }) {
           <X size={20} strokeWidth={3} />
         </button>
 
-        <h2 className="text-lg font-black text-center mb-3 text-[var(--text-main)] uppercase tracking-wider">
+        <h2 className="text-lg font-black text-center mb-1 text-[var(--text-main)] uppercase tracking-wider">
           Your Share Card
         </h2>
+
+        {/* Active design name — updates every time Shuffle is pressed */}
+        <p className="text-center text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)] mb-3">
+          {activeThemeLabel} <span className="opacity-50">· {refreshKey % cardThemes.length + 1}/{cardThemes.length}</span>
+        </p>
 
         <div className={`aspect-[4/5] w-full bg-black/5 dark:bg-white/5 rounded-3xl overflow-hidden flex items-center justify-center relative mb-1 transition-all duration-500 ${isGenerating ? 'animate-card-shuffle' : 'animate-card-pop-in'}`}>
           {imgUrl ? (
