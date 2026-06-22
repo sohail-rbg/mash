@@ -13,7 +13,13 @@ export default function ConfirmedSelection({ suggestedFood, selectedMode, onRest
   const cardUser = React.useMemo(() => ({
     name: user?.fullName || 'Mash User',
     email: user?.primaryEmailAddress?.emailAddress || 'user@mash.com',
-  }), [user?.fullName, user?.primaryEmailAddress?.emailAddress]);
+    image:
+      user?.imageUrl ||
+      user?.image ||
+      user?.profileImageUrl ||
+      user?.avatar ||
+      '',
+  }), [user?.fullName, user?.primaryEmailAddress?.emailAddress, user?.imageUrl, user?.image, user?.profileImageUrl, user?.avatar]);
 
   // If user logs out while share card is open → close it and go home
   useEffect(() => {

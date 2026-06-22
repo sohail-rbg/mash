@@ -2,7 +2,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { X, Link } from 'lucide-react';
 import { cardThemes, cardThemeLabels } from "@/lib/cardThemes";
-import { drawTheme, drawBlob } from "@/lib/drawThemes";
+import { drawTheme, drawBlob, drawTitleOrnament } from "@/lib/drawThemes";
 
 // Lucide removed brand icons in recent versions.
 // We define them locally using standard Lucide SVG paths to fix the compilation error.
@@ -62,18 +62,18 @@ export default function ShareCardCanvas({ food, user, selectedMode, onClose }) {
     const ctx = canvas.getContext('2d', { alpha: false }); // Better performance
     const W = 900;
     
-    // Determine Food Context for design
+    // Determine Food Context for design & Layout (All-Caps for premium look)
     const dietRaw = food.dietType?.[0] || food.category || '';
     const isVeg = dietRaw.toLowerCase().includes('veg') && !dietRaw.toLowerCase().includes('non');
     const accentColor = isVeg ? '#22c55e' : '#f97316';
-
-    // Pre-calculate layout
-    ctx.font = 'bold 48px serif';
-    const preWords = food.name.split(' ');
+    
+    const foodNameUpper = food.name.toUpperCase();
+    ctx.font = 'bold 44px serif';
+    const preWords = foodNameUpper.split(' ');
     let preLines = [], preLine = '';
     preWords.forEach(w => {
       const t = preLine + w + ' ';
-      if (ctx.measureText(t).width > 750 && preLine) {
+      if (ctx.measureText(t).width > 760 && preLine) {
         preLines.push(preLine.trim());
         preLine = w + ' ';
       } else preLine = t;
@@ -106,12 +106,25 @@ export default function ShareCardCanvas({ food, user, selectedMode, onClose }) {
       let logoImg = null;
       try { logoImg = await loadImg('/assets/logo.png'); } catch {}
 
+      const userAvatarSrc =
+        user?.image ||
+        user?.imageUrl ||
+        user?.avatar ||
+        user?.profileImageUrl ||
+        user?.photoURL ||
+        '';
+      let userAvatarImg = null;
+      if (userAvatarSrc) {
+        try { userAvatarImg = await loadImg(userAvatarSrc); } catch {}
+      }
+
       // 1. DYNAMIC THEME & BACKGROUND ACCENTS
       const style = drawTheme(ctx, W, H, themeName);
 
       // Add organic mesh gradient blobs based on food type (Veg/Non-Veg)
       const secondaryColor = isVeg ? '#10b981' : '#f43f5e';
-      drawBlob(ctx, 0, 0, 800, isVeg ? `${style.accent}15` : `${style.gold}15`);
+      const softAccent = isVeg ? `${style.accent}20` : `${style.gold}18`;
+      drawBlob(ctx, 0, 0, 800, softAccent);
       drawBlob(ctx, W, H * 0.5, 600, `${secondaryColor}10`);
 
       // Subtle texture overlay (Grain)
@@ -133,148 +146,185 @@ export default function ShareCardCanvas({ food, user, selectedMode, onClose }) {
       ctx.globalCompositeOperation = 'source-over';
 
       // Logo + App Name
-      const logoSize = 54;
+      const logoSize = 90;
       const logoX = PAD, logoY = (topH - logoSize) / 1;
 
-      // NEW: Glassmorphic background panel for Logo + App Name
-      ctx.save();
-      const headerPanelWidth = 300; // Fixed width for the glass panel
-      const headerPanelHeight = 70; // Fixed height
-      const headerPanelX = logoX - 15;
-      const headerPanelY = logoY - 10;
-
-      const headerGrad = ctx.createLinearGradient(headerPanelX, headerPanelY, headerPanelX + headerPanelWidth, headerPanelY + headerPanelHeight);
-      headerGrad.addColorStop(0, 'rgba(255,255,255,0.1)');
-      headerGrad.addColorStop(1, 'rgba(255,255,255,0.02)');
-      ctx.fillStyle = headerGrad;
-      ctx.shadowColor = 'rgba(0,0,0,0.3)';
-      ctx.shadowBlur = 10;
-      ctx.shadowOffsetY = 4;
-      ctx.beginPath(); ctx.roundRect(headerPanelX, headerPanelY, headerPanelWidth, headerPanelHeight, 18); ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-      ctx.restore();
 
       if (logoImg) {
-        ctx.save(); // Save for logo clip
+        ctx.save();
         ctx.beginPath();
-        ctx.roundRect(logoX, logoY, logoSize, logoSize, 12);
+        ctx.roundRect(logoX, logoY, logoSize, logoSize, 14);
         ctx.clip();
         ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
         ctx.restore();
       } else {
         ctx.save();
-        ctx.fillStyle = style.accent + 'dd';
-        ctx.beginPath(); ctx.roundRect(logoX, logoY, logoSize, logoSize, 12); ctx.fill(); // Draw 'M' background
+        ctx.shadowColor = `${style.accent}55`;
+        // ctx.shadowBlur = 14;
+        ctx.fillStyle = style.accent;
+        ctx.beginPath(); ctx.roundRect(logoX, logoY, logoSize, logoSize, 14); ctx.fill();
         ctx.fillStyle = '#fff'; ctx.font = `bold ${logoSize * 0.5}px sans-serif`;
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText('M', logoX + logoSize / 2, logoY + logoSize / 2);
         ctx.restore();
       }
 
-      ctx.save();
-      ctx.fillStyle = style.text;
-      ctx.font = `bold 22px sans-serif`;
-      ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-      ctx.fillText('Mash', logoX + logoSize + 12, logoY + logoSize * 0.38);
-      ctx.fillStyle = style.muted; // Use style.muted for consistency
-      ctx.font = `400 14px sans-serif`;
-      ctx.fillText('Food Discovery', logoX + logoSize + 12, logoY + logoSize * 0.72);
-      ctx.restore();
+      // ctx.save();
+      // ctx.fillStyle = style.text;
+      // ctx.font = `bold 22px sans-serif`;
+      // ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      // ctx.fillText('Mash', logoX + logoSize + 12, logoY + logoSize * 0.38);
+      // ctx.fillStyle = style.muted;
+      // ctx.font = `400 14px sans-serif`;
+      // ctx.fillText('Food Discovery', logoX + logoSize + 12, logoY + logoSize * 0.72);
+      // ctx.restore();
 
       // User Info
-      // NEW: Glassmorphic background panel for User Info
-      const userX = W - PAD;
+      const userTextX = W - PAD - 18;
       ctx.save();
-      const userPanelWidth = 250; // Fixed width for the glass panel
-      const userPanelHeight = 70; // Fixed height
-      const userPanelX = W - PAD - userPanelWidth + 15; // Adjust for right alignment and padding
-      const userPanelY = logoY - 10;
+      const userPanelWidth = 260;
+      const userPanelHeight = 78;
+      const userPanelX = W - PAD - userPanelWidth + 12;
+      const userPanelY = logoY - 12;
+      ctx.restore();
 
-      const userGrad = ctx.createLinearGradient(userPanelX, userPanelY, userPanelX + userPanelWidth, userPanelY + userPanelHeight);
-      userGrad.addColorStop(0, 'rgba(255,255,255,0.1)');
-      userGrad.addColorStop(1, 'rgba(255,255,255,0.02)');
-      ctx.fillStyle = userGrad;
-      ctx.shadowColor = 'rgba(0,0,0,0.3)';
-      ctx.shadowBlur = 10;
-      ctx.shadowOffsetY = 4;
-      ctx.beginPath(); ctx.roundRect(userPanelX, userPanelY, userPanelWidth, userPanelHeight, 18); ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-      ctx.lineWidth = 1;
+      const avatarSize = 44;
+      const avatarX = userPanelX + 40;
+      const avatarY = logoY + logoSize / 2;
+      const avatarOuter = avatarSize / 2 + 3;
+
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(avatarX, avatarY, avatarSize / 2, 0, Math.PI * 2);
+      ctx.clip();
+      if (userAvatarImg) {
+        ctx.drawImage(userAvatarImg, avatarX - avatarSize / 2, avatarY - avatarSize / 2, avatarSize, avatarSize);
+      } else {
+        ctx.fillStyle = style.accent;
+        ctx.fillRect(avatarX - avatarSize / 2, avatarY - avatarSize / 2, avatarSize, avatarSize);
+        ctx.fillStyle = '#fff';
+        ctx.font = `bold ${avatarSize * 0.45}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText((user.name || 'M').charAt(0).toUpperCase(), avatarX, avatarY + 1);
+      }
+      ctx.restore();
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(avatarX, avatarY, avatarSize / 2, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+      ctx.lineWidth = 1.5;
       ctx.stroke();
       ctx.restore();
 
-      // User Avatar Placeholder
-      const avatarSize = 30;
-      const avatarX = userX - (userPanelWidth / 2) + (avatarSize / 2) - 100; // Position dynamically
-      const avatarY = logoY + logoSize / 2;
       ctx.save();
-      ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
       ctx.fillStyle = style.text;
       ctx.font = `bold 20px sans-serif`;
-      ctx.fillText(user.name, userX, logoY + logoSize * 0.35);
-      ctx.fillStyle = style.muted;
-      ctx.font = `400 14px sans-serif`;
-      ctx.fillText(user.email, userX, logoY + logoSize * 0.72);
-
-      // Draw avatar circle
-      ctx.beginPath();
-      ctx.arc(avatarX, avatarY, avatarSize / 2, 0, Math.PI * 2);
-      ctx.fillStyle = style.accent; // Use accent color for avatar background
-      ctx.fill();
-      ctx.fillStyle = '#fff';
-      ctx.font = `bold ${avatarSize * 0.5}px sans-serif`;
-      ctx.fillText(user.name.charAt(0).toUpperCase(), avatarX, avatarY + 1);
-      ctx.restore();
-
-      // 2. PIXEL-PERFECT IMAGE FRAME
-      const imgX = PAD, imgW = W - PAD * 2, r = 34; 
-      ctx.save();
-      // Integrated Glow
-      ctx.shadowColor = accentColor;
-      ctx.shadowBlur = 50;
-      ctx.shadowOffsetY = 10;
-      ctx.shadowOffsetX = 0;
-      // Double-stroke effect for "Hugged" border
-      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-      ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.roundRect(imgX - 1, imgY - 1, imgW + 2, imgH + 2, r + 1); ctx.stroke();
-      ctx.restore();
-
-      ctx.save();
-      ctx.beginPath(); ctx.roundRect(imgX, imgY, imgW, imgH, r); ctx.clip();
+      ctx.letterSpacing = '1px';
+      ctx.fillText((user.name || 'Mash User').toUpperCase(), avatarX + avatarSize / 2 + 16, logoY + logoSize * 0.34);
       
-      // Aspect fill the image
-      const scale = Math.max(imgW / foodImg.width, imgH / foodImg.height);
-      const iw = foodImg.width * scale, ih = foodImg.height * scale;
-      ctx.drawImage(foodImg, imgX + (imgW - iw) / 2, imgY + (imgH - ih) / 2, iw, ih);
-
-      const imgGrad = ctx.createLinearGradient(0, imgY + imgH * 0.55, 0, imgY + imgH);
-      imgGrad.addColorStop(0, 'transparent');
-      imgGrad.addColorStop(1, 'rgba(0,0,0,0.45)');
-      ctx.fillStyle = imgGrad; ctx.fillRect(imgX, imgY, imgW, imgH);
+      ctx.fillStyle = style.muted;
+      ctx.font = `500 13px sans-serif`;
+      ctx.letterSpacing = '0.5px';
+      ctx.fillText((user.email || 'user@mash.com').toLowerCase(), avatarX + avatarSize / 2 + 16, logoY + logoSize * 0.72);
       ctx.restore();
+
+      // 2. TRUE CIRCULAR FOOD HERO - PREMIUM V2
+      const imgX = PAD;
+      const imgW = W - PAD * 2;
+      const foodCircleDiameter = Math.min(imgW * 0.88, imgH * 0.98);
+      const foodCircleRadius = foodCircleDiameter / 2;
+      const foodCircleX = W / 2;
+      const foodCircleY = imgY + imgH / 2 + 8;
+
+      // Layered Glow & Shadow
+      const { drawFoodGlow, drawSteam } = require("@/lib/drawThemes");
+      drawFoodGlow(ctx, foodCircleX, foodCircleY, foodCircleRadius, accentColor);
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(foodCircleX, foodCircleY, foodCircleRadius + 2, 0, Math.PI * 2);
+      const glassBorder = ctx.createLinearGradient(W * 0.3, imgY, W * 0.7, imgY + imgH);
+      glassBorder.addColorStop(0, 'rgba(255,255,255,0.4)');
+      glassBorder.addColorStop(0.5, 'rgba(255,255,255,0.05)');
+      glassBorder.addColorStop(1, 'rgba(255,255,255,0.3)');
+      ctx.strokeStyle = glassBorder;
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(foodCircleX, foodCircleY, foodCircleRadius, 0, Math.PI * 2);
+      ctx.clip();
+
+      const scale = Math.max(
+        (foodCircleDiameter * 1.06) / foodImg.width,
+        (foodCircleDiameter * 1.06) / foodImg.height
+      );
+      const iw = foodImg.width * scale;
+      const ih = foodImg.height * scale;
+      ctx.drawImage(
+        foodImg,
+        foodCircleX - iw / 2,
+        foodCircleY - ih / 2,
+        iw,
+        ih
+      );
+
+      // High-End Radial Highlight (No dark rim)
+      const imgGrad = ctx.createRadialGradient(
+        foodCircleX,
+        foodCircleY - foodCircleRadius * 0.25,
+        foodCircleRadius * 0.1,
+        foodCircleX,
+        foodCircleY,
+        foodCircleRadius
+      );
+      imgGrad.addColorStop(0, 'rgba(255,255,255,0.12)');
+      imgGrad.addColorStop(0.6, 'transparent');
+      ctx.fillStyle = imgGrad;
+      ctx.fillRect(
+        foodCircleX - foodCircleRadius,
+        foodCircleY - foodCircleRadius,
+        foodCircleDiameter,
+        foodCircleDiameter
+      );
+      ctx.restore();
+
+      // Culinary Steam Effect
+      drawSteam(ctx, foodCircleX, foodCircleY - foodCircleRadius * 0.4, foodCircleRadius * 0.8);
 
       // 3. PREMIUM GLASS BADGES
-      const dietLabel = isVeg ? '🌱 VEG' : dietRaw ? `🍖 ${dietRaw.toUpperCase()}` : null;
+      const dietLabel = isVeg ? '🌱 VEG' : dietRaw ? `${dietRaw.toUpperCase()}` : null;
       if (dietLabel) {
-        const dx = imgX + 16, dy = imgY + 16, dw = 120, dh = 34;
+        const dx = imgX + 16, dy = imgY + 16;
+        const chipText = isVeg ? 'VEG' : dietRaw?.toUpperCase() || 'FOOD';
+        const chipWidth = Math.max(92, ctx.measureText(chipText).width + 38);
+        const dw = chipWidth;
+        const dh = 36;
         const dietColor = isVeg ? '#22c55e' : '#f97316';
         const dietGrad = ctx.createLinearGradient(dx, dy, dx + dw, dy + dh);
-        dietGrad.addColorStop(0, 'rgba(255,255,255,0.1)');
-        dietGrad.addColorStop(1, 'rgba(255,255,255,0.02)');
+        dietGrad.addColorStop(0, `${dietColor}f2`);
+        dietGrad.addColorStop(1, `${dietColor}cc`);
         ctx.save();
-        ctx.shadowColor = 'rgba(0,0,0,0.4)'; ctx.shadowBlur = 15;
-        ctx.shadowOffsetY = 4;
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-        ctx.beginPath(); ctx.roundRect(dx, dy, dw, dh, 17); ctx.fill();
-        ctx.fillStyle = dietGrad; ctx.fill(); // Inner highlight
-        ctx.strokeStyle = dietColor; ctx.lineWidth = 1.5; ctx.stroke();
-        
-        ctx.fillStyle = '#fff'; ctx.font = 'bold 16px sans-serif';
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText(dietLabel, dx + dw / 2, dy + dh / 2);
+        ctx.shadowColor = `${dietColor}55`;
+        ctx.shadowBlur = 18;
+        ctx.shadowOffsetY = 5;
+        ctx.fillStyle = dietGrad;
+        ctx.beginPath(); ctx.roundRect(dx, dy, dw, dh, 18); ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.24)';
+        ctx.lineWidth = 1.1;
+        ctx.stroke();
+        ctx.fillStyle = '#fff';
+        ctx.font = '900 14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.letterSpacing = '1px';
+        ctx.fillText(chipText, dx + dw / 2, dy + dh / 2 + 1);
         ctx.restore();
       }
 
@@ -299,41 +349,76 @@ export default function ShareCardCanvas({ food, user, selectedMode, onClose }) {
         ctx.restore();
       }
 
-      // 4. TYPOGRAPHY ENHANCEMENT
+      // 4. TYPOGRAPHY ENHANCEMENT - PREMIUM ALL-CAPS V3
       ctx.save();
-      ctx.font = 'bold 52px serif';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+      const isMinimalGold = themeName === 'minimalLight' || themeName === 'luxuryGold';
+      const isNeon = themeName === 'neonBlue' || themeName === 'cyberBlue' || themeName === 'purpleGlow';
+      
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'alphabetic';
 
       preLines.forEach((l, i) => {
         const lw = ctx.measureText(l).width;
-        const textGradient = ctx.createLinearGradient(W / 2 - lw / 2, 0, W / 2 + lw / 2, 0); // Horizontal grad
-        textGradient.addColorStop(0, 'rgba(255,255,255,0.9)');
-        textGradient.addColorStop(0.5, style.gold);
-        textGradient.addColorStop(1, 'rgba(255,255,255,0.9)');
+        const textGradient = ctx.createLinearGradient(W / 2 - lw / 2, 0, W / 2 + lw / 2, 0);
         
-        // Layered Shadow for "Floating" effect
+        // Dynamic design based on theme "type"
+        let fontStyle = '900 56px serif';
+        let letterSpacing = '2px';
+        
+        if (isNeon) {
+          fontStyle = '900 52px sans-serif';
+          letterSpacing = '4px';
+        } else if (isMinimalGold) {
+          fontStyle = 'bold 58px serif';
+          letterSpacing = '5px';
+        }
+
+        ctx.font = fontStyle;
+        ctx.letterSpacing = letterSpacing;
+
+        const shadowColor = style.text === '#1f2937' || style.text === '#3b2d5a'
+          ? 'rgba(15, 23, 42, 0.22)'
+          : 'rgba(0, 0, 0, 0.48)';
+        const strokeColor = style.text === '#1f2937' || style.text === '#3b2d5a'
+          ? 'rgba(255, 255, 255, 0.6)'
+          : 'rgba(0, 0, 0, 0.22)';
+
+        textGradient.addColorStop(0, style.text);
+        textGradient.addColorStop(0.48, style.accent);
+        textGradient.addColorStop(1, style.text);
+
+        // Sub-Layer: Deep shadow for dimension
         ctx.save();
-        ctx.shadowColor = 'rgba(0,0,0,0.5)';
-        ctx.shadowBlur = 12;
-        ctx.shadowOffsetY = 6;
-        ctx.fillStyle = 'rgba(0,0,0,0.4)';
-        ctx.strokeStyle = 'rgba(0,0,0,0.2)'; // Subtle stroke for shadow
-        ctx.lineWidth = 0.5;
-        ctx.strokeText(l, W / 2 + 2, nameY + i * 58 + 3);
-        ctx.fillText(l, W / 2 + 2, nameY + i * 58 + 3);
+        ctx.shadowColor = shadowColor;
+        ctx.shadowBlur = 24;
+        ctx.shadowOffsetY = 8;
+        ctx.fillStyle = shadowColor;
+        ctx.fillText(l, W / 2 + 3, nameY + i * 58 + 5);
         ctx.restore();
 
-        // Main text with gradient and subtle inner glow
+        // Main text with high-end glow and stroke
         ctx.save();
         ctx.fillStyle = textGradient;
-        ctx.shadowColor = 'rgba(255,255,255,0.3)'; // Inner glow effect
-        ctx.shadowBlur = 4;
-        ctx.shadowOffsetY = 0;
-        ctx.shadowOffsetX = 0;
+        
+        if (isNeon) {
+          ctx.shadowColor = style.accent;
+          ctx.shadowBlur = 18;
+        } else {
+          ctx.shadowColor = `${style.accent}88`;
+          ctx.shadowBlur = 12;
+        }
+        
+        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+        ctx.lineWidth = 0.8;
+        ctx.strokeText(l, W / 2, nameY + i * 58);
         ctx.fillText(l, W / 2, nameY + i * 58);
         ctx.restore();
       });
       ctx.restore();
+
+      // Unique bottom decorative ornament under the food name, matching the active theme
+      const titleBottomY = nameY + (preLines.length - 1) * 58 + 32; // Increased margin for better rhythm
+      drawTitleOrnament(ctx, W, titleBottomY, style, themeName);
 
       // 5. SIGNATURE BRANDING FOOTER
       ctx.save();
@@ -350,77 +435,64 @@ export default function ShareCardCanvas({ food, user, selectedMode, onClose }) {
       ctx.beginPath(); ctx.moveTo(W * 0.2, footerY - 35); ctx.lineTo(W * 0.8, footerY - 35); ctx.stroke();
       ctx.restore();
 
-      // PREMIUM GLASS MODE BADGE WITH GRAPHIC depth
+      // Simple mode pill with gradient border and no heavy background block
       if (selectedMode) {
         ctx.save();
         const isOnline = selectedMode === 'online';
         const modeLabel = isOnline ? 'ORDER ONLINE' : 'SELF COOKING';
         const icon = isOnline ? '🛵' : '🍳';
         const fullText = `${icon}  ${modeLabel}`;
-        
+
         ctx.font = '900 15px sans-serif';
         ctx.letterSpacing = '2px';
         const textMetrics = ctx.measureText(fullText);
-        
+
         const badgeW = textMetrics.width + 56;
         const badgeH = 46;
         const badgeX = (W - badgeW) / 2;
         const badgeY = footerY - (badgeH / 1) - 4;
 
-        // Dynamic Premium Gradient Base
-        const badgeGrad = ctx.createLinearGradient(badgeX, 0, badgeX + badgeW, 0);
+        const badgeBorderGrad = ctx.createLinearGradient(badgeX, badgeY, badgeX + badgeW, badgeY + badgeH);
         if (isOnline) {
-          badgeGrad.addColorStop(0, '#ef4444');
-          badgeGrad.addColorStop(0.5, '#f97316');
-          badgeGrad.addColorStop(1, style.accent);
+          badgeBorderGrad.addColorStop(0, '#f97316');
+          badgeBorderGrad.addColorStop(0.5, '#fb7185');
+          badgeBorderGrad.addColorStop(1, '#facc15');
         } else {
-          badgeGrad.addColorStop(0, '#22c55e');
-          badgeGrad.addColorStop(0.5, '#10b981');
-          badgeGrad.addColorStop(1, '#059669');
+          badgeBorderGrad.addColorStop(0, '#22c55e');
+          badgeBorderGrad.addColorStop(0.5, '#10b981');
+          badgeBorderGrad.addColorStop(1, '#84cc16');
         }
 
-        ctx.fillStyle = badgeGrad;
-        
-        // Outer Drop Shadow Glow
-        ctx.shadowColor = isOnline ? 'rgba(239, 68, 68, 0.35)' : 'rgba(34, 197, 94, 0.35)';
-        ctx.shadowBlur = 20;
-        ctx.shadowOffsetY = 8;
-        ctx.beginPath(); ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 23); ctx.fill();
+        // very light surface so the pill still feels intentional but not heavy
+        ctx.fillStyle = 'rgba(255,255,255,0.04)';
+        ctx.beginPath();
+        ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 23);
+        ctx.fill();
 
-        // Subtle Inner Shadow (for depth)
-        ctx.shadowColor = 'rgba(0,0,0,0.6)';
-        ctx.shadowBlur = 8;
-        ctx.shadowOffsetY = -2;
-        ctx.globalCompositeOperation = 'source-atop'; // Draw shadow only on top of existing shape
-        ctx.fillStyle = 'rgba(0,0,0,0.1)'; // Very subtle dark overlay
-        ctx.beginPath(); ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 23); ctx.fill();
-        // Inner highlight for glass effect
-        const innerHighlightGrad = ctx.createLinearGradient(badgeX, badgeY, badgeX, badgeY + badgeH);
-        innerHighlightGrad.addColorStop(0, 'rgba(255,255,255,0.15)');
-        innerHighlightGrad.addColorStop(1, 'rgba(255,255,255,0)');
-        ctx.fillStyle = innerHighlightGrad; ctx.fill();
-
-        // Subtle Inner Border
-        ctx.globalCompositeOperation = 'source-over'; // Reset composite operation
-        ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
-        ctx.strokeStyle = 'rgba(255,255,255,0.25)';
-        ctx.lineWidth = 1.2;
+        ctx.strokeStyle = badgeBorderGrad;
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 23);
         ctx.stroke();
-        
-        ctx.fillStyle = '#fff';
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+        ctx.fillStyle = style.text;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
         ctx.fillText(fullText, W / 2, badgeY + badgeH / 2 + 1);
         ctx.restore();
       }
 
       // Modern Branding Watermark Text Layout
-      ctx.save();
-      ctx.font = '900 12px sans-serif';
-      ctx.fillStyle = 'rgba(255,255,255,0.18)'; // More subtle
-      ctx.letterSpacing = "8px";
-      ctx.textAlign = 'center';
-      ctx.fillText("MASH FOOD DISCOVERY", W / 2, footerY + 58); // Adjusted Y position
-      ctx.restore();
+      // ctx.save();
+      // ctx.font = '900 12px sans-serif';
+      // const footerTextColor = style.text === '#1f2937' || style.text === '#3b2d5a'
+      //   ? 'rgba(31, 41, 55, 0.12)'
+      //   : 'rgba(255, 255, 255, 0.18)';
+      // ctx.fillStyle = footerTextColor;
+      // ctx.letterSpacing = '8px';
+      // ctx.textAlign = 'center';
+      // ctx.fillText('MASH FOOD DISCOVERY', W / 2, footerY + 58);
+      // ctx.restore();
 
       const dataUrl = canvas.toDataURL('image/png', 0.93);
       setImgUrl(dataUrl);

@@ -16,8 +16,8 @@
 
 export const cardThemes = [
   "darkElegant",
-  "neonBlue",
-  "greenFresh",
+  "midnightNoir",
+  "ecoLuxury",
   "minimalLight",
   "purpleGlow",
   "orangeSpice",
@@ -32,8 +32,8 @@ export const cardThemes = [
 // to hardcode strings in multiple places.
 export const cardThemeLabels = {
   darkElegant: "Dark Elegant",
-  neonBlue: "Neon Blue",
-  greenFresh: "Green Fresh",
+  midnightNoir: "Midnight Noir",
+  ecoLuxury: "Eco Luxury",
   minimalLight: "Minimal Light",
   purpleGlow: "Purple Glow",
   orangeSpice: "Orange Spice",

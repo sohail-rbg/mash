@@ -105,28 +105,27 @@ export default function FoodList({ initialFoods, isFiltered }) {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {foods.map((food) => (
-              <div key={food._id} className="glass-card p-5 transition-all duration-300 flex flex-col group hover:translate-y-[-5px]">
-                <div className="relative overflow-hidden rounded-2xl">
-                  <img src={food.image} alt={food.name} className="w-full h-48 object-cover rounded-md mb-4" />
+              <div key={food._id} className="glass-card p-6 transition-all duration-300 flex flex-col group hover:translate-y-[-8px] hover:shadow-xl shadow-lg shadow-black/30 rounded-2xl backdrop-blur-sm border border-white/10 bg-gradient-to-br from-zinc-900/80 to-zinc-900/50">
+                <div className="relative overflow-hidden rounded-2xl mb-4 flex justify-center">
+                  <img src={food.image} alt={food.name} className="w-48 h-48 object-cover rounded-full shadow-lg shadow-black/40 border-2 border-white/10" />
                   {food.category && (
-                    <span className="absolute top-2 right-2 bg-black bg-opacity-60 text-white text-xs sm:text-sm font-semibold px-2 py-1 rounded-full capitalize"> {/* Responsive font size */}
-                      {food.category}
-                    </span>
+                    <span className="absolute top-4 right-4 bg-gradient-to-r from-orange-600/80 to-orange-500/80 text-white text-xs sm:text-sm font-semibold px-3 py-1 rounded-full capitalize shadow-lg shadow-orange-500/20">{food.category}</span>
                   )}
                 </div>
                 <div className="flex-grow">
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-green-400 transition-colors">{food.name}</h3>
+                    <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-orange-400 transition-colors">{food.name}</h3>
                   </div>
                   {food.description && <p className="text-white/50 text-xs line-clamp-2 mb-4 font-dm leading-relaxed">{food.description}</p>}
-                  <div className="flex flex-wrap gap-1.5 mt-auto">
-                    {food.cuisine?.map((c) => <span key={c} className="bg-white/5 border border-white/10 text-white/60 text-[9px] px-2 py-1 rounded-lg capitalize"> {c}</span>)}
-                    {food.dietType?.map((d) => <span key={d} className="bg-green-500/10 border border-green-500/20 text-green-400 text-[9px] px-2 py-1 rounded-lg capitalize"> {d}</span>)}
+                  <div className="flex flex-wrap gap-2 mt-auto">
+                    {food.cuisine?.map((c) => <span key={c} className="bg-white/5 border border-white/10 text-white/60 text-[9px] px-2 py-1 rounded-lg capitalize">{c}</span>)}
+                    {food.dietType?.map((d) => <span key={d} className="bg-green-500/10 border border-green-500/20 text-green-400 text-[9px] px-2 py-1 rounded-lg capitalize">{d}</span>)}
+                    {food.foodType?.map((ft) => <span key={ft} className="bg-orange-500/15 border border-orange-500/30 text-orange-300 text-[9px] px-2 py-1 rounded-lg capitalize font-medium">{ft}</span>)}
                     {food.healthGoals?.map((h) => (
                       <button
                         key={h}
                         onClick={() => router.push(`/all-foods?healthGoals=${encodeURIComponent(h)}`)}
-                        className="bg-orange-500/10 border border-orange-500/20 text-orange-400 text-[9px] px-2 py-1 rounded-lg capitalize hover:brightness-110"
+                        className="bg-orange-500/10 border border-orange-500/20 text-orange-400 text-[9px] px-2 py-1 rounded-lg capitalize hover:brightness-110 transition-all"
                         title={`Filter all foods by ${h}`}
                       >
                         {h}
@@ -155,28 +154,28 @@ export default function FoodList({ initialFoods, isFiltered }) {
           <div className="w-full lg:w-1/2 h-[calc(100vh-200px)] lg:h-[800px] overflow-y-auto pr-2 space-y-3 custom-scrollbar"> {/* Responsive height */}
             <h3 className="text-lg sm:text-xl font-semibold mb-4 sticky top-0 bg-[#0a0a0a]/80 backdrop-blur-md text-white py-2 z-10">Available Options ({foods.length})</h3> {/* Responsive font size */}
             {foods.map((food) => (
-              <div 
-                key={food._id} 
+              <div
+                key={food._id}
                 onClick={() => !isConfirmed && setSuggestedFood(food)}
-                className={`flex gap-4 border p-3 rounded-xl transition-all duration-300 
-                  ${isConfirmed ? 'cursor-not-allowed' : 'cursor-pointer hover:scale-[1.02] hover:bg-white/5'}
-                  ${suggestedFood?._id === food._id 
-                    ? (isConfirmed ? 'border-green-500 bg-green-500/20 border-2' : 'border-green-400 bg-green-400/10') 
-                    : (rejectedFoodIds.has(food._id) ? 'border-red-900/50 bg-red-900/10 hover:bg-red-900/20' : 'border-white/10 bg-white/5')}
+                className={`flex gap-4 border p-4 rounded-xl transition-all duration-300 backdrop-blur-sm
+                  ${isConfirmed ? 'cursor-not-allowed' : 'cursor-pointer hover:scale-[1.02] hover:shadow-lg'}
+                  ${suggestedFood?._id === food._id
+                    ? (isConfirmed ? 'border-green-500 bg-green-500/20 border-2 shadow-lg shadow-green-500/20' : 'border-green-400 bg-green-400/10 shadow-md shadow-green-500/10')
+                    : (rejectedFoodIds.has(food._id) ? 'border-red-900/50 bg-red-900/10 hover:bg-red-900/20 shadow-sm shadow-red-900/10' : 'border-white/10 bg-white/5 shadow-md shadow-black/20')}
                   ${isConfirmed && suggestedFood?._id !== food._id ? 'opacity-30' : ''}
                 `}
               >
-                <img src={food.image} alt={food.name} className="w-24 h-24 object-cover rounded-md flex-shrink-0" />
+                <img src={food.image} alt={food.name} className="w-20 h-20 object-cover rounded-full flex-shrink-0 shadow-lg shadow-black/40" />
                 <div className="flex-grow">
                   <div className="flex justify-between items-start text-base sm:text-lg"> {/* Responsive font size */}
-                    <h4 className="font-bold">{food.name}</h4>
+                    <h4 className="font-bold text-white">{food.name}</h4>
                   </div>
                   <p className="text-white/60 text-xs sm:text-sm line-clamp-2 mt-1">{food.description}</p> {/* Responsive font size */}
                   <div className="flex flex-wrap gap-1 mt-2">
                      {food.dietType?.map(d => <span key={d} className="text-[10px] bg-green-500/20 text-green-400 border border-green-500/20 px-2 py-0.5 rounded-full capitalize">{d}</span>)}
                      {food.cuisine?.map(c => <span key={c} className="text-[10px] bg-blue-500/20 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full capitalize">{c}</span>)}
                      {food.mealTiming?.map(t => <span key={t} className="text-[10px] bg-white/10 text-white/60 border border-white/10 px-2 py-0.5 rounded-full capitalize">{t}</span>)}
-                     {food.foodType?.map(ft => <span key={ft} className="text-[10px] bg-teal-500/20 text-teal-400 border border-teal-500/20 px-2 py-0.5 rounded-full capitalize">{ft}</span>)}
+                     {food.foodType?.map(ft => <span key={ft} className="text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/30 px-2 py-0.5 rounded-full capitalize font-medium">{ft}</span>)}
                   </div>
                 </div>
               </div>
@@ -186,20 +185,20 @@ export default function FoodList({ initialFoods, isFiltered }) {
           {/* Right Column: Random Suggestion Card */}
           <div className="w-full lg:w-1/2">
             <div className="sticky top-8">
-               <h3 className="text-xl font-semibold mb-4">Suggestion For You</h3>
+               <h3 className="text-xl font-semibold mb-4 text-white">Suggestion For You</h3>
                {suggestedFood && (
-                 <div className="border border-white/10 rounded-2xl p-6 shadow-2xl bg-zinc-900/50 backdrop-blur-xl text-white">
-                    <div className="relative">
-                        <img src={suggestedFood.image} alt={suggestedFood.name} className="w-full h-64 object-cover rounded-lg mb-4" />
+                 <div className="border border-white/10 rounded-3xl p-8 shadow-2xl shadow-black/40 bg-gradient-to-br from-zinc-900/80 to-zinc-900/50 backdrop-blur-xl text-white">
+                    <div className="relative mb-6 flex justify-center">
+                        <img src={suggestedFood.image} alt={suggestedFood.name} className="w-48 h-48 object-cover rounded-full shadow-2xl shadow-black/50 border-4 border-white/10" />
                         {suggestedFood.category && (
-                            <span className="absolute top-4 right-4 bg-black bg-opacity-70 text-white text-sm font-semibold px-3 py-1 rounded-full capitalize">
+                            <span className="absolute bottom-2 right-8 bg-gradient-to-r from-orange-600/80 to-orange-500/80 text-white text-xs font-bold px-3 py-1 rounded-full capitalize shadow-lg shadow-orange-500/20">
                                 {suggestedFood.category}
                             </span>
                         )}
                     </div>
                     
-                    <h2 className="text-3xl font-bold mb-2">{suggestedFood.name}</h2>
-                    <p className="text-white/70 mb-4 font-light leading-relaxed">{suggestedFood.description}</p>
+                    <h2 className="text-4xl font-bold mb-2 text-center text-white">{suggestedFood.name}</h2>
+                    <p className="text-white/70 mb-6 font-light leading-relaxed text-center text-sm">{suggestedFood.description}</p>
 
                     <div className="space-y-4 mb-6 text-sm">
                         <div>
@@ -240,8 +239,12 @@ export default function FoodList({ initialFoods, isFiltered }) {
                         </div>
                         <div>
                             <span className="font-semibold block text-white/40 uppercase text-[10px] tracking-widest">Food Type</span>
-                            <div className="flex flex-wrap gap-1 mt-1">
-                                {suggestedFood.foodType?.map(ft => <span key={ft} className="bg-teal-500/10 text-teal-400 border border-teal-500/20 px-2 py-1 rounded capitalize"> {ft}</span>)}
+                            <div className="flex flex-wrap gap-2 mt-2">
+                                {suggestedFood.foodType?.map(ft => (
+                                  <span key={ft} className="bg-gradient-to-r from-orange-500/20 to-orange-600/20 text-orange-300 border border-orange-500/30 px-3 py-1.5 rounded-full capitalize font-medium text-sm shadow-lg shadow-orange-500/10">
+                                    {ft}
+                                  </span>
+                                ))}
                             </div>
                         </div>
 
