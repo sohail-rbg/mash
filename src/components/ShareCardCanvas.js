@@ -2,23 +2,11 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { X, Link } from 'lucide-react';
 import { cardThemes, cardThemeLabels } from "@/lib/cardThemes";
-import { drawTheme, drawBlob, drawTitleOrnament } from "@/lib/drawThemes";
+import { drawTheme, drawBlob, drawTitleOrnament, drawSteam } from "@/lib/drawThemes";
 
-// Lucide removed brand icons in recent versions.
-// We define them locally using standard Lucide SVG paths to fix the compilation error.
+// Local brand icons
 const Instagram = ({ size = 24, strokeWidth = 2, ...props }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={strokeWidth}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    {...props}
-  >
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" {...props}>
     <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
     <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
     <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
@@ -26,21 +14,186 @@ const Instagram = ({ size = 24, strokeWidth = 2, ...props }) => (
 );
 
 const Facebook = ({ size = 24, strokeWidth = 2, ...props }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={strokeWidth}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    {...props}
-  >
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" {...props}>
     <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
   </svg>
 );
+
+// Squircle Helper
+function squirclePath(ctx, cx, cy, w, h, r = 0.38) {
+  const n = 4 / (1 - r * 0.7);
+  const steps = 120;
+  ctx.beginPath();
+  for (let i = 0; i <= steps; i++) {
+    const t = (i / steps) * 2 * Math.PI;
+    const cosT = Math.cos(t);
+    const sinT = Math.sin(t);
+    const x = cx + w * Math.sign(cosT) * Math.pow(Math.abs(cosT), 2 / n);
+    const y = cy + h * Math.sign(sinT) * Math.pow(Math.abs(sinT), 2 / n);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+}
+
+// Dynamic Food Image Drawer - Ornate Indian Arch + Rounded Luxury
+function drawFoodImage(ctx, foodImg, cx, cy, side, themeName, accentColor) {
+  ctx.save();
+
+  const isCircle = ['midnightNoir', 'purpleGlow', 'cyberBlue'].includes(themeName);
+  const isLuxury = ['luxuryGold', 'minimalLight', 'darkElegant'].includes(themeName);
+  const isSoftSquare = ['orangeSpice', 'ecoLuxury'].includes(themeName);
+  const isIndian = themeName === 'orangeSpice' || themeName === 'orangesoft';
+
+  // Enhanced Glow Effect
+  const glowRadius = side / 2;
+  const gradGlow = ctx.createRadialGradient(cx, cy, glowRadius * 0.7, cx, cy, glowRadius * 2);
+  gradGlow.addColorStop(0, accentColor + '40');
+  gradGlow.addColorStop(0.5, accentColor + '20');
+  gradGlow.addColorStop(1, 'transparent');
+  ctx.fillStyle = gradGlow;
+  ctx.beginPath();
+  ctx.arc(cx, cy, glowRadius * 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (isIndian) {
+    // Enhanced Ornate Arch Frame
+    const archW = side * 1.18;
+    const archH = side * 1.15;
+    
+    // Outer golden glow with multiple layers
+    ctx.save();
+    ctx.shadowColor = '#fbbf24';
+    ctx.shadowBlur = 60;
+    ctx.strokeStyle = 'rgba(251,191,36,0.5)';
+    ctx.lineWidth = 10;
+    ctx.beginPath();
+    ctx.roundRect(cx - archW/2, cy - archH/2 + 25, archW, archH, side * 0.5);
+    ctx.stroke();
+    ctx.restore();
+    
+    // Inner golden border
+    ctx.save();
+    ctx.strokeStyle = 'rgba(251,191,36,0.5)';
+    ctx.lineWidth = 4;
+    ctx.shadowColor = '#fbbf24';
+    ctx.shadowBlur = 30;
+    ctx.beginPath();
+    ctx.roundRect(cx - archW/2 + 18, cy - archH/2 + 40, archW - 36, archH - 36, side * 0.47);
+    ctx.stroke();
+    ctx.restore();
+
+    // Middle decorative border
+    ctx.save();
+    ctx.strokeStyle = 'rgba(251,191,36,0.2)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 8]);
+    ctx.beginPath();
+    ctx.roundRect(cx - archW/2 + 30, cy - archH/2 + 52, archW - 60, archH - 60, side * 0.44);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+    
+    // Decorative corner ornaments
+    ctx.save();
+    const ornaments = [
+      [cx - archW/2 + 25, cy - archH/2 + 45, -0.3],
+      [cx + archW/2 - 25, cy - archH/2 + 45, 0.3],
+      [cx - archW/2 + 25, cy + archH/2 - 25, 0.3],
+      [cx + archW/2 - 25, cy + archH/2 - 25, -0.3]
+    ];
+    ornaments.forEach(([x, y, rot]) => {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rot);
+      ctx.fillStyle = '#fbbf24';
+      ctx.shadowColor = '#fbbf24';
+      ctx.shadowBlur = 20;
+      
+      // Small decorative diamond
+      ctx.beginPath();
+      ctx.moveTo(0, -8);
+      ctx.lineTo(8, 0);
+      ctx.lineTo(0, 8);
+      ctx.lineTo(-8, 0);
+      ctx.closePath();
+      ctx.fill();
+      
+      // Small circle around diamond
+      ctx.strokeStyle = 'rgba(251,191,36,0.3)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(0, 0, 14, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    });
+    ctx.restore();
+    
+    // Clip and draw food with enhanced quality
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(cx - side/2, cy - side/2, side, side, side * 0.4);
+    ctx.clip();
+    
+    // Draw food with slight zoom for better presentation
+    const scale = Math.max((side * 1.12) / foodImg.width, (side * 1.12) / foodImg.height);
+    const iw = foodImg.width * scale;
+    const ih = foodImg.height * scale;
+    ctx.drawImage(foodImg, cx - iw / 2, cy - ih / 2, iw, ih);
+    ctx.restore();
+  } 
+  else if (isCircle) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, glowRadius, 0, Math.PI * 2);
+    ctx.clip();
+    const scale = Math.max((side * 1.12) / foodImg.width, (side * 1.12) / foodImg.height);
+    const iw = foodImg.width * scale;
+    const ih = foodImg.height * scale;
+    ctx.drawImage(foodImg, cx - iw / 2, cy - ih / 2, iw, ih);
+  } 
+  else if (isLuxury) {
+    const radius = side * 0.48;
+    ctx.roundRect(cx - side/2, cy - side/2, side, side, radius);
+    ctx.clip();
+    const scale = Math.max((side * 1.12) / foodImg.width, (side * 1.12) / foodImg.height);
+    const iw = foodImg.width * scale;
+    const ih = foodImg.height * scale;
+    ctx.drawImage(foodImg, cx - iw / 2, cy - ih / 2, iw, ih);
+  } 
+  else if (isSoftSquare) {
+    ctx.roundRect(cx - side/2, cy - side/2, side, side, side * 0.12);
+    ctx.clip();
+    const scale = Math.max((side * 1.12) / foodImg.width, (side * 1.12) / foodImg.height);
+    const iw = foodImg.width * scale;
+    const ih = foodImg.height * scale;
+    ctx.drawImage(foodImg, cx - iw / 2, cy - ih / 2, iw, ih);
+  } 
+  else {
+    squirclePath(ctx, cx, cy, side/2, side/2, 0.38);
+    ctx.clip();
+    const scale = Math.max((side * 1.12) / foodImg.width, (side * 1.12) / foodImg.height);
+    const iw = foodImg.width * scale;
+    const ih = foodImg.height * scale;
+    ctx.drawImage(foodImg, cx - iw / 2, cy - ih / 2, iw, ih);
+  }
+
+  // Enhanced Inner Highlight for depth
+  const highlight = ctx.createRadialGradient(cx, cy - side * 0.3, side * 0.05, cx, cy, side * 0.75);
+  highlight.addColorStop(0, 'rgba(255,255,255,0.25)');
+  highlight.addColorStop(0.5, 'rgba(255,255,255,0.05)');
+  highlight.addColorStop(1, 'transparent');
+  ctx.fillStyle = highlight;
+  ctx.fillRect(cx - side/2, cy - side/2, side, side);
+
+  // Bottom subtle shadow
+  const shadow = ctx.createRadialGradient(cx, cy + side * 0.5, side * 0.1, cx, cy + side * 0.5, side * 0.8);
+  shadow.addColorStop(0, 'rgba(0,0,0,0.1)');
+  shadow.addColorStop(1, 'transparent');
+  ctx.fillStyle = shadow;
+  ctx.fillRect(cx - side/2, cy - side/2, side, side);
+
+  ctx.restore();
+}
 
 export default function ShareCardCanvas({ food, user, selectedMode, onClose }) {
   const canvasRef = useRef(null);
@@ -49,50 +202,51 @@ export default function ShareCardCanvas({ food, user, selectedMode, onClose }) {
   const [isSharing, setIsSharing] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Which of the 10 designs is active right now — derived from refreshKey so
-  // it always stays perfectly in sync with what drawCard() actually paints.
   const activeThemeKey = cardThemes[refreshKey % cardThemes.length];
   const activeThemeLabel = cardThemeLabels[activeThemeKey] || activeThemeKey;
 
   const drawCard = useCallback(async () => {
     if (!food || !user) return;
     setIsGenerating(true);
+
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d', { alpha: false }); // Better performance
+
+    const ctx = canvas.getContext('2d', { alpha: false });
     const W = 900;
-    
-    // Determine Food Context for design & Layout (All-Caps for premium look)
+
     const dietRaw = food.dietType?.[0] || food.category || '';
     const isVeg = dietRaw.toLowerCase().includes('veg') && !dietRaw.toLowerCase().includes('non');
     const accentColor = isVeg ? '#22c55e' : '#f97316';
-    
+
+    // Food name - better wrapping
     const foodNameUpper = food.name.toUpperCase();
     ctx.font = 'bold 44px serif';
     const preWords = foodNameUpper.split(' ');
     let preLines = [], preLine = '';
     preWords.forEach(w => {
       const t = preLine + w + ' ';
-      if (ctx.measureText(t).width > 760 && preLine) {
+      if (ctx.measureText(t).width > 480 && preLine) {
         preLines.push(preLine.trim());
         preLine = w + ' ';
       } else preLine = t;
     });
     preLines.push(preLine.trim());
 
-    const PAD = 44;
-    const topH = 100;
+    // Enhanced spacing for better visual balance
+    const PAD = 40;
+    const topH = 180;
     const imgH = 680;
-    const imgY = topH + 40;
-    const nameY = imgY + imgH + 70;
-    const H = nameY + (preLines.length * 58) + 160; // Increased from 140 for better bottom padding
-    const footerY = H - 95; // Adjusted for new H and overall spacing
-    
+    const imgY = topH + 90;
+    const nameY = imgY + imgH + 110;
+    const H = nameY + (preLines.length * 60) + 100;
+    const footerY = H - 40;
+
     canvas.width = W;
     canvas.height = H;
 
-    // Active theme for this render — kept in sync with activeThemeKey above.
     const themeName = activeThemeKey;
+
     const loadImg = (src) => new Promise((resolve, reject) => {
       const img = new Image();
       img.crossOrigin = "anonymous";
@@ -104,397 +258,290 @@ export default function ShareCardCanvas({ food, user, selectedMode, onClose }) {
     try {
       const foodImg = await loadImg(food.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800');
       let logoImg = null;
-      try { logoImg = await loadImg('/assets/logo.png'); } catch {}
+      try { logoImg = await loadImg('/assets/logo.png'); } catch (e) {}
 
-      const userAvatarSrc =
-        user?.image ||
-        user?.imageUrl ||
-        user?.avatar ||
-        user?.profileImageUrl ||
-        user?.photoURL ||
-        '';
-      let userAvatarImg = null;
-      if (userAvatarSrc) {
-        try { userAvatarImg = await loadImg(userAvatarSrc); } catch {}
-      }
-
-      // 1. DYNAMIC THEME & BACKGROUND ACCENTS
       const style = drawTheme(ctx, W, H, themeName);
 
-      // Add organic mesh gradient blobs based on food type (Veg/Non-Veg)
+      // Enhanced background effects
       const secondaryColor = isVeg ? '#10b981' : '#f43f5e';
-      const softAccent = isVeg ? `${style.accent}20` : `${style.gold}18`;
-      drawBlob(ctx, 0, 0, 800, softAccent);
-      drawBlob(ctx, W, H * 0.5, 600, `${secondaryColor}10`);
+      drawBlob(ctx, 0, 0, 800, isVeg ? `${style.accent}25` : `${style.gold || style.accent}20`);
+      drawBlob(ctx, W, H * 0.5, 600, `${secondaryColor}15`);
 
-      // Subtle texture overlay (Grain)
+      // Refined grain texture
       ctx.save();
-      ctx.globalAlpha = 0.035;
-      for (let i = 0; i < 6500; i++) {
+      ctx.globalAlpha = 0.025;
+      for (let i = 0; i < 8000; i++) {
         ctx.fillStyle = i % 2 === 0 ? '#fff' : style.accent;
-        ctx.fillRect(Math.random() * W, Math.random() * H, 1.2, 1.2);
+        ctx.fillRect(Math.random() * W, Math.random() * H, 1.5, 1.5);
       }
       ctx.restore();
 
-      // Subtle Vignette for focus
-      const vignette = ctx.createRadialGradient(W/2, H/2, W/4, W/2, H/2, W);
+      // Enhanced vignette
+      const vignette = ctx.createRadialGradient(W/2, H/2, W/3, W/2, H/2, W);
       vignette.addColorStop(0, 'transparent');
-      vignette.addColorStop(1, 'rgba(0,0,0,0.35)');
+      vignette.addColorStop(0.6, 'transparent');
+      vignette.addColorStop(1, 'rgba(0,0,0,0.4)');
       ctx.fillStyle = vignette;
       ctx.globalCompositeOperation = 'multiply';
       ctx.fillRect(0, 0, W, H);
       ctx.globalCompositeOperation = 'source-over';
 
-      // Logo + App Name
-      const logoSize = 90;
-      const logoX = PAD, logoY = (topH - logoSize) / 1;
+      // === LOGO - Enhanced Design ===
+      const logoSize = 110;
+      const logoX = PAD;
+      const logoY = (topH - logoSize) / 2 + 5;
 
+      // Logo background glow
+      ctx.save();
+      const logoGlow = ctx.createRadialGradient(logoX + logoSize/2, logoY + logoSize/2, 0, logoX + logoSize/2, logoY + logoSize/2, logoSize);
+      logoGlow.addColorStop(0, `${style.accent}30`);
+      logoGlow.addColorStop(1, 'transparent');
+      ctx.fillStyle = logoGlow;
+      ctx.beginPath();
+      ctx.arc(logoX + logoSize/2, logoY + logoSize/2, logoSize, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
 
       if (logoImg) {
         ctx.save();
-        ctx.beginPath();
-        ctx.roundRect(logoX, logoY, logoSize, logoSize, 14);
+        ctx.shadowColor = 'rgba(0,0,0,0.3)';
+        ctx.shadowBlur = 20;
+        ctx.shadowOffsetY = 4;
+        ctx.roundRect(logoX, logoY, logoSize, logoSize, 18);
         ctx.clip();
         ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
         ctx.restore();
       } else {
         ctx.save();
-        ctx.shadowColor = `${style.accent}55`;
-        // ctx.shadowBlur = 14;
+        ctx.shadowColor = 'rgba(0,0,0,0.3)';
+        ctx.shadowBlur = 20;
+        ctx.shadowOffsetY = 4;
         ctx.fillStyle = style.accent;
-        ctx.beginPath(); ctx.roundRect(logoX, logoY, logoSize, logoSize, 14); ctx.fill();
-        ctx.fillStyle = '#fff'; ctx.font = `bold ${logoSize * 0.5}px sans-serif`;
+        ctx.roundRect(logoX, logoY, logoSize, logoSize, 18);
+        ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.font = `bold ${logoSize * 0.5}px sans-serif`;
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText('M', logoX + logoSize / 2, logoY + logoSize / 2);
         ctx.restore();
       }
 
-      // ctx.save();
-      // ctx.fillStyle = style.text;
-      // ctx.font = `bold 22px sans-serif`;
-      // ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-      // ctx.fillText('Mash', logoX + logoSize + 12, logoY + logoSize * 0.38);
-      // ctx.fillStyle = style.muted;
-      // ctx.font = `400 14px sans-serif`;
-      // ctx.fillText('Food Discovery', logoX + logoSize + 12, logoY + logoSize * 0.72);
-      // ctx.restore();
-
-      // User Info
-      const userTextX = W - PAD - 18;
+      // === User/Brand Details - Dynamic from API ===
       ctx.save();
-      const userPanelWidth = 260;
-      const userPanelHeight = 78;
-      const userPanelX = W - PAD - userPanelWidth + 12;
-      const userPanelY = logoY - 12;
-      ctx.restore();
-
-      const avatarSize = 44;
-      const avatarX = userPanelX + 40;
-      const avatarY = logoY + logoSize / 2;
-      const avatarOuter = avatarSize / 2 + 3;
-
-
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(avatarX, avatarY, avatarSize / 2, 0, Math.PI * 2);
-      ctx.clip();
-      if (userAvatarImg) {
-        ctx.drawImage(userAvatarImg, avatarX - avatarSize / 2, avatarY - avatarSize / 2, avatarSize, avatarSize);
-      } else {
-        ctx.fillStyle = style.accent;
-        ctx.fillRect(avatarX - avatarSize / 2, avatarY - avatarSize / 2, avatarSize, avatarSize);
-        ctx.fillStyle = '#fff';
-        ctx.font = `bold ${avatarSize * 0.45}px sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText((user.name || 'M').charAt(0).toUpperCase(), avatarX, avatarY + 1);
-      }
-      ctx.restore();
-
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(avatarX, avatarY, avatarSize / 2, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-      ctx.restore();
-
-      ctx.save();
-      ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-      ctx.fillStyle = style.text;
-      ctx.font = `bold 20px sans-serif`;
-      ctx.letterSpacing = '1px';
-      ctx.fillText((user.name || 'Mash User').toUpperCase(), avatarX + avatarSize / 2 + 16, logoY + logoSize * 0.34);
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
       
+      // User name (dynamic from API)
+      const userName = (user.name || 'Guest User').toUpperCase();
+      ctx.fillStyle = style.text;
+      ctx.font = `bold 22px sans-serif`;
+      ctx.letterSpacing = '2px';
+      ctx.fillText(userName, W - PAD, logoY + logoSize * 0.32);
+      
+      // User email (dynamic from API)
+      const userEmail = user.email || 'user@example.com';
       ctx.fillStyle = style.muted;
       ctx.font = `500 13px sans-serif`;
       ctx.letterSpacing = '0.5px';
-      ctx.fillText((user.email || 'user@mash.com').toLowerCase(), avatarX + avatarSize / 2 + 16, logoY + logoSize * 0.72);
+      ctx.fillText(userEmail, W - PAD, logoY + logoSize * 0.72);
       ctx.restore();
 
-      // 2. TRUE CIRCULAR FOOD HERO - PREMIUM V2
-      const imgX = PAD;
+      // === FOOD IMAGE - Enhanced Size ===
       const imgW = W - PAD * 2;
-      const foodCircleDiameter = Math.min(imgW * 0.88, imgH * 0.98);
-      const foodCircleRadius = foodCircleDiameter / 2;
-      const foodCircleX = W / 2;
-      const foodCircleY = imgY + imgH / 2 + 8;
+      const foodSide = Math.min(imgW * 0.90, imgH * 0.94);
+      const foodCX = W / 2;
+      const foodCY = imgY + imgH / 2 + 8;
 
-      // Layered Glow & Shadow
-      const { drawFoodGlow, drawSteam } = require("@/lib/drawThemes");
-      drawFoodGlow(ctx, foodCircleX, foodCircleY, foodCircleRadius, accentColor);
+      drawFoodImage(ctx, foodImg, foodCX, foodCY, foodSide, themeName, accentColor);
+      drawSteam(ctx, foodCX, foodCY - foodSide * 0.4, foodSide * 0.8);
+
+      // === Enhanced VEG Badge ===
+      ctx.save();
+      const dx = PAD + 20;
+      const dy = imgY - 70;
+      const chipText = isVeg ? '🌱 VEG' : `🍖 ${dietRaw?.toUpperCase() || 'FOOD'}`;
+      const chipWidth = Math.max(120, ctx.measureText(chipText).width + 50);
+      const dietColor = isVeg ? '#22c55e' : '#f97316';
+      
+      // Badge background with gradient
+      const dietGrad = ctx.createLinearGradient(dx, dy, dx + chipWidth, dy + 40);
+      dietGrad.addColorStop(0, `${dietColor}f5`);
+      dietGrad.addColorStop(1, `${dietColor}dd`);
 
       ctx.save();
-      ctx.beginPath();
-      ctx.arc(foodCircleX, foodCircleY, foodCircleRadius + 2, 0, Math.PI * 2);
-      const glassBorder = ctx.createLinearGradient(W * 0.3, imgY, W * 0.7, imgY + imgH);
-      glassBorder.addColorStop(0, 'rgba(255,255,255,0.4)');
-      glassBorder.addColorStop(0.5, 'rgba(255,255,255,0.05)');
-      glassBorder.addColorStop(1, 'rgba(255,255,255,0.3)');
-      ctx.strokeStyle = glassBorder;
-      ctx.lineWidth = 2.5;
+      ctx.shadowColor = `${dietColor}66`;
+      ctx.shadowBlur = 25;
+      ctx.shadowOffsetY = 6;
+      ctx.fillStyle = dietGrad;
+      ctx.roundRect(dx, dy, chipWidth, 40, 20);
+      ctx.fill();
+      
+      // Inner border glow
+      ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+      ctx.lineWidth = 1.5;
+      ctx.shadowBlur = 0;
+      ctx.roundRect(dx, dy, chipWidth, 40, 20);
       ctx.stroke();
+
+      ctx.fillStyle = '#fff';
+      ctx.font = '900 14px sans-serif';
+      ctx.letterSpacing = '1px';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(chipText, dx + chipWidth / 2, dy + 20);
       ctx.restore();
 
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(foodCircleX, foodCircleY, foodCircleRadius, 0, Math.PI * 2);
-      ctx.clip();
-
-      const scale = Math.max(
-        (foodCircleDiameter * 1.06) / foodImg.width,
-        (foodCircleDiameter * 1.06) / foodImg.height
-      );
-      const iw = foodImg.width * scale;
-      const ih = foodImg.height * scale;
-      ctx.drawImage(
-        foodImg,
-        foodCircleX - iw / 2,
-        foodCircleY - ih / 2,
-        iw,
-        ih
-      );
-
-      // High-End Radial Highlight (No dark rim)
-      const imgGrad = ctx.createRadialGradient(
-        foodCircleX,
-        foodCircleY - foodCircleRadius * 0.25,
-        foodCircleRadius * 0.1,
-        foodCircleX,
-        foodCircleY,
-        foodCircleRadius
-      );
-      imgGrad.addColorStop(0, 'rgba(255,255,255,0.12)');
-      imgGrad.addColorStop(0.6, 'transparent');
-      ctx.fillStyle = imgGrad;
-      ctx.fillRect(
-        foodCircleX - foodCircleRadius,
-        foodCircleY - foodCircleRadius,
-        foodCircleDiameter,
-        foodCircleDiameter
-      );
-      ctx.restore();
-
-      // Culinary Steam Effect
-      drawSteam(ctx, foodCircleX, foodCircleY - foodCircleRadius * 0.4, foodCircleRadius * 0.8);
-
-      // 3. PREMIUM GLASS BADGES
-      const dietLabel = isVeg ? '🌱 VEG' : dietRaw ? `${dietRaw.toUpperCase()}` : null;
-      if (dietLabel) {
-        const dx = imgX + 16, dy = imgY + 16;
-        const chipText = isVeg ? 'VEG' : dietRaw?.toUpperCase() || 'FOOD';
-        const chipWidth = Math.max(92, ctx.measureText(chipText).width + 38);
-        const dw = chipWidth;
-        const dh = 36;
-        const dietColor = isVeg ? '#22c55e' : '#f97316';
-        const dietGrad = ctx.createLinearGradient(dx, dy, dx + dw, dy + dh);
-        dietGrad.addColorStop(0, `${dietColor}f2`);
-        dietGrad.addColorStop(1, `${dietColor}cc`);
+      // === ENHANCED ORDER ONLINE Badge - Transparent Background ===
+      if (selectedMode) {
+        const isOnline = selectedMode === 'online';
+        const modeLabel = isOnline ? 'ORDER ONLINE' : 'SELF COOKING';
+        const icon = isOnline ? '🛵' : '🍳';
+        const fullText = `${icon}  ${modeLabel}`;
+        
+        ctx.font = '900 13px sans-serif';
+        ctx.letterSpacing = '2px';
+        const textMetrics = ctx.measureText(fullText);
+        
+        const badgeW = textMetrics.width + 40;
+        const badgeH = 40;
+        const badgeX = W - PAD - badgeW - 20;
+        const badgeY = dy;
+        
+        // Theme-based colors for transparent badge
+        const primaryColor = style.accent;
+        const secondaryColor2 = style.gold || style.accent;
+        
+        const badgeBorderGrad = ctx.createLinearGradient(badgeX, badgeY, badgeX + badgeW, badgeY + badgeH);
+        badgeBorderGrad.addColorStop(0, primaryColor);
+        badgeBorderGrad.addColorStop(0.5, secondaryColor2);
+        badgeBorderGrad.addColorStop(1, primaryColor);
+        
         ctx.save();
-        ctx.shadowColor = `${dietColor}55`;
-        ctx.shadowBlur = 18;
-        ctx.shadowOffsetY = 5;
-        ctx.fillStyle = dietGrad;
-        ctx.beginPath(); ctx.roundRect(dx, dy, dw, dh, 18); ctx.fill();
-        ctx.strokeStyle = 'rgba(255,255,255,0.24)';
-        ctx.lineWidth = 1.1;
+        // TRANSPARENT background (no fill)
+        ctx.shadowColor = 'rgba(0,0,0,0.2)';
+        ctx.shadowBlur = 15;
+        ctx.shadowOffsetY = 3;
+        
+        // Only border with theme color
+        ctx.strokeStyle = badgeBorderGrad;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 20);
         ctx.stroke();
-        ctx.fillStyle = '#fff';
-        ctx.font = '900 14px sans-serif';
+        
+        // Text with theme color
+        ctx.fillStyle = style.text;
+        ctx.shadowBlur = 0;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.letterSpacing = '1px';
-        ctx.fillText(chipText, dx + dw / 2, dy + dh / 2 + 1);
+        ctx.fillText(fullText, badgeX + badgeW / 2, badgeY + badgeH / 2 + 1);
         ctx.restore();
       }
 
+      // === Enhanced Calories Badge ===
       const cal = food.nutrition?.calories;
       if (cal) {
         const calText = `🔥 ${cal} kcal`;
-        ctx.font = 'bold 16px sans-serif';
-        const calW = ctx.measureText(calText).width + 24;
-        const cx = imgX + imgW - calW - 16, cy = imgY + 16, ch = 34;
-        const calGrad = ctx.createLinearGradient(cx, cy, cx + calW, cy + ch);
-        calGrad.addColorStop(0, 'rgba(255,255,255,0.1)');
-        calGrad.addColorStop(1, 'rgba(255,255,255,0.02)');
+        ctx.font = 'bold 14px sans-serif';
+        const calW = ctx.measureText(calText).width + 28;
+        const calX = W - PAD - calW - 20;
+        const calY = imgY + imgH - 48;
+
         ctx.save();
-        ctx.shadowColor = 'rgba(0,0,0,0.4)'; ctx.shadowBlur = 15;
-        ctx.shadowOffsetY = 4;
-        ctx.fillStyle = 'rgba(0,0,0,0.65)';
-        ctx.beginPath(); ctx.roundRect(cx, cy, calW, ch, 17); ctx.fill();
-        ctx.fillStyle = calGrad; ctx.fill(); // Inner highlight
+        ctx.shadowColor = 'rgba(0,0,0,0.6)';
+        ctx.shadowBlur = 20;
+        ctx.shadowOffsetY = 5;
+        ctx.fillStyle = 'rgba(0,0,0,0.75)';
+        ctx.roundRect(calX, calY, calW, 34, 17);
+        ctx.fill();
+        
+        // Subtle border
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.lineWidth = 1;
+        ctx.shadowBlur = 0;
+        ctx.roundRect(calX, calY, calW, 34, 17);
+        ctx.stroke();
+        
         ctx.fillStyle = '#fff';
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText(calText, cx + calW / 2, cy + ch / 2);
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(calText, calX + calW / 2, calY + 17);
         ctx.restore();
       }
 
-      // 4. TYPOGRAPHY ENHANCEMENT - PREMIUM ALL-CAPS V3
+      // === Food Name Typography - Enhanced ===
       ctx.save();
-      const isMinimalGold = themeName === 'minimalLight' || themeName === 'luxuryGold';
-      const isNeon = themeName === 'neonBlue' || themeName === 'cyberBlue' || themeName === 'purpleGlow';
-      
+      const isOrangeSoft = themeName === 'orangesoft' || themeName === 'orangeSpice';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'alphabetic';
 
       preLines.forEach((l, i) => {
         const lw = ctx.measureText(l).width;
         const textGradient = ctx.createLinearGradient(W / 2 - lw / 2, 0, W / 2 + lw / 2, 0);
-        
-        // Dynamic design based on theme "type"
-        let fontStyle = '900 56px serif';
+
+        let fontStyle = '900 50px serif';
         let letterSpacing = '2px';
-        
-        if (isNeon) {
-          fontStyle = '900 52px sans-serif';
-          letterSpacing = '4px';
-        } else if (isMinimalGold) {
-          fontStyle = 'bold 58px serif';
-          letterSpacing = '5px';
+
+        if (isOrangeSoft) { 
+          fontStyle = '900 54px serif'; 
+          letterSpacing = '4px'; 
         }
 
         ctx.font = fontStyle;
         ctx.letterSpacing = letterSpacing;
 
-        const shadowColor = style.text === '#1f2937' || style.text === '#3b2d5a'
-          ? 'rgba(15, 23, 42, 0.22)'
-          : 'rgba(0, 0, 0, 0.48)';
-        const strokeColor = style.text === '#1f2937' || style.text === '#3b2d5a'
-          ? 'rgba(255, 255, 255, 0.6)'
-          : 'rgba(0, 0, 0, 0.22)';
-
         textGradient.addColorStop(0, style.text);
-        textGradient.addColorStop(0.48, style.accent);
+        textGradient.addColorStop(0.3, style.accent);
+        textGradient.addColorStop(0.7, style.accent);
         textGradient.addColorStop(1, style.text);
 
-        // Sub-Layer: Deep shadow for dimension
+        const nameStartY = nameY + (i * 62);
+        
+        // Text shadow for depth
         ctx.save();
-        ctx.shadowColor = shadowColor;
-        ctx.shadowBlur = 24;
+        ctx.shadowColor = 'rgba(0,0,0,0.6)';
+        ctx.shadowBlur = 25;
         ctx.shadowOffsetY = 8;
-        ctx.fillStyle = shadowColor;
-        ctx.fillText(l, W / 2 + 3, nameY + i * 58 + 5);
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillText(l, W / 2 + 2, nameStartY + 4);
         ctx.restore();
 
-        // Main text with high-end glow and stroke
+        // Main text with gradient
         ctx.save();
         ctx.fillStyle = textGradient;
-        
-        if (isNeon) {
-          ctx.shadowColor = style.accent;
-          ctx.shadowBlur = 18;
-        } else {
-          ctx.shadowColor = `${style.accent}88`;
-          ctx.shadowBlur = 12;
-        }
-        
-        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-        ctx.lineWidth = 0.8;
-        ctx.strokeText(l, W / 2, nameY + i * 58);
-        ctx.fillText(l, W / 2, nameY + i * 58);
+        ctx.shadowColor = `${style.accent}99`;
+        ctx.shadowBlur = 20;
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.lineWidth = 1;
+        ctx.strokeText(l, W / 2, nameStartY);
+        ctx.fillText(l, W / 2, nameStartY);
         ctx.restore();
       });
       ctx.restore();
 
-      // Unique bottom decorative ornament under the food name, matching the active theme
-      const titleBottomY = nameY + (preLines.length - 1) * 58 + 32; // Increased margin for better rhythm
-      drawTitleOrnament(ctx, W, titleBottomY, style, themeName);
+      // === Enhanced Title Ornament ===
+      const titleBottomY = nameY + (preLines.length - 1) * 62 + 36;
+      drawTitleOrnament(ctx, W, titleBottomY, style, themeName, H);
 
-      // 5. SIGNATURE BRANDING FOOTER
+      // === Date at bottom right - Moved UP with more spacing from bottom ===
       ctx.save();
+      const currentDate = new Date();
+      const dateStr = currentDate.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric' 
+      });
       
-      // High-End Gradient Separator Accent
-      const lineGrd = ctx.createLinearGradient(W * 0.2, 0, W * 0.8, 0);
-      lineGrd.addColorStop(0, 'transparent');
-      lineGrd.addColorStop(0.3, style.accent + '25');
-      lineGrd.addColorStop(0.5, 'rgba(255,255,255,0.22)');
-      lineGrd.addColorStop(0.7, style.accent + '25');
-      lineGrd.addColorStop(1, 'transparent');
-      ctx.strokeStyle = lineGrd;
-      ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(W * 0.2, footerY - 35); ctx.lineTo(W * 0.8, footerY - 35); ctx.stroke();
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'bottom';
+      ctx.fillStyle = style.muted;
+      ctx.font = '600 16px sans-serif';
+      ctx.letterSpacing = '2px';
+      // Changed from H - 15 to H - 45 to move date up (more bottom padding)
+      ctx.fillText(dateStr, W - PAD, H - 45);
       ctx.restore();
 
-      // Simple mode pill with gradient border and no heavy background block
-      if (selectedMode) {
-        ctx.save();
-        const isOnline = selectedMode === 'online';
-        const modeLabel = isOnline ? 'ORDER ONLINE' : 'SELF COOKING';
-        const icon = isOnline ? '🛵' : '🍳';
-        const fullText = `${icon}  ${modeLabel}`;
-
-        ctx.font = '900 15px sans-serif';
-        ctx.letterSpacing = '2px';
-        const textMetrics = ctx.measureText(fullText);
-
-        const badgeW = textMetrics.width + 56;
-        const badgeH = 46;
-        const badgeX = (W - badgeW) / 2;
-        const badgeY = footerY - (badgeH / 1) - 4;
-
-        const badgeBorderGrad = ctx.createLinearGradient(badgeX, badgeY, badgeX + badgeW, badgeY + badgeH);
-        if (isOnline) {
-          badgeBorderGrad.addColorStop(0, '#f97316');
-          badgeBorderGrad.addColorStop(0.5, '#fb7185');
-          badgeBorderGrad.addColorStop(1, '#facc15');
-        } else {
-          badgeBorderGrad.addColorStop(0, '#22c55e');
-          badgeBorderGrad.addColorStop(0.5, '#10b981');
-          badgeBorderGrad.addColorStop(1, '#84cc16');
-        }
-
-        // very light surface so the pill still feels intentional but not heavy
-        ctx.fillStyle = 'rgba(255,255,255,0.04)';
-        ctx.beginPath();
-        ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 23);
-        ctx.fill();
-
-        ctx.strokeStyle = badgeBorderGrad;
-        ctx.lineWidth = 1.8;
-        ctx.beginPath();
-        ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 23);
-        ctx.stroke();
-
-        ctx.fillStyle = style.text;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(fullText, W / 2, badgeY + badgeH / 2 + 1);
-        ctx.restore();
-      }
-
-      // Modern Branding Watermark Text Layout
-      // ctx.save();
-      // ctx.font = '900 12px sans-serif';
-      // const footerTextColor = style.text === '#1f2937' || style.text === '#3b2d5a'
-      //   ? 'rgba(31, 41, 55, 0.12)'
-      //   : 'rgba(255, 255, 255, 0.18)';
-      // ctx.fillStyle = footerTextColor;
-      // ctx.letterSpacing = '8px';
-      // ctx.textAlign = 'center';
-      // ctx.fillText('MASH FOOD DISCOVERY', W / 2, footerY + 58);
-      // ctx.restore();
-
-      const dataUrl = canvas.toDataURL('image/png', 0.93);
+      const dataUrl = canvas.toDataURL('image/png', 0.95);
       setImgUrl(dataUrl);
     } catch (err) {
       console.error('Canvas draw failed:', err);
@@ -568,7 +615,7 @@ export default function ShareCardCanvas({ food, user, selectedMode, onClose }) {
       if (!canvas) return;
 
       const blob = await new Promise((resolve) => {
-        canvas.toBlob(resolve, 'image/png', 0.93);
+        canvas.toBlob(resolve, 'image/png', 0.95);
       });
 
       if (!blob) {
@@ -612,7 +659,6 @@ export default function ShareCardCanvas({ food, user, selectedMode, onClose }) {
         }
       }
 
-      // Try sharing the page URL/text when direct file sharing is unavailable.
       if (typeof navigator !== 'undefined' && navigator.share) {
         try {
           await navigator.share(shareData);
@@ -624,7 +670,6 @@ export default function ShareCardCanvas({ food, user, selectedMode, onClose }) {
         }
       }
 
-      // Copy image to clipboard when possible.
       let copiedImage = false;
       try {
         if (
@@ -653,7 +698,6 @@ export default function ShareCardCanvas({ food, user, selectedMode, onClose }) {
         return;
       }
 
-      // Final fallback for browsers that cannot share directly.
       handleDownload();
       if (platform === 'instagram' || platform === 'facebook') {
         openShareSite();
@@ -672,14 +716,13 @@ export default function ShareCardCanvas({ food, user, selectedMode, onClose }) {
       setIsSharing(false);
     }
   };
-  
 
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes card-shuffle {
           0% { transform: scale(1) rotate(0deg); filter: blur(0px); }
-          50% { transform: scale(0.92) rotate(4deg); filter: blur(6px); opacity: 0.6; }
+          50% { transform: scale(0.99) rotate(4deg); filter: blur(6px); opacity: 0.6; }
           100% { transform: scale(1) rotate(0deg); filter: blur(0px); }
         }
         @keyframes card-pop-in {
@@ -714,7 +757,6 @@ export default function ShareCardCanvas({ food, user, selectedMode, onClose }) {
           Your Share Card
         </h2>
 
-        {/* Active design name — updates every time Shuffle is pressed */}
         <p className="text-center text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)] mb-3">
           {activeThemeLabel} <span className="opacity-50">· {refreshKey % cardThemes.length + 1}/{cardThemes.length}</span>
         </p>
