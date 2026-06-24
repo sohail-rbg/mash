@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAuth } from '@clerk/nextjs/server';
-import { createUserIfMissing } from '@/lib/clerkHelpers';
+import { createUserIfMissing } from '@/lib/clerkdata';
 // import User from '@/models/Users';
 
 export async function GET(req) {

@@ -782,7 +782,7 @@ export default function ShareCardCanvas({ food, user, selectedMode, onClose }) {
               <div className="w-10 h-10 flex items-center justify-center rounded-2xl bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-600 text-white shadow-lg transition-all duration-300 group-hover:scale-125 group-hover:rotate-6 group-active:scale-90">
                 <Instagram size={20} strokeWidth={2.5} />
               </div>
-              <span className="text-[8px] font-bold text-white/40 group-hover:text-white/70 transition-colors uppercase tracking-widest">Post</span>
+              {/* <span className="text-[8px] font-bold text-white/40 group-hover:text-white/70 transition-colors uppercase tracking-widest">Post</span> */}
             </button>
 
             <button 
@@ -793,7 +793,7 @@ export default function ShareCardCanvas({ food, user, selectedMode, onClose }) {
               <div className="w-10 h-10 flex items-center justify-center rounded-2xl bg-[#1877F2] text-white shadow-lg transition-all duration-300 group-hover:scale-125 group-hover:-rotate-6 group-active:scale-90">
                 <Facebook size={20} strokeWidth={2.5} fill="currentColor" />
               </div>
-              <span className="text-[8px] font-bold text-white/40 group-hover:text-white/70 transition-colors uppercase tracking-widest">Feed</span>
+              {/* <span className="text-[8px] font-bold text-white/40 group-hover:text-white/70 transition-colors uppercase tracking-widest">Feed</span> */}
             </button>
 
             <button 
@@ -804,7 +804,7 @@ export default function ShareCardCanvas({ food, user, selectedMode, onClose }) {
               <div className="w-10 h-10 flex items-center justify-center rounded-2xl bg-white/10 border border-white/10 text-white shadow-lg transition-all duration-300 group-hover:scale-125 group-active:scale-90">
                 <Link size={20} strokeWidth={2.5} />
               </div>
-              <span className="text-[8px] font-bold text-white/40 group-hover:text-white/70 transition-colors uppercase tracking-widest">Link</span>
+              {/* <span className="text-[8px] font-bold text-white/40 group-hover:text-white/70 transition-colors uppercase tracking-widest">Link</span> */}
             </button>
           </div>
         </div>

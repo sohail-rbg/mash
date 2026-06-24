@@ -139,6 +139,29 @@ export default function ProfilePage() {
     setIsUpdatingProfile(true);
     try {
       const token = await getToken();
+
+      // ─── 1. Sync with Clerk Identity ───
+      if (isSignedIn && user) {
+        try {
+          // Update Name in Clerk
+          await user.update({
+            firstName: editData.name,
+            lastName: "" // Ensuring last name doesn't double up if previously set
+          });
+
+          // Update Image in Clerk if changed (handling base64)
+          if (editData.image && editData.image.startsWith('data:image')) {
+            const res = await fetch(editData.image);
+            const blob = await res.blob();
+            await user.setProfileImage({ file: blob });
+          }
+        } catch (clerkErr) {
+          console.error("Clerk sync error:", clerkErr);
+          // We continue to update our custom DB even if Clerk fails
+        }
+      }
+
+      // ─── 2. Update Custom Database ───
       const res = await fetch('/api/profile', {
         method: 'PUT',
         credentials: 'include',
@@ -151,7 +174,9 @@ export default function ProfilePage() {
 
       const data = await res.json();
       if (res.ok) {
-        await router.refresh();
+        // Update local profile state immediately so identity section re-renders
+        setProfile(prev => ({ ...prev, name: editData.name, image: editData.image }));
+        router.refresh();
         console.log("Profile updated successfully!");
       } else {
         console.error("Failed to update profile:", data.message);
@@ -321,12 +346,13 @@ export default function ProfilePage() {
       <div className="absolute inset-0 bg-black/80 z-[1]" />
 
       {/* Topbar */}
-      <header className="absolute top-2 inset-x-4 z-30">
-        <div className=" rounded-2xl ">
+      {/* pointer-events-none on header so its empty areas don't block buttons beneath */}
+      <header className="absolute top-2 inset-x-4 z-30 pointer-events-none">
+        <div className="rounded-2xl">
           <div className="relative z-10 flex items-center justify-between px-5 py-2.5">
             {/* Left: Logo side */}
             <div className="flex items-center flex-1">
-              <Link href="/" className="flex items-center gap-2 group">
+              <Link href="/" className="flex items-center gap-2 group pointer-events-auto">
                 <img src="/assets/logo.png" alt="MealMind Logo" className="w-50 h-50 sm:w-14 sm:h-14 object-contain transition-transform hover:scale-110" />
               </Link>
             </div>
@@ -337,7 +363,7 @@ export default function ProfilePage() {
             </div>
 
             {/* Right: Controls */}
-            <div className="flex items-center justify-end gap-3 flex-1">
+            <div className="flex items-center justify-end gap-3 flex-1 pointer-events-auto">
               <RefreshButton />
             </div>
           </div>
@@ -357,14 +383,13 @@ export default function ProfilePage() {
 
       {/* Content */}
       <main className="relative z-10 min-h-screen flex items-center justify-center  px-4">
-        <div className="w-full max-w-xl">
+        <div className="w-full max-w-lg">
 
-          <div className="food-engine-card p-8 sm:p-10 flex flex-col gap-8"
-            style={{ '--gradient-start': 'rgb(0, 183, 255)', '--gradient-end': 'rgb(255, 48, 255)' }}>
-            
+          {/* Wrapper with relative so absolute edit button isn't clipped by card's overflow:hidden */}
+          <div className="relative">
             <button
               onClick={() => setIsEditModalOpen(true)}
-              className="absolute top-5 right-5 z-20 w-8 h-8 rounded-full bg-white/5 border border-[var(--glass-border)] flex items-center justify-center text-[var(--text-muted)] hover:text-orange-400 hover:border-orange-500/30 hover:bg-white/10 transition-all shadow-lg edit-icon-wiggle"
+              className="absolute top-5 right-5 z-[35] w-8 h-8 rounded-full bg-white/5 border border-[var(--glass-border)] flex items-center justify-center cursor-pointer text-[var(--text-muted)] hover:text-orange-400 hover:border-orange-500/30 hover:bg-white/10 transition-all shadow-lg edit-icon-wiggle"
               title="Edit Profile"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -373,18 +398,25 @@ export default function ProfilePage() {
               </svg>
             </button>
 
+          <div className="food-engine-card p-8 sm:p-10 flex flex-col gap-8"
+            style={{ '--gradient-start': 'rgb(0, 183, 255)', '--gradient-end': 'rgb(255, 48, 255)' }}>
+
             {/* ── Section 1: Identity ── */}
             <div className="flex flex-col items-center gap-4 relative z-10">
               <div className="profile-avatar-ring">
                 <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-[2.2rem] overflow-hidden bg-white/5 flex items-center justify-center text-5xl font-black text-orange-400">
-                  {user.imageUrl
-                    ? <img src={user.imageUrl} alt="" className="w-full h-full object-cover" />
-                    : <span>{user.fullName?.charAt(0) ?? "U"}</span>}
+                  {/* profile.image (custom upload) takes priority; fallback to Clerk avatar */}
+                  {profile?.image
+                    ? <img src={profile.image} alt="" className="w-full h-full object-cover" />
+                    : user.imageUrl
+                      ? <img src={user.imageUrl} alt="" className="w-full h-full object-cover" />
+                      : <span>{(profile?.name || user.fullName)?.charAt(0) ?? "U"}</span>}
                 </div>
               </div>
               <div className="text-center">
-                <p className="text-[var(--text-main)] font-black text-2xl tracking-tight">{user.fullName ?? "Chef"}</p>
-                <p className="text-[var(--text-muted)] text-sm font-medium mt-1">{user.primaryEmailAddress?.emailAddress}</p>
+                {/* Show profile.name if available (updated by user), else Clerk name */}
+                <p className="text-[var(--text-main)] font-black text-2xl tracking-tight">{profile?.name || user.fullName || "Chef"}</p>
+                <p className="text-[var(--text-muted)] text-sm font-medium mt-1">{profile?.email || user.primaryEmailAddress?.emailAddress}</p>
               </div>
             </div>
 
@@ -433,6 +465,7 @@ export default function ProfilePage() {
             
             <p className="text-center text-[var(--text-muted)] text-[10px] relative z-10">Personalizing your recommendations</p>
           </div>
+          </div>{/* end relative wrapper */}
         </div>
       </main>
 

@@ -3,7 +3,7 @@ import { getAuth } from '@clerk/nextjs/server';
 import {
   createUserIfMissing,
   syncProfileToClerk,
-} from '@/lib/clerkHelpers';
+} from '@/lib/clerkdata';
 import User from '@/models/Users';
 
 export async function PUT(req) {

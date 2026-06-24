@@ -25,6 +25,14 @@ export default function SignUpPage() {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden bg-black selection:bg-orange-500/30">
+      {/* <style>{`
+        .c-gap-2 {
+          gap: 2px;
+          background-color: red;
+          // border: 2px solid red;
+          // padding: 8px;
+        }
+      `}</style> */}
       {/* Background with Overlay */}
       <div className="absolute inset-0 z-0">
         <img 
@@ -37,7 +45,7 @@ export default function SignUpPage() {
 
       {/* Glass Card Container */}
       <div className="relative z-10 w-full max-w-md">
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-3xl p-6 shadow-2xl">
+        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-3xl p-4 shadow-2xl">
           <SignUp
             forceRedirectUrl={safeRedirect}
             fallbackRedirectUrl={safeRedirect}
@@ -46,8 +54,8 @@ export default function SignUpPage() {
               elements: {
                 rootBox: "w-full flex justify-center",
                 cardBox: "w-full",
-                card: "!bg-transparent shadow-none border-none w-full p-[calc(var(--clerk-spacing,1rem)*1)]",
-                main: "!bg-transparent w-full",
+                card: "!bg-transparent shadow-none c-gap-2 border-none w-full p-[calc(var(--clerk-spacing,1rem)*1)]",
+                main: "bg-red-500 w-full",
                 header: "text-center",
                 headerTitle: "text-white text-3xl font-bold text-center",
                 headerSubtitle: "!text-white text-center",

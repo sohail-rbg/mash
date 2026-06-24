@@ -11,7 +11,7 @@ import Link from "next/link";
 import Image from "next/image";
 
 import { auth as clerkAuth } from "@clerk/nextjs/server";
-import { createUserIfMissing } from "@/lib/clerkHelpers";
+import { createUserIfMissing } from "@/lib/clerkdata";
 import User from "@/models/Users";
 import connectDB from "@/lib/db";
 

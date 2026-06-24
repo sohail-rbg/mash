@@ -4,7 +4,7 @@ import {
   buildQuestionnaireWithNulls,
   createUserIfMissing,
   syncPreferencesToClerk,
-} from '@/lib/clerkHelpers';
+} from '@/lib/clerkdata';
 import User from '@/models/Users';
 
 export async function POST(req) {

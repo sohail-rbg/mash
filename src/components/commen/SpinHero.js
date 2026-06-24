@@ -18,21 +18,51 @@ export default function SpinHero({ timeLeft, onClearFilters, onOpenFilters }) {
         .filter-btn:hover { transform: scale(1.08); }
         .filter-btn svg { pointer-events: none; }
 
-        /* Gradient ring — always visible */
+        @keyframes rotate-green {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+
+        /* Rotating green border container */
         .filter-grad-ring {
-          padding: 1.5px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, #fcd34d, #f97316 50%, #ef4444);
+          position: relative;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          cursor: pointer;
+          padding: 2.5px; /* Space for the rotating border */
+          border-radius: 50%;
           z-index: 1;
-          transition: box-shadow 0.3s ease;
-          position: relative; /* create stacking context for the clear badge */
+          transition: all 0.3s ease;
         }
+
+        /* The actual rotating green ring */
+        .filter-grad-ring::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          border-radius: 50%;
+          padding: 2px; /* Ring thickness */
+          background: conic-gradient(from 0deg, transparent 20%, #22c55e, transparent 80%);
+          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          -webkit-mask-composite: destination-out;
+          mask-composite: exclude;
+          animation: rotate-green 2.5s linear infinite;
+          pointer-events: none;
+        }
+
+        /* Inner gradient ring - Always visible as requested */
+        .inner-ring {
+          padding: 2px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #fcd34d, #f97316 50%, #ef4444);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
         .filter-grad-ring.active {
-          box-shadow: 0 0 0 3px rgba(249,115,22,0.2), 0 4px 20px rgba(249,115,22,0.35);
+          box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.15), 0 8px 24px rgba(0,0,0,0.3);
         }
 
         /* X badge */
@@ -117,35 +147,37 @@ export default function SpinHero({ timeLeft, onClearFilters, onOpenFilters }) {
             cursor: 'pointer',
           }}
         >
-          <span
-            className="filter-btn"
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: "50%",
-              border: "none",
-              background: "var(--card-bg, rgba(18,18,28,0.95))",
-              backdropFilter: "blur(12px)",
-              WebkitBackdropFilter: "blur(12px)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: filterActive ? "#f97316" : "var(--text-main, #fff)",
-              position: "relative",
-              zIndex: 1,
-            }}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="17"
-              height="17"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              style={{ pointerEvents: "none" }}
+          <span className="inner-ring">
+            <span
+              className="filter-btn"
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: "50%",
+                border: "none",
+                background: "var(--card-bg, rgba(18,18,28,0.95))",
+                backdropFilter: "blur(12px)",
+                WebkitBackdropFilter: "blur(12px)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: filterActive ? "#f97316" : "var(--text-main, #fff)",
+                position: "relative",
+                zIndex: 1,
+              }}
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-            </svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="17"
+                height="17"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                style={{ pointerEvents: "none" }}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+              </svg>
+            </span>
           </span>
         </button>
         {filterActive && (

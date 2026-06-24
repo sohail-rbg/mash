@@ -105,11 +105,11 @@ export default function LogoutButton() {
         className="relative cursor-pointer active:scale-90 transition-transform"
         title="Account"
       >
-        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden bg-neutral-900 border border-white/15 shadow-lg">
+        <div className="w-20 h-20 sm:w-10 sm:h-10 rounded-full overflow-hidden bg-neutral-900 border border-white/15 shadow-lg">
           {user?.imageUrl ? (
             <img
             // {(session?.user?.image
-              src={user.imageUrl}
+              src={user.imageUrl} 
               alt="User"
               className="w-full h-full object-cover"
             />
